@@ -1,8 +1,21 @@
 {
 	"nodes":[
+		{"id":"group-resear","type":"group","x":0,"y":0,"width":380,"height":1120,"label":"Research"},
 		{"id":"canvas-errors","type":"text","text":"## Errors\n✓ None","x":-540,"y":-750,"width":380,"height":200,"color":"1"},
 		{"id":"legend","type":"text","text":"## Legend\n🔴 **Red** = To Do (ready)\n⬜ **Gray** = Blocked\n🟠 **Orange** = Doing\n🔵 **Cyan** = Ready to review\n🟢 **Green** = Done\n🟣 **Purple** = Proposed by agent","x":-540,"y":-310,"width":380,"height":230,"color":"0"},
-		{"id":"canvas-warnings","type":"text","text":"## Warnings\n✓ None","x":-540,"y":-530,"width":380,"height":200,"color":"3"}
+		{"id":"canvas-warnings","type":"text","text":"## Warnings\n✓ None","x":-540,"y":-530,"width":380,"height":200,"color":"3"},
+		{"id":"b16fa6be","type":"text","text":"## RE-01 Definir motivo de ser\nAclarar por qué existe este proyecto: qué problema real resuelve para la academia, qué dolores operativos ataca y qué resultado debería justificar construir una plataforma propia.","x":20,"y":40,"width":280,"height":160,"color":"4"},
+		{"id":"0ea9be59","type":"text","text":"## RE-02 Definir objetivo principal\nConvertir el motivo de ser en un objetivo principal claro, medible y útil para orientar decisiones de producto, arquitectura y prioridades del MVP.","x":20,"y":220,"width":280,"height":160,"color":"4"},
+		{"id":"7ee4050d","type":"text","text":"## RE-03 Definir scope y alcance inicial\nDelimitar qué entra y qué queda fuera de la primera versión: procesos cubiertos, usuarios contemplados, límites explícitos y criterios para evitar crecimiento descontrolado del MVP.","x":20,"y":400,"width":280,"height":160,"color":"4"},
+		{"id":"80a3c47c","type":"text","text":"## RE-04 Levantar requisitos funcionales\nIdentificar las funciones necesarias para la primera versión: gestión de alumnos, familias, profesores, cursos, horarios, pagos, comunicaciones, asistencia, informes y roles de usuario, separando MVP de futuras fases.","x":20,"y":580,"width":280,"height":160,"color":"4"},
+		{"id":"8e57536c","type":"text","text":"## RE-05 Definir stack tecnologico\nElegir una pila técnica pragmática para el MVP considerando velocidad de desarrollo, mantenibilidad, despliegue, coste, autenticación, base de datos, frontend, backend, testing y capacidad futura de ampliación.","x":20,"y":760,"width":280,"height":160,"color":"4"},
+		{"id":"8dd722f2","type":"text","text":"## RE-06 Consolidar documento de research\nRecoger las decisiones anteriores en una especificación inicial del proyecto que sirva como base para crear tareas de diseño, desarrollo y planificación del MVP.","x":20,"y":940,"width":280,"height":160,"color":"4"}
 	],
-	"edges":[]
+	"edges":[
+		{"id":"edge-001","fromNode":"b16fa6be","fromSide":"bottom","toNode":"0ea9be59","toSide":"top"},
+		{"id":"edge-002","fromNode":"0ea9be59","fromSide":"bottom","toNode":"7ee4050d","toSide":"top"},
+		{"id":"edge-003","fromNode":"7ee4050d","fromSide":"bottom","toNode":"80a3c47c","toSide":"top"},
+		{"id":"edge-004","fromNode":"80a3c47c","fromSide":"bottom","toNode":"8e57536c","toSide":"top"},
+		{"id":"edge-005","fromNode":"8e57536c","fromSide":"bottom","toNode":"8dd722f2","toSide":"top"}
+	]
 }
