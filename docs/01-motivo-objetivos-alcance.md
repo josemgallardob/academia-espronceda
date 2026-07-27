@@ -8,7 +8,7 @@ No contiene reglas detalladas de negocio ni requisitos de interfaz. Para eso se 
 
 1. `02-contexto-negocio.md`: reglas propias de la academia.
 2. `03-requisitos-funcionales-sistema.md`: funcionalidades que debe ofrecer la aplicacion.
-3. `04-diseno-arquitectura-tecnica.md`: decisiones tecnicas y arquitectura, pendiente de desarrollar.
+3. `04-diseno-arquitectura-tecnica.md`: decisiones tecnicas y arquitectura.
 
 ## Motivo de ser
 

@@ -283,7 +283,7 @@ Las clases de 5 alumnos son aun mas excepcionales y solo deben aceptarse si no q
 
 ## Reglas de asignacion
 
-Una persona solo puede asignarse a una clase si:
+Para que una asignacion se considere libre de conflictos debe cumplir que:
 
 1. El profesor imparte al menos una de sus asignaturas.
 2. El profesor puede atender su curso.
@@ -295,7 +295,9 @@ Una persona solo puede asignarse a una clase si:
 
 La restriccion de no solape hace que los cuadrantes de los tres profesores sean interdependientes.
 
-Ejemplo: si una persona ya tiene clase el lunes de 19:00 a 20:00 con el Profesor 1, no puede estar tambien el lunes de 19:00 a 20:00 con el Profesor 3.
+Ejemplo: si una persona ya tiene clase el lunes de 19:00 a 20:00 con el Profesor 1, asignarla tambien el lunes de 19:00 a 20:00 con el Profesor 3 producira un conflicto de solape que debera mostrarse al usuario.
+
+Estas reglas deben guiar la generacion automatica y la validacion del horario global. No obstante, representan la operativa esperada del negocio y no un bloqueo tecnico absoluto: el usuario podra confirmar excepcionalmente un horario que incumpla alguna de ellas siempre que el sistema identifique los conflictos, explique sus consecuencias y solicite una confirmacion expresa e informada.
 
 ## Curso `Otros`
 

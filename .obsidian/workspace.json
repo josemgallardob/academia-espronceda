@@ -15,8 +15,8 @@
               "state": {
                 "file": "Project.canvas",
                 "viewState": {
-                  "x": -80,
-                  "y": 546.6701731301938,
+                  "x": -32.3072299168975,
+                  "y": 778.510027700831,
                   "zoom": -0.5104710516377629
                 }
               },
@@ -188,6 +188,10 @@
   },
   "active": "bc7eec1f3b9670b2",
   "lastOpenFiles": [
+    "docs/04-diseno-arquitectura-tecnica.md",
+    "docs/03-requisitos-funcionales-sistema.md",
+    "docs/02-contexto-negocio.md",
+    "docs/01-motivo-objetivos-alcance.md",
     "docs/research/04-diseno-arquitectura-tecnica.md",
     "docs/research/03-requisitos-funcionales-sistema.md",
     "docs/research/02-contexto-negocio.md",
