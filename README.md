@@ -1,1 +1,78 @@
-# Proyecto para desarrollo de una plataforma para la automatización de la gestión de la Academia Espronceda (Mejor academia de enseñanza de la historia de la ciudad de Almendralejo).
+# Academia Espronceda
+
+Plataforma para automatizar la gestión académica y la generación de horarios semanales de
+Academia Espronceda.
+
+## Estructura
+
+```text
+apps/
+├── web/       Frontend Angular
+├── api/       API de aplicación NestJS
+└── solver/    Motor de horarios Python/FastAPI
+docs/          Documentación funcional y técnica
+Project.canvas Backlog visual del proyecto
+```
+
+Los paquetes TypeScript se administran mediante `npm workspaces`. El servicio Python mantiene
+su entorno virtual y sus dependencias de forma independiente.
+
+## Requisitos
+
+- Node.js 24.16.0
+- npm 11.13.0
+- Python 3.14.2
+
+Las versiones esperadas también están declaradas en `.nvmrc`, `.python-version` y
+`package.json`.
+
+## Preparación
+
+```bash
+npm run setup
+```
+
+Este comando instala los paquetes JavaScript, crea `.venv` e instala el servicio solver con sus
+dependencias de desarrollo.
+
+## Desarrollo local
+
+Cada proceso se inicia desde una terminal distinta:
+
+```bash
+npm run dev:web
+npm run dev:api
+npm run dev:solver
+```
+
+Servicios:
+
+- Web: `http://localhost:4200`
+- API: `http://localhost:3000`, salud en `GET /health`
+- Solver: `http://localhost:8001`, salud en `GET /health`
+
+## Comandos comunes
+
+```bash
+npm run format          # aplica el formato
+npm run format:check    # comprueba el formato sin modificar
+npm run lint            # analiza TypeScript, plantillas y Python
+npm run test            # ejecuta las pruebas de los tres servicios
+npm run build           # construye o valida los tres servicios
+npm run check           # ejecuta todas las comprobaciones anteriores
+```
+
+Cada comando dispone además de variantes por servicio, por ejemplo `test:web`, `test:api` y
+`test:solver`.
+
+## Convenciones de idioma
+
+Los textos visibles para los usuarios se escriben en español. El código, los identificadores,
+los nombres de archivos, las configuraciones, las pruebas y los mensajes técnicos se escriben
+en inglés con nombres descriptivos. Los comentarios se reservan para decisiones o invariantes
+que el propio código no pueda expresar con claridad.
+
+## Flujo de trabajo
+
+El backlog se gestiona mediante `Project.canvas`. Sus tarjetas solo se modifican a través de
+`canvas-tool.py`, siguiendo las reglas de [AGENTS.md](./AGENTS.md).

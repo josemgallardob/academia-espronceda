@@ -1,0 +1,6 @@
+.angular/
+.venv/
+coverage/
+dist/
+node_modules/
+Project.canvas

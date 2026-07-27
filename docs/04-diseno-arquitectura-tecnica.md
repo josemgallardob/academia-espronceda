@@ -6,6 +6,31 @@ Este documento recoge las decisiones tecnicas iniciales para el MVP.
 
 El objetivo es definir una arquitectura pragmatica, mantenible y suficientemente flexible para cubrir la gestion de personas, la generacion de horarios y futuras ampliaciones razonables.
 
+## Convenciones de idioma y comentarios
+
+La interfaz de usuario estara completamente en español. Esto incluye textos, etiquetas, botones, formularios, mensajes de validacion, alertas, avisos de conflictos, dialogos de confirmacion y formatos visibles de fechas, dias y horas.
+
+El codigo y todos los identificadores tecnicos se escribiran en ingles y utilizaran nombres suficientemente descriptivos. Esta convencion se aplicara a:
+
+1. Variables, constantes, funciones y metodos.
+2. Clases, interfaces, tipos, enums y decoradores.
+3. Modulos, componentes, servicios y repositorios.
+4. Archivos, directorios y nombres de paquetes.
+5. Tablas, columnas, indices y migraciones.
+6. Rutas, propiedades y codigos de los contratos API.
+7. Variables de entorno y archivos de configuracion.
+8. Identificadores del catalogo de reglas y conflictos.
+9. Tests, fixtures y nombres de casos de prueba.
+10. Logs y mensajes tecnicos no visibles para el usuario.
+
+Los codigos internos y mensajes tecnicos de la API estaran en ingles, mientras que Angular sera responsable de presentar al usuario su texto equivalente en español. El contenido de la documentacion funcional y de producto podra mantenerse en español.
+
+Los comentarios dentro del codigo se escribiran en ingles y se utilizaran con moderacion. Deben explicar principalmente el motivo de una decision, una invariante importante, una limitacion externa o un comportamiento que no resulte evidente al leer el codigo.
+
+Se evitaran comentarios que repitan literalmente lo que ya expresa el codigo, bloques de codigo comentado y anotaciones de bajo valor. Cuando el codigo pueda hacerse mas claro mediante mejores nombres o una funcion bien delimitada, se preferira esa mejora antes que añadir un comentario.
+
+Los comentarios `TODO` deberan ser concretos, accionables y explicar la condicion necesaria para resolverlos. No se utilizaran como sustituto de tareas del backlog.
+
 ## Stack tecnologico elegido
 
 ### Frontend
@@ -564,6 +589,8 @@ Para PDFs o artefactos binarios, la recomendacion inicial es almacenar referenci
 12. La estrategia de testing debe priorizar el dominio, las propiedades del horario y la coherencia independiente entre el solver Python y el validador NestJS.
 13. Drizzle ORM sera la capa de acceso a Turso/libSQL y no formara parte del dominio.
 14. La autenticacion utilizara dos cuentas precreadas, sin roles, mediante credenciales clasicas y JWT en cookie segura.
+15. La UI y sus mensajes estaran en español; el codigo, los identificadores tecnicos, los tests y los comentarios estaran en ingles.
+16. Los comentarios de codigo seran escasos y explicaran decisiones o comportamientos no evidentes, evitando ruido y repeticion.
 
 ## Decisiones pendientes
 
