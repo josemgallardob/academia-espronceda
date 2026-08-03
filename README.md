@@ -37,12 +37,12 @@ dependencias de desarrollo.
 
 ## Desarrollo local
 
-Cada proceso se inicia desde una terminal distinta:
+La configuracion local real vive en `.env.local`, que esta ignorado por Git. Para crearla a
+partir de valores locales seguros y levantar todos los procesos:
 
 ```bash
-npm run dev:web
-npm run dev:api
-npm run dev:solver
+cp .env.development.example .env.local
+npm run dev
 ```
 
 Servicios:
@@ -50,6 +50,18 @@ Servicios:
 - Web: `http://localhost:4200`
 - API: `http://localhost:3000`, salud en `GET /health`
 - Solver: `http://localhost:8001`, salud en `GET /health`
+- Base libSQL local: `.data/academia-espronceda.db`
+
+Los procesos tambien pueden iniciarse por separado con `dev:web`, `dev:api` y `dev:solver`.
+
+## Produccion
+
+El frontend se sirve bajo un dominio HTTPS publico; las peticiones a `/api` se enrutan a
+NestJS y FastAPI permanece en una red privada. Produccion usa Turso remoto y secretos
+inyectados por la plataforma, nunca archivos versionados.
+
+El contrato completo de variables, topologia, arranque, dominio, TLS, CORS y manejo de secretos
+esta en [Configuracion de entornos y secretos](./docs/05-configuracion-entornos.md).
 
 ## Comandos comunes
 

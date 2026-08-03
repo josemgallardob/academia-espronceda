@@ -1,0 +1,212 @@
+export type RuntimeEnvironment = 'development' | 'test' | 'production';
+
+export interface ApiEnvironment {
+  nodeEnv: RuntimeEnvironment;
+  host: string;
+  port: number;
+  corsOrigins: string[];
+  solverUrl: string;
+  databaseUrl: string;
+  databaseAuthToken?: string;
+  jwtSecret: string;
+  internalServiceToken: string;
+  authCookieName: string;
+  cookieSecure: boolean;
+  trustProxy: boolean;
+}
+
+const DEVELOPMENT_DEFAULTS = {
+  API_HOST: '127.0.0.1',
+  API_PORT: '3000',
+  API_CORS_ORIGINS: 'http://localhost:4200,http://127.0.0.1:4200',
+  SOLVER_URL: 'http://127.0.0.1:8001',
+  DATABASE_URL: 'file:./.data/academia-espronceda.db',
+  JWT_SECRET: 'local-only-jwt-secret-replace-in-every-deployed-environment',
+  INTERNAL_SERVICE_TOKEN:
+    'local-only-service-token-replace-in-every-deployed-environment',
+  AUTH_COOKIE_NAME: 'academia_session',
+  COOKIE_SECURE: 'false',
+  TRUST_PROXY: 'false',
+} as const;
+
+export function loadApiEnvironment(
+  source: NodeJS.ProcessEnv = process.env,
+): ApiEnvironment {
+  const nodeEnv = readNodeEnvironment(source.NODE_ENV);
+  const value = (name: keyof typeof DEVELOPMENT_DEFAULTS): string => {
+    const configured = source[name]?.trim();
+    if (configured) {
+      return configured;
+    }
+
+    if (nodeEnv !== 'production') {
+      return DEVELOPMENT_DEFAULTS[name];
+    }
+
+    throw new Error(`${name} must be configured in production`);
+  };
+
+  const corsOrigins = parseOrigins(value('API_CORS_ORIGINS'), nodeEnv);
+  const solverUrl = parseUrl(value('SOLVER_URL'), 'SOLVER_URL');
+  const databaseUrl = value('DATABASE_URL');
+  const jwtSecret = value('JWT_SECRET');
+  const internalServiceToken = value('INTERNAL_SERVICE_TOKEN');
+  const authCookieName = value('AUTH_COOKIE_NAME');
+  const cookieSecure = parseBoolean(value('COOKIE_SECURE'), 'COOKIE_SECURE');
+  const trustProxy = parseBoolean(value('TRUST_PROXY'), 'TRUST_PROXY');
+
+  if (nodeEnv === 'production') {
+    assertProductionConfiguration({
+      source,
+      corsOrigins,
+      solverUrl,
+      databaseUrl,
+      jwtSecret,
+      internalServiceToken,
+      authCookieName,
+      cookieSecure,
+      trustProxy,
+    });
+  }
+
+  return {
+    nodeEnv,
+    host: value('API_HOST'),
+    port: parsePort(value('API_PORT'), 'API_PORT'),
+    corsOrigins,
+    solverUrl: solverUrl.toString(),
+    databaseUrl,
+    databaseAuthToken: source.DATABASE_AUTH_TOKEN?.trim() || undefined,
+    jwtSecret,
+    internalServiceToken,
+    authCookieName,
+    cookieSecure,
+    trustProxy,
+  };
+}
+
+function readNodeEnvironment(value: string | undefined): RuntimeEnvironment {
+  const environment = value?.trim() || 'development';
+  if (
+    environment !== 'development' &&
+    environment !== 'test' &&
+    environment !== 'production'
+  ) {
+    throw new Error('NODE_ENV must be one of development, test, or production');
+  }
+
+  return environment;
+}
+
+function parsePort(value: string, name: string): number {
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error(`${name} must be an integer between 1 and 65535`);
+  }
+
+  return port;
+}
+
+function parseBoolean(value: string, name: string): boolean {
+  if (value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+
+  throw new Error(`${name} must be either true or false`);
+}
+
+function parseUrl(value: string, name: string): URL {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error();
+    }
+    return url;
+  } catch {
+    throw new Error(`${name} must be an absolute HTTP(S) URL`);
+  }
+}
+
+function parseOrigins(value: string, nodeEnv: RuntimeEnvironment): string[] {
+  const origins = value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .map((origin) => {
+      if (origin === '*') {
+        throw new Error('API_CORS_ORIGINS cannot contain a wildcard');
+      }
+
+      const url = parseUrl(origin, 'API_CORS_ORIGINS');
+      if (url.pathname !== '/' || url.search || url.hash) {
+        throw new Error(
+          'API_CORS_ORIGINS entries must contain only scheme, host, and optional port',
+        );
+      }
+      if (nodeEnv === 'production' && url.protocol !== 'https:') {
+        throw new Error('API_CORS_ORIGINS must use HTTPS in production');
+      }
+
+      return url.origin;
+    });
+
+  if (origins.length === 0) {
+    throw new Error('API_CORS_ORIGINS must contain at least one origin');
+  }
+
+  return [...new Set(origins)];
+}
+
+function assertProductionConfiguration(configuration: {
+  source: NodeJS.ProcessEnv;
+  corsOrigins: string[];
+  solverUrl: URL;
+  databaseUrl: string;
+  jwtSecret: string;
+  internalServiceToken: string;
+  authCookieName: string;
+  cookieSecure: boolean;
+  trustProxy: boolean;
+}): void {
+  if (!configuration.databaseUrl.startsWith('libsql://')) {
+    throw new Error('DATABASE_URL must use libsql:// in production');
+  }
+  if (!configuration.source.DATABASE_AUTH_TOKEN?.trim()) {
+    throw new Error('DATABASE_AUTH_TOKEN must be configured in production');
+  }
+  if (configuration.jwtSecret.length < 64) {
+    throw new Error(
+      'JWT_SECRET must contain at least 64 characters in production',
+    );
+  }
+  if (configuration.internalServiceToken.length < 32) {
+    throw new Error(
+      'INTERNAL_SERVICE_TOKEN must contain at least 32 characters in production',
+    );
+  }
+  if (!configuration.cookieSecure) {
+    throw new Error('COOKIE_SECURE must be true in production');
+  }
+  if (!configuration.trustProxy) {
+    throw new Error('TRUST_PROXY must be true in production');
+  }
+  if (!configuration.authCookieName.startsWith('__Host-')) {
+    throw new Error(
+      'AUTH_COOKIE_NAME must use the __Host- prefix in production',
+    );
+  }
+  if (
+    configuration.solverUrl.hostname === 'localhost' ||
+    configuration.solverUrl.hostname === '127.0.0.1'
+  ) {
+    throw new Error(
+      'SOLVER_URL must point to the private solver service in production',
+    );
+  }
+  if (configuration.corsOrigins.some((origin) => origin.includes('<'))) {
+    throw new Error('API_CORS_ORIGINS still contains an example placeholder');
+  }
+}

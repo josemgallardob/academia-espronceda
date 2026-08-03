@@ -15,8 +15,8 @@
               "state": {
                 "file": "Project.canvas",
                 "viewState": {
-                  "x": 996.2477879917393,
-                  "y": 288.8304481802266,
+                  "x": 558.0004744054952,
+                  "y": 660.3487469405816,
                   "zoom": -0.9554863122661266
                 }
               },
@@ -189,16 +189,17 @@
   "active": "bc7eec1f3b9670b2",
   "lastOpenFiles": [
     "apps/api/dist/tsconfig.build.tsbuildinfo",
-    "apps/api/dist/main.js.map",
-    "apps/api/dist/main.js",
     "apps/api/dist/main.d.ts",
+    "apps/api/dist/main.js",
+    "apps/api/dist/main.js.map",
+    "apps/api/dist/config/environment.js.map",
+    "apps/api/dist/config/environment.js",
+    "apps/api/dist/config/environment.d.ts",
+    "apps/api/dist/config",
     "apps/api/dist/app.service.js.map",
     "apps/api/dist/app.service.js",
     "apps/api/dist/app.service.d.ts",
-    "apps/api/dist/app.module.js.map",
-    "apps/api/dist/app.module.js",
-    "apps/api/dist/app.module.d.ts",
-    "apps/api/dist/app.controller.js.map",
+    "docs/05-configuracion-entornos.md",
     "node_modules/fsevents/README.md",
     "node_modules/@esbuild/darwin-arm64/README.md",
     "node_modules/prettier/THIRD-PARTY-NOTICES.md",
@@ -223,7 +224,6 @@
     "node_modules/multer/node_modules/mime-types/README.md",
     "node_modules/multer/node_modules/mime-types/HISTORY.md",
     "node_modules/multer/node_modules/media-typer/HISTORY.md",
-    "node_modules/multer/node_modules/type-is/README.md",
     "node_modules/webpack/lib/html/favicon.svg",
     "node_modules/@jest/reporters/assets/jest_logo.png",
     "node_modules/istanbul-reports/lib/html-spa/assets/sort-arrow-sprite.png",
