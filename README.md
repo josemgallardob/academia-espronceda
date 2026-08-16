@@ -63,6 +63,12 @@ inyectados por la plataforma, nunca archivos versionados.
 El contrato completo de variables, topologia, arranque, dominio, TLS, CORS y manejo de secretos
 esta en [Configuracion de entornos y secretos](./docs/05-configuracion-entornos.md).
 
+## Contratos y reglas de horarios
+
+Los contratos versionados entre Angular, NestJS y FastAPI, junto con el catalogo neutral de
+reglas y preferencias, viven en `contracts/`. Su estructura, versionado y semantica se resumen en
+[Contratos API y catalogo de reglas v1](./docs/06-contratos-y-catalogo-reglas.md).
+
 ## Comandos comunes
 
 ```bash

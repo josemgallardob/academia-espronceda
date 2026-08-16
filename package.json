@@ -28,15 +28,18 @@
     "lint:web": "npm run lint --workspace @academia-espronceda/web",
     "lint:api": "npm run lint --workspace @academia-espronceda/api",
     "lint:solver": ".venv/bin/python -m ruff check apps/solver",
-    "format": "prettier --write .prettierrc.json package.json README.md docs/05-configuracion-entornos.md scripts apps/api apps/web && .venv/bin/python -m ruff format apps/solver",
-    "format:check": "prettier --check .prettierrc.json package.json README.md docs/05-configuracion-entornos.md scripts apps/api apps/web && .venv/bin/python -m ruff format --check apps/solver",
+    "format": "prettier --write .prettierrc.json package.json README.md contracts docs/05-configuracion-entornos.md docs/06-contratos-y-catalogo-reglas.md scripts apps/api apps/web && .venv/bin/python -m ruff format apps/solver",
+    "format:check": "prettier --check .prettierrc.json package.json README.md contracts docs/05-configuracion-entornos.md docs/06-contratos-y-catalogo-reglas.md scripts apps/api apps/web && .venv/bin/python -m ruff format --check apps/solver",
     "test": "npm run test:web && npm run test:api && npm run test:solver",
     "test:web": "npm run test --workspace @academia-espronceda/web -- --watch=false",
     "test:api": "npm run test --workspace @academia-espronceda/api -- --runInBand && npm run test:e2e --workspace @academia-espronceda/api -- --runInBand",
     "test:solver": ".venv/bin/python -m pytest apps/solver",
-    "check": "npm run format:check && npm run lint && npm run test && npm run build"
+    "validate:contracts": "node scripts/validate-contracts.mjs",
+    "check": "npm run format:check && npm run validate:contracts && npm run lint && npm run test && npm run build"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "prettier": "^3.8.1"
   }
 }

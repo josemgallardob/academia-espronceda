@@ -1,0 +1,23 @@
+{
+  "contractVersion": "1.0.0",
+  "ruleCatalogVersion": "1.0.0",
+  "requestId": "request-infeasible",
+  "mode": "RELAXED",
+  "status": "INFEASIBLE",
+  "attempts": [
+    {
+      "mode": "STRICT",
+      "status": "INFEASIBLE",
+      "elapsedMilliseconds": 5
+    },
+    {
+      "mode": "RELAXED",
+      "status": "INFEASIBLE",
+      "elapsedMilliseconds": 4
+    }
+  ],
+  "solution": null,
+  "elapsedMilliseconds": 9,
+  "randomSeed": 12345,
+  "timeLimitSeconds": 10
+}

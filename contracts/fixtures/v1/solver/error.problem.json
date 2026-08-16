@@ -1,0 +1,10 @@
+{
+  "type": "/problems/solver-error",
+  "title": "Solver execution failed",
+  "status": 500,
+  "detail": "The scheduling engine could not complete the accepted request.",
+  "instance": "/v1/schedules/solve",
+  "code": "SOLVER_EXECUTION_FAILED",
+  "traceId": "trace-solver-error",
+  "solverStatus": "ERROR"
+}

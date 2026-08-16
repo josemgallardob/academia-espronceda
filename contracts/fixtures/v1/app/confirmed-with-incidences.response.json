@@ -1,0 +1,111 @@
+{
+  "id": "schedule-confirmed-1",
+  "state": "CONFIRMED",
+  "revision": 3,
+  "isCurrent": true,
+  "sourceScheduleId": null,
+  "ruleCatalogVersion": "1.0.0",
+  "createdAt": "2026-08-15T09:30:00Z",
+  "confirmedAt": "2026-08-15T10:05:00Z",
+  "confirmedByUserId": "user-owner-1",
+  "teachers": [
+    {
+      "id": "teacher-2",
+      "displayName": "Profesor 2"
+    }
+  ],
+  "slots": [
+    {
+      "id": "FRIDAY_18_00",
+      "dayOfWeek": "FRIDAY",
+      "startTime": "18:00",
+      "endTime": "19:00"
+    }
+  ],
+  "classes": [
+    {
+      "id": "class-friday-18-teacher-2",
+      "teacherId": "teacher-2",
+      "slotId": "FRIDAY_18_00",
+      "assignments": [
+        {
+          "id": "assignment-1",
+          "studentId": "student-1",
+          "studentDisplayName": "Ana Pérez"
+        },
+        {
+          "id": "assignment-2",
+          "studentId": "student-2",
+          "studentDisplayName": "Luis García"
+        }
+      ],
+      "findingFingerprints": [
+        "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      ]
+    }
+  ],
+  "subjectTeacherAllocations": [],
+  "evaluation": {
+    "validationFingerprint": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "scheduleId": "schedule-confirmed-1",
+    "scheduleRevision": 3,
+    "ruleCatalogVersion": "1.0.0",
+    "evaluatedAt": "2026-08-15T10:04:00Z",
+    "outcome": "HAS_RELAXABLE_CONFLICTS",
+    "canConfirm": true,
+    "counts": {
+      "blockingErrors": 0,
+      "relaxableErrors": 1,
+      "warnings": 1,
+      "information": 0
+    },
+    "findings": [
+      {
+        "fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "ruleId": "CLASS_CAPACITY_MINIMUM",
+        "enforcement": "RELAXABLE",
+        "severity": "ERROR",
+        "blocksConfirmation": false,
+        "entityRefs": [
+          {
+            "type": "CLASS",
+            "id": "class-friday-18-teacher-2"
+          },
+          {
+            "type": "TEACHER",
+            "id": "teacher-2"
+          }
+        ],
+        "slotIds": ["FRIDAY_18_00"],
+        "parameters": {
+          "actualCapacity": 2,
+          "minimumCapacity": 3
+        },
+        "message": "La clase del viernes a las 18:00 con Profesor 2 tiene 2 alumnos; el mínimo recomendado es 3."
+      },
+      {
+        "fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "ruleId": "CLASS_CAPACITY_IDEAL",
+        "enforcement": "PREFERENCE",
+        "severity": "WARNING",
+        "blocksConfirmation": false,
+        "entityRefs": [
+          {
+            "type": "CLASS",
+            "id": "class-friday-18-teacher-2"
+          }
+        ],
+        "slotIds": ["FRIDAY_18_00"],
+        "parameters": {
+          "actualCapacity": 2,
+          "idealCapacity": 4
+        },
+        "message": "La clase del viernes a las 18:00 no alcanza la capacidad ideal de 4 alumnos."
+      }
+    ]
+  },
+  "acceptedFindingFingerprints": [
+    "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  ]
+}

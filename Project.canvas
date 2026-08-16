@@ -162,17 +162,17 @@
 			"y": 220,
 			"width": 280,
 			"height": 160,
-			"color": "5"
+			"color": "4"
 		},
 		{
 			"id": "ef998ccb",
 			"type": "text",
-			"text": "## FO-03 Define API contracts and rule catalog v1\nCrear los contratos versionados Angular-NestJS y NestJS-FastAPI, junto con el catalogo neutral de reglas y preferencias. Definir identificadores estables, severidades, estados del solver, puntuaciones, conflictos y fixtures contractuales iniciales.",
+			"text": "## FO-03 Define API contracts and rule catalog v1\n## FO-03 Define API contracts and rule catalog v1\n\nImplementados los contratos neutrales y versionados de Angular-NestJS y NestJS-FastAPI con OpenAPI 3.1 JSON, componentes compartidos, identificadores estables, errores, conflictos, estados del solver y puntuacion lexicografica.\n\nCatalogo 1.0.0 definido con 19 entradas: 12 reglas hard, 2 reglas de capacidad relajables y 5 preferencias. Incluye prioridades, severidades, condiciones, entidades, evidencia y metricas neutrales.\n\nAnadidos 13 fixtures contractuales positivos y negativos, validador automatico de esquemas, referencias e invariantes semanticas, documentacion de consumo y comando npm run validate:contracts integrado en npm run check.\n\nVerificacion final: npm run check completado correctamente con formato, contratos, lint, tests y builds de Angular, NestJS y Python.",
 			"x": 460,
 			"y": 400,
 			"width": 280,
 			"height": 160,
-			"color": "6"
+			"color": "5"
 		},
 		{
 			"id": "e19291b1",

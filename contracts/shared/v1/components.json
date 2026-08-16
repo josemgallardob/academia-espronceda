@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "components": {
+    "schemas": {
+      "SemanticVersion": {
+        "type": "string",
+        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+        "examples": ["1.0.0"]
+      },
+      "EntityId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "description": "Opaque identifier. Consumers must not infer semantics from its format."
+      },
+      "RuleId": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]*$",
+        "examples": ["STUDENT_TIME_OVERLAP"]
+      },
+      "CourseCode": {
+        "type": "string",
+        "enum": ["ESO_1", "ESO_2", "ESO_3", "ESO_4", "BACH_1", "BACH_2", "OTHER"]
+      },
+      "SubjectCode": {
+        "type": "string",
+        "enum": [
+          "MATHEMATICS",
+          "SOCIAL_SCIENCES_MATHEMATICS",
+          "PHYSICS",
+          "CHEMISTRY",
+          "BIOLOGY",
+          "SPANISH_LANGUAGE",
+          "ENGLISH"
+        ]
+      },
+      "TeacherProfile": {
+        "type": "string",
+        "enum": ["SENIOR_SCIENCES", "GENERAL_SCIENCES", "LANGUAGES"]
+      },
+      "PersonStatus": {
+        "type": "string",
+        "enum": ["ACTIVE", "WAITING_LIST"]
+      },
+      "DayOfWeek": {
+        "type": "string",
+        "enum": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
+      },
+      "LocalTime": {
+        "type": "string",
+        "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+        "examples": ["16:00"]
+      },
+      "IsoDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "WeeklySlot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "dayOfWeek", "startTime", "endTime"],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "dayOfWeek": {
+            "$ref": "#/components/schemas/DayOfWeek"
+          },
+          "startTime": {
+            "$ref": "#/components/schemas/LocalTime"
+          },
+          "endTime": {
+            "$ref": "#/components/schemas/LocalTime"
+          }
+        }
+      },
+      "SubjectHours": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["subjectCode", "weeklyHours"],
+        "properties": {
+          "subjectCode": {
+            "$ref": "#/components/schemas/SubjectCode"
+          },
+          "weeklyHours": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "StudentRelationship": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["studentIds"],
+        "properties": {
+          "studentIds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/EntityId"
+            },
+            "description": "Undirected related-student pair."
+          }
+        }
+      },
+      "RuleEnforcement": {
+        "type": "string",
+        "enum": ["HARD", "RELAXABLE", "PREFERENCE"]
+      },
+      "FindingSeverity": {
+        "type": "string",
+        "enum": ["ERROR", "WARNING", "INFO"]
+      },
+      "EntityType": {
+        "type": "string",
+        "enum": [
+          "SCHEDULE",
+          "CLASS",
+          "ASSIGNMENT",
+          "STUDENT",
+          "TEACHER",
+          "SUBJECT",
+          "COURSE",
+          "SLOT",
+          "RELATIONSHIP"
+        ]
+      },
+      "EntityReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "id"],
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "id": {
+            "$ref": "#/components/schemas/EntityId"
+          }
+        }
+      },
+      "FindingParameterValue": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "FindingCore": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fingerprint",
+          "ruleId",
+          "enforcement",
+          "severity",
+          "blocksConfirmation",
+          "entityRefs",
+          "slotIds",
+          "parameters"
+        ],
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "Deterministic fingerprint of the rule and canonical evidence."
+          },
+          "ruleId": {
+            "$ref": "#/components/schemas/RuleId"
+          },
+          "enforcement": {
+            "$ref": "#/components/schemas/RuleEnforcement"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/FindingSeverity"
+          },
+          "blocksConfirmation": {
+            "type": "boolean"
+          },
+          "entityRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityReference"
+            }
+          },
+          "slotIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/EntityId"
+            }
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FindingParameterValue"
+            }
+          }
+        }
+      },
+      "ScoreTier": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["priority", "penalty"],
+        "properties": {
+          "priority": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "penalty": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "RuleScore": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "priority", "occurrenceCount", "penalty"],
+        "properties": {
+          "ruleId": {
+            "$ref": "#/components/schemas/RuleId"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "occurrenceCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "penalty": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "ScheduleScore": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["direction", "bestScore", "tiers", "ruleBreakdown"],
+        "properties": {
+          "direction": {
+            "const": "MINIMIZE"
+          },
+          "bestScore": {
+            "const": 0
+          },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoreTier"
+            }
+          },
+          "ruleBreakdown": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleScore"
+            }
+          }
+        }
+      },
+      "WeeklyClass": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "teacherId", "slotId", "studentIds"],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "teacherId": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "slotId": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "studentIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/EntityId"
+            }
+          }
+        }
+      },
+      "SubjectTeacherAllocation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["studentId", "teacherId", "subjectHours", "totalHours"],
+        "properties": {
+          "studentId": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "teacherId": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "subjectHours": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/SubjectHours"
+            }
+          },
+          "totalHours": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "ScheduleState": {
+        "type": "string",
+        "enum": ["DRAFT", "CONFIRMED"]
+      },
+      "FieldViolation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "code", "message"],
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "title", "status", "code", "traceId"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": ["string", "null"]
+          },
+          "instance": {
+            "type": ["string", "null"],
+            "format": "uri-reference"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "traceId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldViolation"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,575 @@
+{
+  "$schema": "../catalog.schema.json",
+  "catalogVersion": "1.0.0",
+  "name": "Academia Espronceda scheduling rules",
+  "description": "Language-neutral scheduling rules and preferences shared by NestJS validation and the Python solver.",
+  "scoring": {
+    "direction": "MINIMIZE",
+    "comparison": "LEXICOGRAPHIC",
+    "bestScore": 0,
+    "priorityOrder": [
+      {
+        "priority": 1,
+        "name": "Avoid classes above maximum capacity",
+        "ruleIds": ["CLASS_CAPACITY_MAXIMUM"]
+      },
+      {
+        "priority": 2,
+        "name": "Avoid classes below minimum capacity",
+        "ruleIds": ["CLASS_CAPACITY_MINIMUM"]
+      },
+      {
+        "priority": 3,
+        "name": "Keep active classes at the ideal capacity",
+        "ruleIds": ["CLASS_CAPACITY_IDEAL"]
+      },
+      {
+        "priority": 4,
+        "name": "Keep each student's compatible workload with one teacher",
+        "ruleIds": ["STUDENT_TEACHER_CONTINUITY"]
+      },
+      {
+        "priority": 5,
+        "name": "Place related students together",
+        "ruleIds": ["RELATED_STUDENTS_TOGETHER"]
+      },
+      {
+        "priority": 6,
+        "name": "Use the preferred teaching profile",
+        "ruleIds": ["PREFERRED_TEACHER_BACH1_SCIENCES", "PREFERRED_TEACHER_OTHER_SCIENCES"]
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "ACTIVE_STUDENTS_ONLY",
+      "name": "Only active students can be scheduled",
+      "description": "Every scheduled student must be active; waiting-list people cannot receive assignments.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "Every assignment references a student whose status is ACTIVE.",
+      "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT"],
+      "evidence": ["scheduleId", "assignmentId", "studentId", "studentStatus"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "CLASS_SLOT_VALID",
+      "name": "Classes use valid one-hour slots",
+      "description": "Every class must reference one predefined weekday slot inside the weekly opening calendar.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "Every class references an input slot whose duration is exactly sixty minutes and whose day is Monday through Friday.",
+      "entities": ["SCHEDULE", "CLASS", "SLOT"],
+      "evidence": ["scheduleId", "classId", "slotId", "dayOfWeek", "startTime", "endTime"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "durationMinutes": 60,
+        "timezone": "Europe/Madrid"
+      },
+      "optimization": null
+    },
+    {
+      "id": "TEACHER_SINGLE_CLASS_PER_SLOT",
+      "name": "A teacher has at most one class per slot",
+      "description": "A teacher cannot lead parallel classes in the same weekly slot.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "The pair teacherId and slotId is unique among classes in a schedule.",
+      "entities": ["SCHEDULE", "CLASS", "TEACHER", "SLOT"],
+      "evidence": ["scheduleId", "classIds", "teacherId", "slotId"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "STUDENT_UNIQUE_IN_CLASS",
+      "name": "A student appears once in a class",
+      "description": "A class cannot contain duplicate assignments for the same student.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "Each studentId occurs at most once in the assignments of a class.",
+      "entities": ["CLASS", "ASSIGNMENT", "STUDENT"],
+      "evidence": ["classId", "assignmentIds", "studentId"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "STUDENT_TIME_OVERLAP",
+      "name": "A student cannot attend overlapping classes",
+      "description": "A student cannot be assigned to two or more classes that overlap on the same day, regardless of teacher.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "For every student, no pair of assigned class intervals overlaps on the same weekday; adjacent intervals are not overlaps.",
+      "entities": ["SCHEDULE", "CLASS", "ASSIGNMENT", "STUDENT", "TEACHER", "SLOT"],
+      "evidence": ["scheduleId", "studentId", "classIds", "teacherIds", "slotIds"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "TEACHER_SUBJECT_COMPATIBILITY",
+      "name": "Teacher and subject compatibility",
+      "description": "Every assigned student must have at least one contracted subject supported by the teacher, and any explicit subject allocation must use a supported subject.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "The teacher supports at least one of the student's subjects and supports every subject explicitly allocated to that teacher.",
+      "entities": ["ASSIGNMENT", "STUDENT", "TEACHER", "SUBJECT"],
+      "evidence": [
+        "assignmentId",
+        "studentId",
+        "teacherId",
+        "studentSubjectCodes",
+        "teacherSubjectCodes"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "TEACHER_COURSE_COMPATIBILITY",
+      "name": "Teacher and course compatibility",
+      "description": "Every assigned student's course must be supported by the teacher.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "The student's course code occurs in the teacher's supported course codes.",
+      "entities": ["ASSIGNMENT", "STUDENT", "TEACHER", "COURSE"],
+      "evidence": [
+        "assignmentId",
+        "studentId",
+        "teacherId",
+        "studentCourseCode",
+        "teacherCourseCodes"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "TEACHER_AVAILABILITY",
+      "name": "Teacher availability",
+      "description": "A class can only use a slot in which its teacher is available.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "The class slotId occurs in the teacher's availableSlotIds.",
+      "entities": ["CLASS", "TEACHER", "SLOT"],
+      "evidence": ["classId", "teacherId", "slotId", "teacherAvailableSlotIds"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "STUDENT_AVAILABILITY",
+      "name": "Student availability",
+      "description": "A student cannot be assigned to a slot marked as unavailable.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "The assigned class slotId does not occur in the student's unavailableSlotIds.",
+      "entities": ["CLASS", "ASSIGNMENT", "STUDENT", "SLOT"],
+      "evidence": ["classId", "assignmentId", "studentId", "slotId", "studentUnavailableSlotIds"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "STUDENT_WEEKLY_HOURS_EXACT",
+      "name": "Exact contracted weekly hours",
+      "description": "A confirmed or generated schedule assigns exactly the weekly hours contracted by each active student; drafts may be temporarily under-assigned but never over-assigned.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "Assigned class count equals weeklyHoursTotal for solving and confirmation; during draft construction assigned class count is at most weeklyHoursTotal.",
+      "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT"],
+      "evidence": [
+        "scheduleId",
+        "studentId",
+        "weeklyHoursTotal",
+        "assignedHours",
+        "remainingHours"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "classDurationHours": 1,
+        "allowDraftUnderAssignment": true,
+        "allowDraftOverAssignment": false
+      },
+      "optimization": null
+    },
+    {
+      "id": "STUDENT_SUBJECT_HOURS_EXACT",
+      "name": "Exact subject hours when teachers are split",
+      "description": "When more than one teacher serves a student, explicit subject allocations preserve all contracted subject hours exactly.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "For a student served by multiple teachers, allocated hours for each subject equal the contracted hours for that subject and allocated hours per teacher equal assigned class count with that teacher.",
+      "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT", "TEACHER", "SUBJECT"],
+      "evidence": [
+        "scheduleId",
+        "studentId",
+        "teacherIds",
+        "subjectCode",
+        "contractedSubjectHours",
+        "allocatedSubjectHours"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "singleTeacherSessionsNeedSubjectLabels": false,
+        "multipleTeachersNeedSubjectAllocation": true
+      },
+      "optimization": null
+    },
+    {
+      "id": "SUBJECT_SINGLE_TEACHER",
+      "name": "One teacher per subject and student",
+      "description": "All weekly hours of one student's subject are taught by one teacher.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "For each studentId and subjectCode pair, at most one teacherId has a positive subject-hour allocation.",
+      "entities": ["SCHEDULE", "STUDENT", "TEACHER", "SUBJECT"],
+      "evidence": ["scheduleId", "studentId", "subjectCode", "teacherIds", "allocatedSubjectHours"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "CLASS_CAPACITY_MAXIMUM",
+      "name": "Maximum class capacity",
+      "description": "An active class should not contain more than five students.",
+      "classification": "RULE",
+      "enforcement": "RELAXABLE",
+      "severity": "ERROR",
+      "priority": 1,
+      "condition": "An active class has at most five distinct assigned students.",
+      "entities": ["CLASS", "ASSIGNMENT", "STUDENT", "TEACHER", "SLOT"],
+      "evidence": [
+        "classId",
+        "teacherId",
+        "slotId",
+        "studentIds",
+        "actualCapacity",
+        "maximumCapacity"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "maximumCapacity": 5
+      },
+      "optimization": {
+        "metric": "STUDENTS_ABOVE_MAXIMUM",
+        "parameters": {
+          "penaltyPerStudent": 1
+        }
+      }
+    },
+    {
+      "id": "CLASS_CAPACITY_MINIMUM",
+      "name": "Minimum active class capacity",
+      "description": "A class becomes active with its first assignment and should contain at least three students.",
+      "classification": "RULE",
+      "enforcement": "RELAXABLE",
+      "severity": "ERROR",
+      "priority": 2,
+      "condition": "An active class has at least three distinct assigned students; an empty slot is not an active class.",
+      "entities": ["CLASS", "ASSIGNMENT", "STUDENT", "TEACHER", "SLOT"],
+      "evidence": [
+        "classId",
+        "teacherId",
+        "slotId",
+        "studentIds",
+        "actualCapacity",
+        "minimumCapacity"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "minimumCapacity": 3
+      },
+      "optimization": {
+        "metric": "STUDENTS_BELOW_MINIMUM",
+        "parameters": {
+          "penaltyPerStudent": 1
+        }
+      }
+    },
+    {
+      "id": "CLASS_CAPACITY_IDEAL",
+      "name": "Ideal class capacity",
+      "description": "Active classes should contain four students; five is less desirable than three.",
+      "classification": "PREFERENCE",
+      "enforcement": "PREFERENCE",
+      "severity": "WARNING",
+      "priority": 3,
+      "condition": "An active class ideally contains exactly four distinct students.",
+      "entities": ["CLASS", "ASSIGNMENT", "STUDENT", "TEACHER", "SLOT"],
+      "evidence": [
+        "classId",
+        "teacherId",
+        "slotId",
+        "studentIds",
+        "actualCapacity",
+        "idealCapacity"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "idealCapacity": 4,
+        "belowIdealPenaltyPerStudent": 1,
+        "aboveIdealPenaltyPerStudent": 2
+      },
+      "optimization": {
+        "metric": "ASYMMETRIC_DISTANCE_FROM_IDEAL_CAPACITY",
+        "parameters": {
+          "belowIdealPenaltyPerStudent": 1,
+          "aboveIdealPenaltyPerStudent": 2
+        }
+      }
+    },
+    {
+      "id": "STUDENT_TEACHER_CONTINUITY",
+      "name": "Student teacher continuity",
+      "description": "A student's compatible workload should use the fewest teachers needed to cover all contracted subjects.",
+      "classification": "PREFERENCE",
+      "enforcement": "PREFERENCE",
+      "severity": "WARNING",
+      "priority": 4,
+      "condition": "The number of teachers assigned to a student does not exceed the minimum needed to cover that student's subject set.",
+      "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT", "TEACHER", "SUBJECT"],
+      "evidence": [
+        "scheduleId",
+        "studentId",
+        "teacherIds",
+        "subjectCodes",
+        "minimumRequiredTeachers"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": {
+        "metric": "ADDITIONAL_TEACHERS_ABOVE_MINIMUM",
+        "parameters": {
+          "penaltyPerAdditionalTeacher": 1
+        }
+      }
+    },
+    {
+      "id": "RELATED_STUDENTS_TOGETHER",
+      "name": "Related students together",
+      "description": "Related students should share as many classes as their contracted hours and common compatibility allow.",
+      "classification": "PREFERENCE",
+      "enforcement": "PREFERENCE",
+      "severity": "WARNING",
+      "priority": 5,
+      "condition": "Each undirected related-student pair maximizes shared classIds with the same teacherId and slotId.",
+      "entities": ["SCHEDULE", "CLASS", "ASSIGNMENT", "STUDENT", "TEACHER", "SLOT", "RELATIONSHIP"],
+      "evidence": ["scheduleId", "studentIds", "sharedClassIds", "sharedSessionTarget"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "relationshipIsUndirected": true,
+        "sameSlotDifferentTeacherCounts": false
+      },
+      "optimization": {
+        "metric": "UNSHARED_FEASIBLE_SESSIONS",
+        "parameters": {
+          "penaltyPerSession": 1
+        }
+      }
+    },
+    {
+      "id": "PREFERRED_TEACHER_BACH1_SCIENCES",
+      "name": "Preferred science teacher for first-year Bachillerato",
+      "description": "GENERAL_SCIENCES is preferred over SENIOR_SCIENCES for first-year Bachillerato science workload.",
+      "classification": "PREFERENCE",
+      "enforcement": "PREFERENCE",
+      "severity": "WARNING",
+      "priority": 6,
+      "condition": "A BACH_1 science assignment uses a GENERAL_SCIENCES teacher when compatible.",
+      "entities": ["ASSIGNMENT", "STUDENT", "TEACHER", "SUBJECT", "COURSE"],
+      "evidence": [
+        "assignmentId",
+        "studentId",
+        "teacherId",
+        "teacherProfile",
+        "courseCode",
+        "subjectCodes"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "courseCode": "BACH_1",
+        "preferredTeacherProfile": "GENERAL_SCIENCES",
+        "fallbackTeacherProfile": "SENIOR_SCIENCES"
+      },
+      "optimization": {
+        "metric": "NON_PREFERRED_ASSIGNMENTS",
+        "parameters": {
+          "penaltyPerAssignment": 1
+        }
+      }
+    },
+    {
+      "id": "PREFERRED_TEACHER_OTHER_SCIENCES",
+      "name": "Preferred science teacher for other courses",
+      "description": "SENIOR_SCIENCES is preferred over GENERAL_SCIENCES for science workload in the OTHER course.",
+      "classification": "PREFERENCE",
+      "enforcement": "PREFERENCE",
+      "severity": "WARNING",
+      "priority": 6,
+      "condition": "An OTHER science assignment uses a SENIOR_SCIENCES teacher when compatible.",
+      "entities": ["ASSIGNMENT", "STUDENT", "TEACHER", "SUBJECT", "COURSE"],
+      "evidence": [
+        "assignmentId",
+        "studentId",
+        "teacherId",
+        "teacherProfile",
+        "courseCode",
+        "subjectCodes"
+      ],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "courseCode": "OTHER",
+        "preferredTeacherProfile": "SENIOR_SCIENCES",
+        "fallbackTeacherProfile": "GENERAL_SCIENCES"
+      },
+      "optimization": {
+        "metric": "NON_PREFERRED_ASSIGNMENTS",
+        "parameters": {
+          "penaltyPerAssignment": 1
+        }
+      }
+    }
+  ]
+}

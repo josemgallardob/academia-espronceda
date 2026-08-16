@@ -1,0 +1,1837 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Academia Espronceda Application API",
+    "version": "1.0.0",
+    "description": "Versioned public contract used by Angular to communicate with NestJS."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Same-origin application API"
+    }
+  ],
+  "security": [
+    {
+      "SessionCookie": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication"
+    },
+    {
+      "name": "People"
+    },
+    {
+      "name": "Teachers"
+    },
+    {
+      "name": "Scheduling configuration"
+    },
+    {
+      "name": "Schedules"
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "tags": ["Authentication"],
+        "summary": "Start an authenticated session",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated session created; session and XSRF cookies are set by NestJS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "tags": ["Authentication"],
+        "summary": "End the authenticated session",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session cookie removed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "tags": ["Authentication"],
+        "summary": "Get the current authenticated user",
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/people": {
+      "get": {
+        "operationId": "listPeople",
+        "tags": ["People"],
+        "summary": "List active or waiting-list people",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/PersonStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "People matching the filter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPerson",
+        "tags": ["People"],
+        "summary": "Create a person",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Person created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/people/activate": {
+      "post": {
+        "operationId": "activatePeople",
+        "tags": ["People"],
+        "summary": "Move one or more people from the waiting list to active students",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePeopleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Activated people with their original identifiers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/PersonId"
+        }
+      ],
+      "get": {
+        "operationId": "getPerson",
+        "tags": ["People"],
+        "summary": "Get person details",
+        "responses": {
+          "200": {
+            "description": "Person details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updatePerson",
+        "tags": ["People"],
+        "summary": "Update person details",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePerson",
+        "tags": ["People"],
+        "summary": "Delete an unreferenced person",
+        "description": "Deletion is rejected when a draft or confirmed schedule references the person. No schedule assignments are deleted by cascade.",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person deleted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/teachers": {
+      "get": {
+        "operationId": "listTeacherOptions",
+        "tags": ["Teachers"],
+        "summary": "List the minimal teacher options used by schedule selectors",
+        "responses": {
+          "200": {
+            "description": "Teacher selector options; no teacher administration data is exposed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeacherOption"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/configuration": {
+      "get": {
+        "operationId": "getSchedulingConfiguration",
+        "tags": ["Scheduling configuration"],
+        "summary": "Get the public weekly slots and labels needed by Angular",
+        "responses": {
+          "200": {
+            "description": "Scheduling configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulingConfiguration"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules": {
+      "get": {
+        "operationId": "listSchedules",
+        "tags": ["Schedules"],
+        "summary": "List schedule revisions",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ScheduleState"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schedule revisions in descending creation order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/current": {
+      "get": {
+        "operationId": "getCurrentSchedule",
+        "tags": ["Schedules"],
+        "summary": "Get the current confirmed ordinary schedule",
+        "responses": {
+          "200": {
+            "description": "Current confirmed schedule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/drafts": {
+      "post": {
+        "operationId": "createEmptyScheduleDraft",
+        "tags": ["Schedules"],
+        "summary": "Create an empty global weekly schedule draft",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Empty draft created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/generate": {
+      "post": {
+        "operationId": "generateScheduleDraft",
+        "tags": ["Schedules"],
+        "summary": "Generate a global weekly schedule draft",
+        "description": "NestJS obtains current domain data, invokes the private solver, validates the result independently, and returns a draft.",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Generated and independently validated draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "502": {
+            "$ref": "#/components/responses/BadGateway"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        }
+      ],
+      "get": {
+        "operationId": "getSchedule",
+        "tags": ["Schedules"],
+        "summary": "Get a schedule revision",
+        "responses": {
+          "200": {
+            "description": "Schedule revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}/revisions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        }
+      ],
+      "post": {
+        "operationId": "createScheduleRevision",
+        "tags": ["Schedules"],
+        "summary": "Create an editable draft from a confirmed schedule",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Draft revision created without modifying the confirmed source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}/assignments": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        }
+      ],
+      "post": {
+        "operationId": "addScheduleAssignment",
+        "tags": ["Schedules"],
+        "summary": "Assign an active student to a draft class",
+        "description": "The command is rejected if it would exceed the student's contracted hours or violate any other hard rule.",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddAssignmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated draft and global evaluation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}/assignments/{assignmentId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        },
+        {
+          "$ref": "#/components/parameters/AssignmentId"
+        }
+      ],
+      "delete": {
+        "operationId": "removeScheduleAssignment",
+        "tags": ["Schedules"],
+        "summary": "Remove an assignment from a draft",
+        "description": "A draft may become temporarily under-assigned but can never be confirmed in that state.",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ExpectedRevision"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated draft and global evaluation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleMutationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}/assignments/{assignmentId}/move": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        },
+        {
+          "$ref": "#/components/parameters/AssignmentId"
+        }
+      ],
+      "post": {
+        "operationId": "moveScheduleAssignment",
+        "tags": ["Schedules"],
+        "summary": "Move an assignment atomically",
+        "description": "The student's assigned-hour count remains unchanged throughout the command.",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveAssignmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated draft and global evaluation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}/students/{studentId}/subject-teacher-allocations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        },
+        {
+          "$ref": "#/components/parameters/StudentId"
+        }
+      ],
+      "put": {
+        "operationId": "setSubjectTeacherAllocations",
+        "tags": ["Schedules"],
+        "summary": "Set explicit subject-to-teacher hours for a student served by multiple teachers",
+        "description": "Each subject must be allocated in full to one teacher, and the total must match the student's assigned classes per teacher.",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSubjectTeacherAllocationsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated draft and global evaluation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}/validate": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        }
+      ],
+      "post": {
+        "operationId": "validateSchedule",
+        "tags": ["Schedules"],
+        "summary": "Evaluate the complete schedule without invoking the solver",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deterministic global evaluation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleEvaluation"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{scheduleId}/confirm": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ScheduleId"
+        }
+      ],
+      "post": {
+        "operationId": "confirmSchedule",
+        "tags": ["Schedules"],
+        "summary": "Confirm an immutable schedule revision",
+        "description": "Confirmation requires the current revision and validation fingerprint. Relaxable capacity conflicts require explicit acceptance; hard findings always block confirmation.",
+        "security": [
+          {
+            "SessionCookie": [],
+            "XsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmScheduleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Confirmed immutable schedule with persisted validation evidence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-academia_session",
+        "description": "HttpOnly, Secure, SameSite=Strict session cookie containing the JWT."
+      },
+      "XsrfHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-XSRF-TOKEN",
+        "description": "Double-submit XSRF token required for authenticated state-changing requests."
+      }
+    },
+    "parameters": {
+      "PersonId": {
+        "name": "personId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+        }
+      },
+      "ScheduleId": {
+        "name": "scheduleId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+        }
+      },
+      "AssignmentId": {
+        "name": "assignmentId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+        }
+      },
+      "StudentId": {
+        "name": "studentId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+        }
+      },
+      "ExpectedRevision": {
+        "name": "expectedRevision",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Malformed request or hard input invariant violation",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Authentication is required or the session is invalid",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The XSRF token or request origin is invalid",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The requested entity does not exist",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The operation conflicts with current state, a hard rule, schedule references, or a stale revision",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Login rate limit exceeded",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "BadGateway": {
+        "description": "The private solver failed or its result disagreed with NestJS validation",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["identifier", "password"],
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Username or email address."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "writeOnly": true
+          }
+        }
+      },
+      "AuthenticatedUser": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "username", "email"],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user"],
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthenticatedUser"
+          }
+        }
+      },
+      "NullableString": {
+        "type": ["string", "null"]
+      },
+      "PersonFields": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "firstSurname": {
+            "type": "string",
+            "minLength": 1
+          },
+          "secondSurname": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "courseCode": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/CourseCode"
+          },
+          "subjectHours": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectHours"
+            }
+          },
+          "weeklyHoursTotal": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "schoolName": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "unavailableSlotIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          },
+          "relatedPersonIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          },
+          "primaryPhone": {
+            "type": "string",
+            "minLength": 1
+          },
+          "secondaryPhone": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "isTutored": {
+            "type": "boolean"
+          },
+          "tutorFullName": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "comments": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "status": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/PersonStatus"
+          }
+        }
+      },
+      "CreatePersonRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonFields"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "firstName",
+              "firstSurname",
+              "courseCode",
+              "subjectHours",
+              "weeklyHoursTotal",
+              "primaryPhone",
+              "isTutored",
+              "status"
+            ],
+            "properties": {
+              "firstName": true,
+              "firstSurname": true,
+              "secondSurname": true,
+              "courseCode": true,
+              "subjectHours": true,
+              "weeklyHoursTotal": true,
+              "schoolName": true,
+              "unavailableSlotIds": true,
+              "relatedPersonIds": true,
+              "primaryPhone": true,
+              "secondaryPhone": true,
+              "isTutored": true,
+              "tutorFullName": true,
+              "comments": true,
+              "status": true
+            }
+          }
+        ]
+      },
+      "UpdatePersonRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonFields"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "firstName": true,
+              "firstSurname": true,
+              "secondSurname": true,
+              "courseCode": true,
+              "subjectHours": true,
+              "weeklyHoursTotal": true,
+              "schoolName": true,
+              "unavailableSlotIds": true,
+              "relatedPersonIds": true,
+              "primaryPhone": true,
+              "secondaryPhone": true,
+              "isTutored": true,
+              "tutorFullName": true,
+              "comments": true
+            }
+          }
+        ]
+      },
+      "Person": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "firstName",
+          "firstSurname",
+          "secondSurname",
+          "courseCode",
+          "subjectHours",
+          "weeklyHoursTotal",
+          "schoolName",
+          "unavailableSlotIds",
+          "relatedPersonIds",
+          "primaryPhone",
+          "secondaryPhone",
+          "isTutored",
+          "tutorFullName",
+          "comments",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "firstSurname": {
+            "type": "string",
+            "minLength": 1
+          },
+          "secondSurname": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "courseCode": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/CourseCode"
+          },
+          "subjectHours": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectHours"
+            }
+          },
+          "weeklyHoursTotal": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "schoolName": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "unavailableSlotIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          },
+          "relatedPersonIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          },
+          "primaryPhone": {
+            "type": "string",
+            "minLength": 1
+          },
+          "secondaryPhone": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "isTutored": {
+            "type": "boolean"
+          },
+          "tutorFullName": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "comments": {
+            "$ref": "#/components/schemas/NullableString"
+          },
+          "status": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/PersonStatus"
+          },
+          "createdAt": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/IsoDateTime"
+          },
+          "updatedAt": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/IsoDateTime"
+          }
+        }
+      },
+      "PersonListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Person"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "ActivatePeopleRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["personIds"],
+        "properties": {
+          "personIds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          }
+        }
+      },
+      "TeacherOption": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "displayName"],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "SchedulingConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["timezone", "slots", "courseLabels", "subjectLabels"],
+        "properties": {
+          "timezone": {
+            "const": "Europe/Madrid"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/WeeklySlot"
+            }
+          },
+          "courseLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "subjectLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ScheduleListItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "state", "revision", "isCurrent", "createdAt", "confirmedAt"],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "state": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/ScheduleState"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/IsoDateTime"
+          },
+          "confirmedAt": {
+            "oneOf": [
+              {
+                "$ref": "../../shared/v1/components.json#/components/schemas/IsoDateTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ScheduleListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleListItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "PublicAssignment": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "studentId", "studentDisplayName"],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "studentId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "studentDisplayName": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "PublicWeeklyClass": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "teacherId", "slotId", "assignments", "findingFingerprints"],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "teacherId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "slotId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicAssignment"
+            }
+          },
+          "findingFingerprints": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        }
+      },
+      "PublicScheduleFinding": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fingerprint",
+          "ruleId",
+          "enforcement",
+          "severity",
+          "blocksConfirmation",
+          "entityRefs",
+          "slotIds",
+          "parameters",
+          "message"
+        ],
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "ruleId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/RuleId"
+          },
+          "enforcement": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/RuleEnforcement"
+          },
+          "severity": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/FindingSeverity"
+          },
+          "blocksConfirmation": {
+            "type": "boolean"
+          },
+          "entityRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityReference"
+            }
+          },
+          "slotIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/FindingParameterValue"
+            }
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable explanation rendered by NestJS in Spanish."
+          }
+        }
+      },
+      "EvaluationCounts": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["blockingErrors", "relaxableErrors", "warnings", "information"],
+        "properties": {
+          "blockingErrors": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "relaxableErrors": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "warnings": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "information": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "ScheduleEvaluation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "validationFingerprint",
+          "scheduleId",
+          "scheduleRevision",
+          "ruleCatalogVersion",
+          "evaluatedAt",
+          "outcome",
+          "canConfirm",
+          "counts",
+          "findings"
+        ],
+        "properties": {
+          "validationFingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "scheduleId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "scheduleRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ruleCatalogVersion": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/SemanticVersion"
+          },
+          "evaluatedAt": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/IsoDateTime"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["IDEAL", "VALID_WITH_RECOMMENDATIONS", "HAS_RELAXABLE_CONFLICTS", "BLOCKED"]
+          },
+          "canConfirm": {
+            "type": "boolean"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/EvaluationCounts"
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicScheduleFinding"
+            }
+          }
+        }
+      },
+      "Schedule": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "state",
+          "revision",
+          "isCurrent",
+          "sourceScheduleId",
+          "ruleCatalogVersion",
+          "createdAt",
+          "confirmedAt",
+          "confirmedByUserId",
+          "teachers",
+          "slots",
+          "classes",
+          "subjectTeacherAllocations",
+          "evaluation",
+          "acceptedFindingFingerprints"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "state": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/ScheduleState"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "sourceScheduleId": {
+            "oneOf": [
+              {
+                "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ruleCatalogVersion": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/SemanticVersion"
+          },
+          "createdAt": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/IsoDateTime"
+          },
+          "confirmedAt": {
+            "oneOf": [
+              {
+                "$ref": "../../shared/v1/components.json#/components/schemas/IsoDateTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confirmedByUserId": {
+            "oneOf": [
+              {
+                "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "teachers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeacherOption"
+            }
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/WeeklySlot"
+            }
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicWeeklyClass"
+            }
+          },
+          "subjectTeacherAllocations": {
+            "type": "array",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectTeacherAllocation"
+            }
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/ScheduleEvaluation"
+          },
+          "acceptedFindingFingerprints": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        }
+      },
+      "RevisionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expectedRevision"],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "AddAssignmentRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expectedRevision", "studentId", "teacherId", "slotId"],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "studentId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "teacherId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "slotId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          }
+        }
+      },
+      "MoveAssignmentRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expectedRevision", "targetTeacherId", "targetSlotId"],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "targetTeacherId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "targetSlotId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          }
+        }
+      },
+      "SetSubjectTeacherAllocationsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expectedRevision", "allocations"],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "allocations": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectTeacherAllocation"
+            }
+          }
+        }
+      },
+      "ConfirmScheduleRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expectedRevision", "validationFingerprint", "acceptRelaxableConflicts"],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "validationFingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "acceptRelaxableConflicts": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ScheduleMutationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schedule"],
+        "properties": {
+          "schedule": {
+            "$ref": "#/components/schemas/Schedule"
+          }
+        }
+      }
+    }
+  }
+}

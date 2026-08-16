@@ -1,0 +1,47 @@
+{
+  "contractVersion": "1.0.0",
+  "ruleCatalogVersion": "1.0.0",
+  "requestId": "request-invalid-hours",
+  "timezone": "Europe/Madrid",
+  "slots": [
+    {
+      "id": "MONDAY_16_00",
+      "dayOfWeek": "MONDAY",
+      "startTime": "16:00",
+      "endTime": "17:00"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "teacher-2",
+      "profile": "GENERAL_SCIENCES",
+      "supportedCourseCodes": ["BACH_1"],
+      "supportedSubjectCodes": ["MATHEMATICS", "PHYSICS"],
+      "availableSlotIds": ["MONDAY_16_00"]
+    }
+  ],
+  "students": [
+    {
+      "id": "student-1",
+      "status": "ACTIVE",
+      "courseCode": "BACH_1",
+      "subjectHours": [
+        {
+          "subjectCode": "MATHEMATICS",
+          "weeklyHours": 2
+        },
+        {
+          "subjectCode": "PHYSICS",
+          "weeklyHours": 2
+        }
+      ],
+      "weeklyHoursTotal": 3,
+      "unavailableSlotIds": []
+    }
+  ],
+  "relationships": [],
+  "options": {
+    "timeLimitSeconds": 10,
+    "randomSeed": 12345
+  }
+}

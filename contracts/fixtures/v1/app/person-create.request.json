@@ -1,0 +1,26 @@
+{
+  "firstName": "Lucía",
+  "firstSurname": "Martín",
+  "secondSurname": null,
+  "courseCode": "BACH_1",
+  "subjectHours": [
+    {
+      "subjectCode": "PHYSICS",
+      "weeklyHours": 2
+    },
+    {
+      "subjectCode": "ENGLISH",
+      "weeklyHours": 1
+    }
+  ],
+  "weeklyHoursTotal": 3,
+  "schoolName": null,
+  "unavailableSlotIds": ["MONDAY_16_00"],
+  "relatedPersonIds": ["person-related-1"],
+  "primaryPhone": "+34 600 000 001",
+  "secondaryPhone": null,
+  "isTutored": true,
+  "tutorFullName": null,
+  "comments": "Pendiente confirmar el centro educativo.",
+  "status": "WAITING_LIST"
+}

@@ -1,0 +1,26 @@
+{
+  "suiteVersion": "1.0.0",
+  "applicationApi": {
+    "apiMajorVersion": 1,
+    "artifactVersion": "1.0.0",
+    "path": "app-api/v1/openapi.json"
+  },
+  "solverApi": {
+    "apiMajorVersion": 1,
+    "artifactVersion": "1.0.0",
+    "path": "solver-api/v1/openapi.json"
+  },
+  "sharedComponents": {
+    "artifactVersion": "1.0.0",
+    "path": "shared/v1/components.json"
+  },
+  "ruleCatalog": {
+    "catalogVersion": "1.0.0",
+    "path": "rules/1.0.0/catalog.json",
+    "schemaPath": "rules/catalog.schema.json"
+  },
+  "fixtures": {
+    "fixtureVersion": "1.0.0",
+    "manifestPath": "fixtures/v1/manifest.json"
+  }
+}

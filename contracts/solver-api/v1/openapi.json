@@ -1,0 +1,496 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Academia Espronceda Solver API",
+    "version": "1.0.0",
+    "description": "Private, versioned contract used by NestJS to request global weekly schedule generation from FastAPI."
+  },
+  "servers": [
+    {
+      "url": "http://solver:8001",
+      "description": "Private service network"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "Schedules"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getSolverHealth",
+        "tags": ["Health"],
+        "summary": "Check solver service health",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Solver service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/schedules/solve": {
+      "post": {
+        "operationId": "solveWeeklySchedule",
+        "tags": ["Schedules"],
+        "summary": "Solve the global weekly schedule",
+        "description": "Attempts strict generation first and uses relaxed capacity constraints only when no strict schedule is found. INFEASIBLE and UNKNOWN are normal solve outcomes returned with HTTP 200.",
+        "security": [
+          {
+            "ServiceBearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolveScheduleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed solve attempt, including feasible, infeasible, or unknown outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolveScheduleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/IncompatibleVersion"
+          },
+          "422": {
+            "$ref": "#/components/responses/RejectedSolveOptions"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ServiceBearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "service-token",
+        "description": "Internal service credential. Human-user JWTs are not accepted."
+      }
+    },
+    "responses": {
+      "InvalidRequest": {
+        "description": "The request is malformed or violates a hard input invariant",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "The service credential is missing or invalid",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "IncompatibleVersion": {
+        "description": "The contract or rule catalog version is not supported",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "RejectedSolveOptions": {
+        "description": "Requested solve limits are outside server policy",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "The solver failed while processing an accepted request",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/SolverErrorProblem"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "service", "version"],
+        "properties": {
+          "status": {
+            "const": "ok"
+          },
+          "service": {
+            "const": "solver"
+          },
+          "version": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/SemanticVersion"
+          }
+        }
+      },
+      "SolverMode": {
+        "type": "string",
+        "enum": ["STRICT", "RELAXED"]
+      },
+      "SolverStatus": {
+        "type": "string",
+        "enum": ["OPTIMAL", "FEASIBLE", "INFEASIBLE", "UNKNOWN", "ERROR"]
+      },
+      "SolveOutcomeStatus": {
+        "type": "string",
+        "enum": ["OPTIMAL", "FEASIBLE", "INFEASIBLE", "UNKNOWN"]
+      },
+      "SolverTeacher": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "profile",
+          "supportedCourseCodes",
+          "supportedSubjectCodes",
+          "availableSlotIds"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "profile": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/TeacherProfile"
+          },
+          "supportedCourseCodes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/CourseCode"
+            }
+          },
+          "supportedSubjectCodes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectCode"
+            }
+          },
+          "availableSlotIds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          }
+        }
+      },
+      "SolverStudent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "courseCode",
+          "subjectHours",
+          "weeklyHoursTotal",
+          "unavailableSlotIds"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "status": {
+            "const": "ACTIVE"
+          },
+          "courseCode": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/CourseCode"
+          },
+          "subjectHours": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectHours"
+            }
+          },
+          "weeklyHoursTotal": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unavailableSlotIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          }
+        }
+      },
+      "SolveOptions": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["timeLimitSeconds", "randomSeed"],
+        "properties": {
+          "timeLimitSeconds": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "randomSeed": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "SolveScheduleRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contractVersion",
+          "ruleCatalogVersion",
+          "requestId",
+          "timezone",
+          "slots",
+          "teachers",
+          "students",
+          "relationships",
+          "options"
+        ],
+        "properties": {
+          "contractVersion": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/SemanticVersion"
+          },
+          "ruleCatalogVersion": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/SemanticVersion"
+          },
+          "requestId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "timezone": {
+            "const": "Europe/Madrid"
+          },
+          "slots": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/WeeklySlot"
+            }
+          },
+          "teachers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/SolverTeacher"
+            }
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SolverStudent"
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/StudentRelationship"
+            }
+          },
+          "options": {
+            "$ref": "#/components/schemas/SolveOptions"
+          }
+        }
+      },
+      "SolveAttempt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mode", "status", "elapsedMilliseconds"],
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/SolverMode"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SolveOutcomeStatus"
+          },
+          "elapsedMilliseconds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "SolverFinding": {
+        "$ref": "../../shared/v1/components.json#/components/schemas/FindingCore"
+      },
+      "SolverSolution": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["classes", "subjectTeacherAllocations", "score", "findings"],
+        "properties": {
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/WeeklyClass"
+            }
+          },
+          "subjectTeacherAllocations": {
+            "type": "array",
+            "description": "Required for students served by more than one teacher; omitted students are served by one teacher and need no per-session subject labels.",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectTeacherAllocation"
+            }
+          },
+          "score": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/ScheduleScore"
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SolverFinding"
+            }
+          }
+        }
+      },
+      "SolveScheduleResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contractVersion",
+          "ruleCatalogVersion",
+          "requestId",
+          "mode",
+          "status",
+          "attempts",
+          "solution",
+          "elapsedMilliseconds",
+          "randomSeed",
+          "timeLimitSeconds"
+        ],
+        "properties": {
+          "contractVersion": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/SemanticVersion"
+          },
+          "ruleCatalogVersion": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/SemanticVersion"
+          },
+          "requestId": {
+            "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/SolverMode"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SolveOutcomeStatus"
+          },
+          "attempts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/SolveAttempt"
+            }
+          },
+          "solution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SolverSolution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elapsedMilliseconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "randomSeed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timeLimitSeconds": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "SolverErrorProblem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "title", "status", "code", "traceId", "solverStatus"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "const": 500
+          },
+          "detail": {
+            "type": ["string", "null"]
+          },
+          "instance": {
+            "type": ["string", "null"],
+            "format": "uri-reference"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "traceId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "solverStatus": {
+            "const": "ERROR"
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/FieldViolation"
+            }
+          }
+        }
+      }
+    }
+  }
+}

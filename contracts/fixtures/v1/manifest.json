@@ -1,0 +1,96 @@
+{
+  "fixtureVersion": "1.0.0",
+  "fixtures": [
+    {
+      "id": "solver.strict-ideal.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "solver/strict-ideal.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.strict-ideal.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "solver/strict-ideal.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.single-teacher.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "solver/single-teacher.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.single-teacher.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "solver/single-teacher.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.multi-teacher.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "solver/multi-teacher.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.relaxed-capacity.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "solver/relaxed-capacity.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.invalid-hours.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "solver/invalid-hours.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "INVALID"
+    },
+    {
+      "id": "solver.infeasible.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "solver/infeasible.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.unknown.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "solver/unknown.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "solver.error.problem",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolverErrorProblem",
+      "path": "solver/error.problem.json",
+      "semanticValidator": "NONE",
+      "expected": "VALID"
+    },
+    {
+      "id": "app.person-create.request",
+      "schemaRef": "../../app-api/v1/openapi.json#/components/schemas/CreatePersonRequest",
+      "path": "app/person-create.request.json",
+      "semanticValidator": "APP_CREATE_PERSON",
+      "expected": "VALID"
+    },
+    {
+      "id": "app.schedule-validation.response",
+      "schemaRef": "../../app-api/v1/openapi.json#/components/schemas/ScheduleEvaluation",
+      "path": "app/schedule-validation.response.json",
+      "semanticValidator": "APP_SCHEDULE_EVALUATION",
+      "expected": "VALID"
+    },
+    {
+      "id": "app.confirmed-with-incidences.response",
+      "schemaRef": "../../app-api/v1/openapi.json#/components/schemas/Schedule",
+      "path": "app/confirmed-with-incidences.response.json",
+      "semanticValidator": "APP_SCHEDULE",
+      "expected": "VALID"
+    }
+  ]
+}
