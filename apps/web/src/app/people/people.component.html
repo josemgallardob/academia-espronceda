@@ -1,0 +1,223 @@
+<main class="people-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Gestión de personas</p>
+      <h1>Alumnos y lista de espera</h1>
+      <p class="lead">
+        Consulta las horas contratadas, activa nuevas incorporaciones y mantén actualizados ambos
+        listados.
+      </p>
+    </div>
+  </header>
+
+  <section class="people-panel" aria-labelledby="people-panel-title">
+    <h2 id="people-panel-title" class="visually-hidden">Listados de personas</h2>
+
+    <div class="tabs" role="tablist" aria-label="Estado de las personas">
+      <button
+        id="active-tab"
+        type="button"
+        role="tab"
+        [class.selected]="activeTab() === 'ACTIVE'"
+        [attr.aria-selected]="activeTab() === 'ACTIVE'"
+        aria-controls="people-tab-panel"
+        (click)="selectTab('ACTIVE')"
+      >
+        <span>Alumnos activos</span>
+        <span class="tab-count">{{ tabTotal('ACTIVE') ?? '—' }}</span>
+      </button>
+      <button
+        id="waiting-tab"
+        type="button"
+        role="tab"
+        [class.selected]="activeTab() === 'WAITING_LIST'"
+        [attr.aria-selected]="activeTab() === 'WAITING_LIST'"
+        aria-controls="people-tab-panel"
+        (click)="selectTab('WAITING_LIST')"
+      >
+        <span>Lista de espera</span>
+        <span class="tab-count">{{ tabTotal('WAITING_LIST') ?? '—' }}</span>
+      </button>
+    </div>
+
+    @if (notice(); as currentNotice) {
+      <div
+        class="notice"
+        [class.notice-success]="currentNotice.tone === 'success'"
+        [class.notice-warning]="currentNotice.tone === 'warning'"
+        [class.notice-error]="currentNotice.tone === 'error'"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="notice-mark" aria-hidden="true"></span>
+        <p>{{ currentNotice.message }}</p>
+        <button type="button" aria-label="Cerrar aviso" (click)="closeNotice()">×</button>
+      </div>
+    }
+
+    <div class="list-toolbar">
+      <p aria-live="polite">{{ selectionLabel() }}</p>
+      <div class="toolbar-actions">
+        @if (activeTab() === 'WAITING_LIST') {
+          <button
+            type="button"
+            class="primary-action"
+            [disabled]="actionsDisabled()"
+            (click)="requestActivation($event)"
+          >
+            Activar selección
+          </button>
+        }
+        <button
+          type="button"
+          class="danger-action"
+          [disabled]="actionsDisabled()"
+          (click)="requestDeletion($event)"
+        >
+          Eliminar selección
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="people-tab-panel"
+      class="tab-panel"
+      role="tabpanel"
+      [attr.aria-labelledby]="activeTab() === 'ACTIVE' ? 'active-tab' : 'waiting-tab'"
+      [attr.aria-busy]="currentState().kind === 'loading' || operationPending()"
+    >
+      @switch (currentState().kind) {
+        @case ('loading') {
+          <div class="loading-state" role="status">
+            <span class="visually-hidden">Cargando listado…</span>
+            @for (row of [1, 2, 3, 4]; track row) {
+              <div class="skeleton-row" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+              </div>
+            }
+          </div>
+        }
+        @case ('error') {
+          <div class="message-state error-state">
+            <span class="state-icon" aria-hidden="true">!</span>
+            <h3>No hemos podido mostrar el listado</h3>
+            <p>{{ currentErrorMessage() }}</p>
+            <button type="button" (click)="retry()">Reintentar</button>
+          </div>
+        }
+        @case ('ready') {
+          @if (currentItems().length === 0) {
+            <div class="message-state empty-state">
+              <span class="state-icon" aria-hidden="true">0</span>
+              @if (activeTab() === 'ACTIVE') {
+                <h3>Todavía no hay alumnos activos</h3>
+                <p>Las personas que actives desde la lista de espera aparecerán aquí.</p>
+              } @else {
+                <h3>La lista de espera está vacía</h3>
+                <p>No hay personas pendientes de incorporación.</p>
+              }
+            </div>
+          } @else {
+            <div class="table-wrap">
+              <table>
+                <caption class="visually-hidden">
+                  {{
+                    activeTab() === 'ACTIVE' ? 'Alumnos activos' : 'Personas en lista de espera'
+                  }}
+                </caption>
+                <thead>
+                  <tr>
+                    <th class="selection-column" scope="col">
+                      <input
+                        type="checkbox"
+                        aria-label="Seleccionar todas las personas de este listado"
+                        [checked]="allSelected()"
+                        [indeterminate]="someSelected()"
+                        [disabled]="operationPending()"
+                        (change)="handleToggleAll($event)"
+                      />
+                    </th>
+                    <th scope="col">Persona</th>
+                    <th scope="col">Curso</th>
+                    <th scope="col">Asignaturas</th>
+                    <th scope="col">Horas</th>
+                    <th scope="col">Teléfono</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (person of currentItems(); track person.id) {
+                    <tr [class.row-selected]="currentSelection().has(person.id)">
+                      <td class="selection-column" data-label="Seleccionar">
+                        <input
+                          type="checkbox"
+                          [attr.aria-label]="'Seleccionar a ' + fullName(person)"
+                          [checked]="currentSelection().has(person.id)"
+                          [disabled]="operationPending()"
+                          (change)="handlePersonSelection(person.id, $event)"
+                        />
+                      </td>
+                      <th scope="row" data-label="Persona">
+                        <span class="person-name">{{ fullName(person) }}</span>
+                      </th>
+                      <td data-label="Curso">
+                        <span class="course-badge">{{ courseLabel(person.courseCode) }}</span>
+                      </td>
+                      <td data-label="Asignaturas">
+                        <div class="subjects">
+                          @for (subject of person.subjectHours; track subject.subjectCode) {
+                            <span>
+                              {{ subjectLabel(subject.subjectCode) }} · {{ subject.weeklyHours }} h
+                            </span>
+                          }
+                        </div>
+                      </td>
+                      <td data-label="Horas semanales">
+                        <strong class="hours-total">{{ person.weeklyHoursTotal }} h</strong>
+                      </td>
+                      <td data-label="Teléfono">
+                        <a [href]="'tel:' + person.primaryPhone">{{ person.primaryPhone }}</a>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      }
+    </div>
+
+    @if (operationPending()) {
+      <p class="operation-status" role="status" aria-live="polite">Actualizando los listados…</p>
+    }
+  </section>
+</main>
+
+@if (confirmation()) {
+  <div class="dialog-backdrop">
+    <dialog
+      open
+      class="confirmation-dialog"
+      aria-modal="true"
+      aria-labelledby="confirmation-title"
+      aria-describedby="confirmation-message"
+      (keydown)="handleDialogKeydown($event)"
+    >
+      <p class="dialog-eyebrow">Confirmar operación</p>
+      <h2 id="confirmation-title">{{ confirmationTitle() }}</h2>
+      <p id="confirmation-message">{{ confirmationMessage() }}</p>
+      <div class="dialog-actions">
+        <button #cancelButton type="button" (click)="cancelConfirmation()">Cancelar</button>
+        <button
+          #confirmButton
+          type="button"
+          [class.danger-confirmation]="confirmation()?.kind === 'delete'"
+          [class.primary-action]="confirmation()?.kind === 'activate'"
+          (click)="confirmOperation()"
+        >
+          {{ confirmationAction() }}
+        </button>
+      </div>
+    </dialog>
+  </div>
+}

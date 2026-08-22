@@ -189,6 +189,8 @@
   "active": "bc7eec1f3b9670b2",
   "lastOpenFiles": [
     "apps/api/dist/tsconfig.build.tsbuildinfo",
+    "apps/api/dist/src/administration/scripts/create-administrative-users.d.ts",
+    "apps/api/dist/src/administration/scripts/create-administrative-users.js",
     "apps/api/dist/src/administration/interactive-prompt.d.ts",
     "apps/api/dist/src/administration/interactive-prompt.js",
     "apps/api/dist/src/administration/interactive-prompt.js.map",
@@ -197,8 +199,6 @@
     "apps/api/dist/src/administration/administrative-context.js.map",
     "apps/api/dist/src/administration/administrative-cli.d.ts",
     "apps/api/dist/src/administration/administrative-cli.js",
-    "apps/api/dist/src/administration/administrative-cli.js.map",
-    "apps/api/dist/src/administration/administrative-users.service.d.ts",
     "node_modules/@types/cookie-parser/README.md",
     "node_modules/libphonenumber-js/README.md",
     "node_modules/libphonenumber-js/CODE_OF_CONDUCT.md",
