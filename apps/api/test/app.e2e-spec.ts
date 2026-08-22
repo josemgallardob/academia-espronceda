@@ -1,8 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { loadApiEnvironment } from './../src/config/environment';
+import { configureApiApplication } from './../src/configure-api-application';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -16,7 +19,11 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestExpressApplication>();
+    configureApiApplication(
+      app as NestExpressApplication,
+      loadApiEnvironment(),
+    );
     await app.init();
   });
 

@@ -59,3 +59,22 @@ caracteres y se almacena un hash Argon2id con salt individual.
 Los costes pueden incrementarse mediante `ARGON2_MEMORY_COST_KIB`,
 `ARGON2_TIME_COST` y `ARGON2_PARALLELISM`. No se permiten valores inferiores a
 19 456 KiB, 2 iteraciones y paralelismo 1, respectivamente.
+
+## Autenticación
+
+La API expone `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` y
+`GET /api/v1/auth/me`. El login admite el nombre de usuario o el email sin
+distinguir mayúsculas y minúsculas, pero devuelve el mismo error para una cuenta
+inexistente, inactiva o con contraseña incorrecta.
+
+La sesión es un JWT HS256 de duración limitada, guardado en una cookie `HttpOnly`
+con `SameSite=Strict`. No hay refresh token. Cada petición contrasta el usuario
+activo y `token_version` con la base de datos, por lo que restablecer la contraseña
+revoca las sesiones existentes.
+
+Todas las rutas son privadas salvo las marcadas expresamente como públicas
+(`health` y `login`). Las operaciones que modifican estado exigen un origen CORS
+permitido y, excepto el login, una cabecera `X-XSRF-TOKEN` igual a la cookie XSRF
+y vinculada criptográficamente a la sesión HttpOnly. Angular debe enviar las
+credenciales y su soporte XSRF estándar. Los intentos de login se limitan de forma
+independiente por IP y por identificador normalizado.

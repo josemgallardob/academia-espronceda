@@ -11,6 +11,13 @@ describe('loadApiEnvironment', () => {
       databaseUrl: 'file:./.data/academia-espronceda.db',
       cookieSecure: false,
       trustProxy: false,
+      jwtIssuer: 'academia-espronceda-api',
+      jwtAudience: 'academia-espronceda-web',
+      jwtExpiresInSeconds: 36_000,
+      xsrfCookieName: 'XSRF-TOKEN',
+      loginRateWindowSeconds: 900,
+      loginRateIpLimit: 20,
+      loginRateIdentifierLimit: 5,
     });
     expect(environment.corsOrigins).toEqual([
       'http://localhost:4200',
@@ -24,6 +31,15 @@ describe('loadApiEnvironment', () => {
     );
   });
 
+  it('restricts session duration to the approved range of 8 to 12 hours', () => {
+    expect(() => loadApiEnvironment({ JWT_TTL_SECONDS: '28799' })).toThrow(
+      'JWT_TTL_SECONDS must be an integer between 28800 and 43200',
+    );
+    expect(() => loadApiEnvironment({ JWT_TTL_SECONDS: '43201' })).toThrow(
+      'JWT_TTL_SECONDS must be an integer between 28800 and 43200',
+    );
+  });
+
   it('accepts a complete production configuration', () => {
     const environment = loadApiEnvironment({
       NODE_ENV: 'production',
@@ -34,8 +50,15 @@ describe('loadApiEnvironment', () => {
       DATABASE_URL: 'libsql://database.turso.io',
       DATABASE_AUTH_TOKEN: 'database-token',
       JWT_SECRET: 'j'.repeat(64),
+      JWT_ISSUER: 'academia-espronceda-api',
+      JWT_AUDIENCE: 'academia-espronceda-web',
+      JWT_TTL_SECONDS: '36000',
       INTERNAL_SERVICE_TOKEN: 's'.repeat(32),
       AUTH_COOKIE_NAME: '__Host-academia_session',
+      XSRF_COOKIE_NAME: 'XSRF-TOKEN',
+      AUTH_LOGIN_RATE_WINDOW_SECONDS: '900',
+      AUTH_LOGIN_IP_LIMIT: '20',
+      AUTH_LOGIN_IDENTIFIER_LIMIT: '5',
       COOKIE_SECURE: 'true',
       TRUST_PROXY: 'true',
     });
@@ -55,8 +78,15 @@ describe('loadApiEnvironment', () => {
         DATABASE_URL: 'file:./production.db',
         DATABASE_AUTH_TOKEN: 'database-token',
         JWT_SECRET: 'j'.repeat(64),
+        JWT_ISSUER: 'academia-espronceda-api',
+        JWT_AUDIENCE: 'academia-espronceda-web',
+        JWT_TTL_SECONDS: '36000',
         INTERNAL_SERVICE_TOKEN: 's'.repeat(32),
         AUTH_COOKIE_NAME: '__Host-academia_session',
+        XSRF_COOKIE_NAME: 'XSRF-TOKEN',
+        AUTH_LOGIN_RATE_WINDOW_SECONDS: '900',
+        AUTH_LOGIN_IP_LIMIT: '20',
+        AUTH_LOGIN_IDENTIFIER_LIMIT: '5',
         COOKIE_SECURE: 'true',
         TRUST_PROXY: 'true',
       }),

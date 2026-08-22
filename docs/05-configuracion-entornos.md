@@ -106,27 +106,41 @@ secretos.
 
 ## Variables
 
-| Variable                 | Desarrollo                  | Produccion                            | Consumidor      |
-| ------------------------ | --------------------------- | ------------------------------------- | --------------- |
-| `NODE_ENV`               | `development`               | `production`                          | NestJS, FastAPI |
-| `WEB_HOST`               | `127.0.0.1`                 | No aplica al bundle estatico          | Arranque local  |
-| `WEB_PORT`               | `4200`                      | Gestionado por el hosting             | Arranque local  |
-| `API_HOST`               | `127.0.0.1`                 | `0.0.0.0` o interfaz privada asignada | NestJS          |
-| `API_PORT`               | `3000`                      | Puerto asignado/interno               | NestJS          |
-| `API_CORS_ORIGINS`       | Origenes locales explicitos | `https://<dominio-publico>`           | NestJS          |
-| `SOLVER_HOST`            | `127.0.0.1`                 | Interfaz de red privada               | FastAPI         |
-| `SOLVER_PORT`            | `8001`                      | Puerto interno                        | FastAPI         |
-| `SOLVER_URL`             | `http://127.0.0.1:8001`     | URL interna, nunca publica            | NestJS          |
-| `DATABASE_URL`           | `file:./.data/...`          | `libsql://...turso.io`                | NestJS          |
-| `DATABASE_AUTH_TOKEN`    | Vacio                       | Secreto de Turso                      | NestJS          |
-| `JWT_SECRET`             | Marcador local conocido     | Secreto aleatorio de 64+ caracteres   | NestJS          |
-| `INTERNAL_SERVICE_TOKEN` | Marcador local conocido     | Secreto aleatorio de 32+ caracteres   | NestJS, FastAPI |
-| `AUTH_COOKIE_NAME`       | `academia_session`          | `__Host-academia_session`             | NestJS          |
-| `COOKIE_SECURE`          | `false`                     | `true`                                | NestJS          |
-| `TRUST_PROXY`            | `false`                     | `true`                                | NestJS          |
+| Variable                         | Desarrollo                  | Produccion                            | Consumidor      |
+| -------------------------------- | --------------------------- | ------------------------------------- | --------------- |
+| `NODE_ENV`                       | `development`               | `production`                          | NestJS, FastAPI |
+| `WEB_HOST`                       | `127.0.0.1`                 | No aplica al bundle estatico          | Arranque local  |
+| `WEB_PORT`                       | `4200`                      | Gestionado por el hosting             | Arranque local  |
+| `API_HOST`                       | `127.0.0.1`                 | `0.0.0.0` o interfaz privada asignada | NestJS          |
+| `API_PORT`                       | `3000`                      | Puerto asignado/interno               | NestJS          |
+| `API_CORS_ORIGINS`               | Origenes locales explicitos | `https://<dominio-publico>`           | NestJS          |
+| `SOLVER_HOST`                    | `127.0.0.1`                 | Interfaz de red privada               | FastAPI         |
+| `SOLVER_PORT`                    | `8001`                      | Puerto interno                        | FastAPI         |
+| `SOLVER_URL`                     | `http://127.0.0.1:8001`     | URL interna, nunca publica            | NestJS          |
+| `DATABASE_URL`                   | `file:./.data/...`          | `libsql://...turso.io`                | NestJS          |
+| `DATABASE_AUTH_TOKEN`            | Vacio                       | Secreto de Turso                      | NestJS          |
+| `JWT_SECRET`                     | Marcador local conocido     | Secreto aleatorio de 64+ caracteres   | NestJS          |
+| `JWT_ISSUER`                     | `academia-espronceda-api`   | Emisor estable de la API              | NestJS          |
+| `JWT_AUDIENCE`                   | `academia-espronceda-web`   | Audiencia estable de la web           | NestJS          |
+| `JWT_TTL_SECONDS`                | `36000` (10 horas)          | Entre 28800 y 43200                   | NestJS          |
+| `INTERNAL_SERVICE_TOKEN`         | Marcador local conocido     | Secreto aleatorio de 32+ caracteres   | NestJS, FastAPI |
+| `AUTH_COOKIE_NAME`               | `academia_session`          | `__Host-academia_session`             | NestJS          |
+| `XSRF_COOKIE_NAME`               | `XSRF-TOKEN`                | `XSRF-TOKEN`                          | NestJS, Angular |
+| `AUTH_LOGIN_RATE_WINDOW_SECONDS` | `900`                       | Ventana entre 60 y 3600 segundos      | NestJS          |
+| `AUTH_LOGIN_IP_LIMIT`            | `20`                        | Intentos por IP y ventana             | NestJS          |
+| `AUTH_LOGIN_IDENTIFIER_LIMIT`    | `5`                         | Intentos por identidad y ventana      | NestJS          |
+| `COOKIE_SECURE`                  | `false`                     | `true`                                | NestJS          |
+| `TRUST_PROXY`                    | `false`                     | `true`                                | NestJS          |
 
 `API_CORS_ORIGINS` acepta una lista separada por comas, sin rutas ni comodines. En produccion
 todos los origenes deben usar HTTPS.
+
+La cookie de sesión es `HttpOnly`, `SameSite=Strict`, tiene ruta `/` y en
+producción también es `Secure` y usa el prefijo `__Host-`. La cookie XSRF debe ser
+legible por Angular y no contiene la sesión; NestJS exige además la cabecera
+`X-XSRF-TOKEN`, verifica el origen en operaciones de escritura y vincula el token
+XSRF al JWT de sesión. La duración configurada se aplica tanto al JWT como a la
+cookie y no existe token de refresco.
 
 ## Manejo de secretos
 

@@ -9,8 +9,15 @@ export interface ApiEnvironment {
   databaseUrl: string;
   databaseAuthToken?: string;
   jwtSecret: string;
+  jwtIssuer: string;
+  jwtAudience: string;
+  jwtExpiresInSeconds: number;
   internalServiceToken: string;
   authCookieName: string;
+  xsrfCookieName: string;
+  loginRateWindowSeconds: number;
+  loginRateIpLimit: number;
+  loginRateIdentifierLimit: number;
   cookieSecure: boolean;
   trustProxy: boolean;
 }
@@ -22,9 +29,16 @@ const DEVELOPMENT_DEFAULTS = {
   SOLVER_URL: 'http://127.0.0.1:8001',
   DATABASE_URL: 'file:./.data/academia-espronceda.db',
   JWT_SECRET: 'local-only-jwt-secret-replace-in-every-deployed-environment',
+  JWT_ISSUER: 'academia-espronceda-api',
+  JWT_AUDIENCE: 'academia-espronceda-web',
+  JWT_TTL_SECONDS: '36000',
   INTERNAL_SERVICE_TOKEN:
     'local-only-service-token-replace-in-every-deployed-environment',
   AUTH_COOKIE_NAME: 'academia_session',
+  XSRF_COOKIE_NAME: 'XSRF-TOKEN',
+  AUTH_LOGIN_RATE_WINDOW_SECONDS: '900',
+  AUTH_LOGIN_IP_LIMIT: '20',
+  AUTH_LOGIN_IDENTIFIER_LIMIT: '5',
   COOKIE_SECURE: 'false',
   TRUST_PROXY: 'false',
 } as const;
@@ -50,8 +64,35 @@ export function loadApiEnvironment(
   const solverUrl = parseUrl(value('SOLVER_URL'), 'SOLVER_URL');
   const databaseUrl = value('DATABASE_URL');
   const jwtSecret = value('JWT_SECRET');
+  const jwtIssuer = value('JWT_ISSUER');
+  const jwtAudience = value('JWT_AUDIENCE');
+  const jwtExpiresInSeconds = parseIntegerInRange(
+    value('JWT_TTL_SECONDS'),
+    'JWT_TTL_SECONDS',
+    28_800,
+    43_200,
+  );
   const internalServiceToken = value('INTERNAL_SERVICE_TOKEN');
   const authCookieName = value('AUTH_COOKIE_NAME');
+  const xsrfCookieName = value('XSRF_COOKIE_NAME');
+  const loginRateWindowSeconds = parseIntegerInRange(
+    value('AUTH_LOGIN_RATE_WINDOW_SECONDS'),
+    'AUTH_LOGIN_RATE_WINDOW_SECONDS',
+    60,
+    3_600,
+  );
+  const loginRateIpLimit = parseIntegerInRange(
+    value('AUTH_LOGIN_IP_LIMIT'),
+    'AUTH_LOGIN_IP_LIMIT',
+    1,
+    1_000,
+  );
+  const loginRateIdentifierLimit = parseIntegerInRange(
+    value('AUTH_LOGIN_IDENTIFIER_LIMIT'),
+    'AUTH_LOGIN_IDENTIFIER_LIMIT',
+    1,
+    100,
+  );
   const cookieSecure = parseBoolean(value('COOKIE_SECURE'), 'COOKIE_SECURE');
   const trustProxy = parseBoolean(value('TRUST_PROXY'), 'TRUST_PROXY');
 
@@ -62,6 +103,8 @@ export function loadApiEnvironment(
       solverUrl,
       databaseUrl,
       jwtSecret,
+      jwtIssuer,
+      jwtAudience,
       internalServiceToken,
       authCookieName,
       cookieSecure,
@@ -78,8 +121,15 @@ export function loadApiEnvironment(
     databaseUrl,
     databaseAuthToken: source.DATABASE_AUTH_TOKEN?.trim() || undefined,
     jwtSecret,
+    jwtIssuer,
+    jwtAudience,
+    jwtExpiresInSeconds,
     internalServiceToken,
     authCookieName,
+    xsrfCookieName,
+    loginRateWindowSeconds,
+    loginRateIpLimit,
+    loginRateIdentifierLimit,
     cookieSecure,
     trustProxy,
   };
@@ -105,6 +155,25 @@ function parsePort(value: string, name: string): number {
   }
 
   return port;
+}
+
+function parseIntegerInRange(
+  value: string,
+  name: string,
+  minimum: number,
+  maximum: number,
+): number {
+  const parsedValue = Number(value);
+  if (
+    !Number.isSafeInteger(parsedValue) ||
+    parsedValue < minimum ||
+    parsedValue > maximum
+  ) {
+    throw new Error(
+      `${name} must be an integer between ${minimum} and ${maximum}`,
+    );
+  }
+  return parsedValue;
 }
 
 function parseBoolean(value: string, name: string): boolean {
@@ -166,6 +235,8 @@ function assertProductionConfiguration(configuration: {
   solverUrl: URL;
   databaseUrl: string;
   jwtSecret: string;
+  jwtIssuer: string;
+  jwtAudience: string;
   internalServiceToken: string;
   authCookieName: string;
   cookieSecure: boolean;
@@ -180,6 +251,14 @@ function assertProductionConfiguration(configuration: {
   if (configuration.jwtSecret.length < 64) {
     throw new Error(
       'JWT_SECRET must contain at least 64 characters in production',
+    );
+  }
+  if (
+    configuration.jwtIssuer.includes('<') ||
+    configuration.jwtAudience.includes('<')
+  ) {
+    throw new Error(
+      'JWT issuer and audience still contain example placeholders',
     );
   }
   if (configuration.internalServiceToken.length < 32) {
