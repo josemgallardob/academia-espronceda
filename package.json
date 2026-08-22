@@ -34,6 +34,10 @@
     "test:web": "npm run test --workspace @academia-espronceda/web -- --watch=false",
     "test:api": "npm run test --workspace @academia-espronceda/api -- --runInBand && npm run test:e2e --workspace @academia-espronceda/api -- --runInBand",
     "test:solver": ".venv/bin/python -m pytest apps/solver",
+    "db:generate": "npm run db:generate --workspace @academia-espronceda/api",
+    "db:migrate": "npm run db:migrate --workspace @academia-espronceda/api",
+    "db:check": "npm run db:check --workspace @academia-espronceda/api",
+    "db:studio": "npm run db:studio --workspace @academia-espronceda/api",
     "validate:contracts": "node scripts/validate-contracts.mjs",
     "check": "npm run format:check && npm run validate:contracts && npm run lint && npm run test && npm run build"
   },

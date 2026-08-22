@@ -6,8 +6,12 @@ import { AppModule } from './../src/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  let originalDatabaseUrl: string | undefined;
 
   beforeEach(async () => {
+    originalDatabaseUrl = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = 'file::memory:';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -25,5 +29,10 @@ describe('AppController (e2e)', () => {
 
   afterEach(async () => {
     await app.close();
+    if (originalDatabaseUrl === undefined) {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = originalDatabaseUrl;
+    }
   });
 });

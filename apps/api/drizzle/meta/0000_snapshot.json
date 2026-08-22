@@ -1,0 +1,1721 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "7e04b859-7ca6-4cbe-b240-64b3463b16bd",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "people": {
+      "name": "people",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "first_surname": {
+          "name": "first_surname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "second_surname": {
+          "name": "second_surname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "course_code": {
+          "name": "course_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weekly_hours_total": {
+          "name": "weekly_hours_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "school_name": {
+          "name": "school_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "primary_phone": {
+          "name": "primary_phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "secondary_phone": {
+          "name": "secondary_phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_tutored": {
+          "name": "is_tutored",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "tutor_full_name": {
+          "name": "tutor_full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "comments": {
+          "name": "comments",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "people_status_idx": {
+          "name": "people_status_idx",
+          "columns": ["status"],
+          "isUnique": false
+        },
+        "people_name_idx": {
+          "name": "people_name_idx",
+          "columns": ["first_surname", "first_name"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "people_first_name_not_blank": {
+          "name": "people_first_name_not_blank",
+          "value": "length(trim(\"people\".\"first_name\")) > 0"
+        },
+        "people_first_surname_not_blank": {
+          "name": "people_first_surname_not_blank",
+          "value": "length(trim(\"people\".\"first_surname\")) > 0"
+        },
+        "people_weekly_hours_positive": {
+          "name": "people_weekly_hours_positive",
+          "value": "\"people\".\"weekly_hours_total\" > 0"
+        },
+        "people_primary_phone_not_blank": {
+          "name": "people_primary_phone_not_blank",
+          "value": "length(trim(\"people\".\"primary_phone\")) > 0"
+        },
+        "people_course_code_allowed": {
+          "name": "people_course_code_allowed",
+          "value": "\"people\".\"course_code\" in ('ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1', 'BACH_2', 'OTHER')"
+        },
+        "people_status_allowed": {
+          "name": "people_status_allowed",
+          "value": "\"people\".\"status\" in ('ACTIVE', 'WAITING_LIST')"
+        },
+        "people_tutor_coherence": {
+          "name": "people_tutor_coherence",
+          "value": "(\"people\".\"is_tutored\" = 0) or (\"people\".\"tutor_full_name\" is not null and length(trim(\"people\".\"tutor_full_name\")) > 0)"
+        }
+      }
+    },
+    "person_relationships": {
+      "name": "person_relationships",
+      "columns": {
+        "first_person_id": {
+          "name": "first_person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "second_person_id": {
+          "name": "second_person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "person_relationships_first_person_id_people_id_fk": {
+          "name": "person_relationships_first_person_id_people_id_fk",
+          "tableFrom": "person_relationships",
+          "tableTo": "people",
+          "columnsFrom": ["first_person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "person_relationships_second_person_id_people_id_fk": {
+          "name": "person_relationships_second_person_id_people_id_fk",
+          "tableFrom": "person_relationships",
+          "tableTo": "people",
+          "columnsFrom": ["second_person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "person_relationships_first_person_id_second_person_id_pk": {
+          "columns": ["first_person_id", "second_person_id"],
+          "name": "person_relationships_first_person_id_second_person_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "person_relationships_canonical_order": {
+          "name": "person_relationships_canonical_order",
+          "value": "\"person_relationships\".\"first_person_id\" < \"person_relationships\".\"second_person_id\""
+        }
+      }
+    },
+    "person_subjects": {
+      "name": "person_subjects",
+      "columns": {
+        "person_id": {
+          "name": "person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "subject_code": {
+          "name": "subject_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weekly_hours": {
+          "name": "weekly_hours",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "person_subjects_person_id_people_id_fk": {
+          "name": "person_subjects_person_id_people_id_fk",
+          "tableFrom": "person_subjects",
+          "tableTo": "people",
+          "columnsFrom": ["person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "person_subjects_person_id_subject_code_pk": {
+          "columns": ["person_id", "subject_code"],
+          "name": "person_subjects_person_id_subject_code_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "person_subjects_hours_positive": {
+          "name": "person_subjects_hours_positive",
+          "value": "\"person_subjects\".\"weekly_hours\" > 0"
+        },
+        "person_subjects_subject_allowed": {
+          "name": "person_subjects_subject_allowed",
+          "value": "\"person_subjects\".\"subject_code\" in ('MATHEMATICS', 'SOCIAL_SCIENCES_MATHEMATICS', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'SPANISH_LANGUAGE', 'ENGLISH')"
+        }
+      }
+    },
+    "person_unavailable_slots": {
+      "name": "person_unavailable_slots",
+      "columns": {
+        "person_id": {
+          "name": "person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slot_id": {
+          "name": "slot_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "person_unavailable_slots_person_id_people_id_fk": {
+          "name": "person_unavailable_slots_person_id_people_id_fk",
+          "tableFrom": "person_unavailable_slots",
+          "tableTo": "people",
+          "columnsFrom": ["person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "person_unavailable_slots_slot_id_weekly_slots_id_fk": {
+          "name": "person_unavailable_slots_slot_id_weekly_slots_id_fk",
+          "tableFrom": "person_unavailable_slots",
+          "tableTo": "weekly_slots",
+          "columnsFrom": ["slot_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "person_unavailable_slots_person_id_slot_id_pk": {
+          "columns": ["person_id", "slot_id"],
+          "name": "person_unavailable_slots_person_id_slot_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "schedule_accepted_findings": {
+      "name": "schedule_accepted_findings",
+      "columns": {
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "validation_id": {
+          "name": "validation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "finding_fingerprint": {
+          "name": "finding_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "accepted_by_user_id": {
+          "name": "accepted_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "schedule_accepted_findings_schedule_id_schedules_id_fk": {
+          "name": "schedule_accepted_findings_schedule_id_schedules_id_fk",
+          "tableFrom": "schedule_accepted_findings",
+          "tableTo": "schedules",
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "schedule_accepted_findings_accepted_by_user_id_users_id_fk": {
+          "name": "schedule_accepted_findings_accepted_by_user_id_users_id_fk",
+          "tableFrom": "schedule_accepted_findings",
+          "tableTo": "users",
+          "columnsFrom": ["accepted_by_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "schedule_accepted_findings_finding_fk": {
+          "name": "schedule_accepted_findings_finding_fk",
+          "tableFrom": "schedule_accepted_findings",
+          "tableTo": "schedule_validation_findings",
+          "columnsFrom": ["validation_id", "finding_fingerprint"],
+          "columnsTo": ["validation_id", "fingerprint"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "schedule_accepted_findings_schedule_validation_fk": {
+          "name": "schedule_accepted_findings_schedule_validation_fk",
+          "tableFrom": "schedule_accepted_findings",
+          "tableTo": "schedule_validations",
+          "columnsFrom": ["schedule_id", "validation_id"],
+          "columnsTo": ["schedule_id", "id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "schedule_accepted_findings_schedule_id_finding_fingerprint_pk": {
+          "columns": ["schedule_id", "finding_fingerprint"],
+          "name": "schedule_accepted_findings_schedule_id_finding_fingerprint_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "schedule_assignments": {
+      "name": "schedule_assignments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "class_id": {
+          "name": "class_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slot_id": {
+          "name": "slot_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "student_display_name": {
+          "name": "student_display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "schedule_assignments_class_person_uq": {
+          "name": "schedule_assignments_class_person_uq",
+          "columns": ["class_id", "person_id"],
+          "isUnique": true
+        },
+        "schedule_assignments_person_slot_uq": {
+          "name": "schedule_assignments_person_slot_uq",
+          "columns": ["schedule_id", "person_id", "slot_id"],
+          "isUnique": true
+        },
+        "schedule_assignments_person_idx": {
+          "name": "schedule_assignments_person_idx",
+          "columns": ["person_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "schedule_assignments_person_id_people_id_fk": {
+          "name": "schedule_assignments_person_id_people_id_fk",
+          "tableFrom": "schedule_assignments",
+          "tableTo": "people",
+          "columnsFrom": ["person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "schedule_assignments_class_fk": {
+          "name": "schedule_assignments_class_fk",
+          "tableFrom": "schedule_assignments",
+          "tableTo": "schedule_classes",
+          "columnsFrom": ["schedule_id", "slot_id", "class_id"],
+          "columnsTo": ["schedule_id", "slot_id", "id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "schedule_assignments_display_name_not_blank": {
+          "name": "schedule_assignments_display_name_not_blank",
+          "value": "length(trim(\"schedule_assignments\".\"student_display_name\")) > 0"
+        }
+      }
+    },
+    "schedule_classes": {
+      "name": "schedule_classes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "teacher_id": {
+          "name": "teacher_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slot_id": {
+          "name": "slot_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "schedule_classes_teacher_slot_uq": {
+          "name": "schedule_classes_teacher_slot_uq",
+          "columns": ["schedule_id", "teacher_id", "slot_id"],
+          "isUnique": true
+        },
+        "schedule_classes_schedule_slot_id_uq": {
+          "name": "schedule_classes_schedule_slot_id_uq",
+          "columns": ["schedule_id", "slot_id", "id"],
+          "isUnique": true
+        },
+        "schedule_classes_schedule_idx": {
+          "name": "schedule_classes_schedule_idx",
+          "columns": ["schedule_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "schedule_classes_schedule_id_schedules_id_fk": {
+          "name": "schedule_classes_schedule_id_schedules_id_fk",
+          "tableFrom": "schedule_classes",
+          "tableTo": "schedules",
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "schedule_classes_teacher_fk": {
+          "name": "schedule_classes_teacher_fk",
+          "tableFrom": "schedule_classes",
+          "tableTo": "schedule_teachers",
+          "columnsFrom": ["schedule_id", "teacher_id"],
+          "columnsTo": ["schedule_id", "teacher_id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "schedule_classes_slot_fk": {
+          "name": "schedule_classes_slot_fk",
+          "tableFrom": "schedule_classes",
+          "tableTo": "schedule_slots",
+          "columnsFrom": ["schedule_id", "slot_id"],
+          "columnsTo": ["schedule_id", "slot_id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "schedule_confirmations": {
+      "name": "schedule_confirmations",
+      "columns": {
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "validation_id": {
+          "name": "validation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "confirmed_by_user_id": {
+          "name": "confirmed_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "schedule_confirmations_validation_id_unique": {
+          "name": "schedule_confirmations_validation_id_unique",
+          "columns": ["validation_id"],
+          "isUnique": true
+        },
+        "schedule_confirmations_user_idx": {
+          "name": "schedule_confirmations_user_idx",
+          "columns": ["confirmed_by_user_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "schedule_confirmations_schedule_id_schedules_id_fk": {
+          "name": "schedule_confirmations_schedule_id_schedules_id_fk",
+          "tableFrom": "schedule_confirmations",
+          "tableTo": "schedules",
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "schedule_confirmations_validation_id_schedule_validations_id_fk": {
+          "name": "schedule_confirmations_validation_id_schedule_validations_id_fk",
+          "tableFrom": "schedule_confirmations",
+          "tableTo": "schedule_validations",
+          "columnsFrom": ["validation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "schedule_confirmations_confirmed_by_user_id_users_id_fk": {
+          "name": "schedule_confirmations_confirmed_by_user_id_users_id_fk",
+          "tableFrom": "schedule_confirmations",
+          "tableTo": "users",
+          "columnsFrom": ["confirmed_by_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "schedule_confirmations_schedule_validation_fk": {
+          "name": "schedule_confirmations_schedule_validation_fk",
+          "tableFrom": "schedule_confirmations",
+          "tableTo": "schedule_validations",
+          "columnsFrom": ["schedule_id", "validation_id"],
+          "columnsTo": ["schedule_id", "id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "schedule_slots": {
+      "name": "schedule_slots",
+      "columns": {
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slot_id": {
+          "name": "slot_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "day_of_week": {
+          "name": "day_of_week",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "schedule_slots_schedule_id_schedules_id_fk": {
+          "name": "schedule_slots_schedule_id_schedules_id_fk",
+          "tableFrom": "schedule_slots",
+          "tableTo": "schedules",
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "schedule_slots_slot_id_weekly_slots_id_fk": {
+          "name": "schedule_slots_slot_id_weekly_slots_id_fk",
+          "tableFrom": "schedule_slots",
+          "tableTo": "weekly_slots",
+          "columnsFrom": ["slot_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "schedule_slots_schedule_id_slot_id_pk": {
+          "columns": ["schedule_id", "slot_id"],
+          "name": "schedule_slots_schedule_id_slot_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "schedule_slots_ordered": {
+          "name": "schedule_slots_ordered",
+          "value": "\"schedule_slots\".\"start_time\" < \"schedule_slots\".\"end_time\""
+        },
+        "schedule_slots_day_allowed": {
+          "name": "schedule_slots_day_allowed",
+          "value": "\"schedule_slots\".\"day_of_week\" in ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY')"
+        }
+      }
+    },
+    "schedule_teachers": {
+      "name": "schedule_teachers",
+      "columns": {
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "teacher_id": {
+          "name": "teacher_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile": {
+          "name": "profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "schedule_teachers_schedule_id_schedules_id_fk": {
+          "name": "schedule_teachers_schedule_id_schedules_id_fk",
+          "tableFrom": "schedule_teachers",
+          "tableTo": "schedules",
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "schedule_teachers_teacher_id_teachers_id_fk": {
+          "name": "schedule_teachers_teacher_id_teachers_id_fk",
+          "tableFrom": "schedule_teachers",
+          "tableTo": "teachers",
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "schedule_teachers_schedule_id_teacher_id_pk": {
+          "columns": ["schedule_id", "teacher_id"],
+          "name": "schedule_teachers_schedule_id_teacher_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "schedule_teachers_display_name_not_blank": {
+          "name": "schedule_teachers_display_name_not_blank",
+          "value": "length(trim(\"schedule_teachers\".\"display_name\")) > 0"
+        },
+        "schedule_teachers_profile_allowed": {
+          "name": "schedule_teachers_profile_allowed",
+          "value": "\"schedule_teachers\".\"profile\" in ('SENIOR_SCIENCES', 'GENERAL_SCIENCES', 'LANGUAGES')"
+        }
+      }
+    },
+    "schedule_validation_findings": {
+      "name": "schedule_validation_findings",
+      "columns": {
+        "validation_id": {
+          "name": "validation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rule_id": {
+          "name": "rule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "enforcement": {
+          "name": "enforcement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "blocks_confirmation": {
+          "name": "blocks_confirmation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "entity_refs_json": {
+          "name": "entity_refs_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
+        },
+        "slot_ids_json": {
+          "name": "slot_ids_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
+        },
+        "parameters_json": {
+          "name": "parameters_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'{}'"
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "schedule_validation_findings_rule_idx": {
+          "name": "schedule_validation_findings_rule_idx",
+          "columns": ["rule_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "schedule_validation_findings_validation_id_schedule_validations_id_fk": {
+          "name": "schedule_validation_findings_validation_id_schedule_validations_id_fk",
+          "tableFrom": "schedule_validation_findings",
+          "tableTo": "schedule_validations",
+          "columnsFrom": ["validation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "schedule_validation_findings_validation_id_fingerprint_pk": {
+          "columns": ["validation_id", "fingerprint"],
+          "name": "schedule_validation_findings_validation_id_fingerprint_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "schedule_validation_findings_message_not_blank": {
+          "name": "schedule_validation_findings_message_not_blank",
+          "value": "length(trim(\"schedule_validation_findings\".\"message\")) > 0"
+        },
+        "schedule_validation_findings_enforcement_allowed": {
+          "name": "schedule_validation_findings_enforcement_allowed",
+          "value": "\"schedule_validation_findings\".\"enforcement\" in ('HARD', 'RELAXABLE', 'PREFERENCE')"
+        },
+        "schedule_validation_findings_severity_allowed": {
+          "name": "schedule_validation_findings_severity_allowed",
+          "value": "\"schedule_validation_findings\".\"severity\" in ('ERROR', 'WARNING', 'INFO')"
+        },
+        "schedule_validation_findings_fingerprint_format": {
+          "name": "schedule_validation_findings_fingerprint_format",
+          "value": "length(\"schedule_validation_findings\".\"fingerprint\") = 71 and substr(\"schedule_validation_findings\".\"fingerprint\", 1, 7) = 'sha256:' and substr(\"schedule_validation_findings\".\"fingerprint\", 8) not glob '*[^0-9a-f]*'"
+        },
+        "schedule_validation_findings_entity_refs_json": {
+          "name": "schedule_validation_findings_entity_refs_json",
+          "value": "json_valid(\"schedule_validation_findings\".\"entity_refs_json\")"
+        },
+        "schedule_validation_findings_slot_ids_json": {
+          "name": "schedule_validation_findings_slot_ids_json",
+          "value": "json_valid(\"schedule_validation_findings\".\"slot_ids_json\")"
+        },
+        "schedule_validation_findings_parameters_json": {
+          "name": "schedule_validation_findings_parameters_json",
+          "value": "json_valid(\"schedule_validation_findings\".\"parameters_json\")"
+        }
+      }
+    },
+    "schedule_validations": {
+      "name": "schedule_validations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "validation_fingerprint": {
+          "name": "validation_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "schedule_revision": {
+          "name": "schedule_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rule_catalog_version": {
+          "name": "rule_catalog_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "can_confirm": {
+          "name": "can_confirm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "blocking_errors": {
+          "name": "blocking_errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "relaxable_errors": {
+          "name": "relaxable_errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "warnings": {
+          "name": "warnings",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "information": {
+          "name": "information",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "evaluated_at": {
+          "name": "evaluated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "schedule_validations_fingerprint_uq": {
+          "name": "schedule_validations_fingerprint_uq",
+          "columns": [
+            "schedule_id",
+            "schedule_revision",
+            "validation_fingerprint"
+          ],
+          "isUnique": true
+        },
+        "schedule_validations_schedule_idx": {
+          "name": "schedule_validations_schedule_idx",
+          "columns": ["schedule_id", "evaluated_at"],
+          "isUnique": false
+        },
+        "schedule_validations_schedule_id_uq": {
+          "name": "schedule_validations_schedule_id_uq",
+          "columns": ["schedule_id", "id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "schedule_validations_schedule_id_schedules_id_fk": {
+          "name": "schedule_validations_schedule_id_schedules_id_fk",
+          "tableFrom": "schedule_validations",
+          "tableTo": "schedules",
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "schedule_validations_revision_non_negative": {
+          "name": "schedule_validations_revision_non_negative",
+          "value": "\"schedule_validations\".\"schedule_revision\" >= 0"
+        },
+        "schedule_validations_counts_non_negative": {
+          "name": "schedule_validations_counts_non_negative",
+          "value": "\"schedule_validations\".\"blocking_errors\" >= 0 and \"schedule_validations\".\"relaxable_errors\" >= 0 and \"schedule_validations\".\"warnings\" >= 0 and \"schedule_validations\".\"information\" >= 0"
+        },
+        "schedule_validations_outcome_allowed": {
+          "name": "schedule_validations_outcome_allowed",
+          "value": "\"schedule_validations\".\"outcome\" in ('IDEAL', 'VALID_WITH_RECOMMENDATIONS', 'HAS_RELAXABLE_CONFLICTS', 'BLOCKED')"
+        },
+        "schedule_validations_fingerprint_format": {
+          "name": "schedule_validations_fingerprint_format",
+          "value": "length(\"schedule_validations\".\"validation_fingerprint\") = 71 and substr(\"schedule_validations\".\"validation_fingerprint\", 1, 7) = 'sha256:' and substr(\"schedule_validations\".\"validation_fingerprint\", 8) not glob '*[^0-9a-f]*'"
+        }
+      }
+    },
+    "schedules": {
+      "name": "schedules",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'DRAFT'"
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "is_current": {
+          "name": "is_current",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "source_schedule_id": {
+          "name": "source_schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rule_catalog_version": {
+          "name": "rule_catalog_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "schedules_single_current_uq": {
+          "name": "schedules_single_current_uq",
+          "columns": ["is_current"],
+          "isUnique": true,
+          "where": "\"schedules\".\"is_current\" = 1"
+        },
+        "schedules_state_created_idx": {
+          "name": "schedules_state_created_idx",
+          "columns": ["state", "created_at"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "schedules_source_schedule_id_schedules_id_fk": {
+          "name": "schedules_source_schedule_id_schedules_id_fk",
+          "tableFrom": "schedules",
+          "tableTo": "schedules",
+          "columnsFrom": ["source_schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "schedules_revision_non_negative": {
+          "name": "schedules_revision_non_negative",
+          "value": "\"schedules\".\"revision\" >= 0"
+        },
+        "schedules_state_allowed": {
+          "name": "schedules_state_allowed",
+          "value": "\"schedules\".\"state\" in ('DRAFT', 'CONFIRMED')"
+        },
+        "schedules_current_is_confirmed": {
+          "name": "schedules_current_is_confirmed",
+          "value": "\"schedules\".\"is_current\" = 0 or \"schedules\".\"state\" = 'CONFIRMED'"
+        },
+        "schedules_rule_catalog_version_format": {
+          "name": "schedules_rule_catalog_version_format",
+          "value": "\"schedules\".\"rule_catalog_version\" glob '[0-9]*.[0-9]*.[0-9]*'"
+        }
+      }
+    },
+    "subject_teacher_allocations": {
+      "name": "subject_teacher_allocations",
+      "columns": {
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "subject_code": {
+          "name": "subject_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "teacher_id": {
+          "name": "teacher_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weekly_hours": {
+          "name": "weekly_hours",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "subject_teacher_allocations_teacher_idx": {
+          "name": "subject_teacher_allocations_teacher_idx",
+          "columns": ["schedule_id", "teacher_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "subject_teacher_allocations_schedule_id_schedules_id_fk": {
+          "name": "subject_teacher_allocations_schedule_id_schedules_id_fk",
+          "tableFrom": "subject_teacher_allocations",
+          "tableTo": "schedules",
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "subject_teacher_allocations_person_id_people_id_fk": {
+          "name": "subject_teacher_allocations_person_id_people_id_fk",
+          "tableFrom": "subject_teacher_allocations",
+          "tableTo": "people",
+          "columnsFrom": ["person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "subject_teacher_allocations_teacher_fk": {
+          "name": "subject_teacher_allocations_teacher_fk",
+          "tableFrom": "subject_teacher_allocations",
+          "tableTo": "schedule_teachers",
+          "columnsFrom": ["schedule_id", "teacher_id"],
+          "columnsTo": ["schedule_id", "teacher_id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "subject_teacher_allocations_schedule_id_person_id_subject_code_pk": {
+          "columns": ["schedule_id", "person_id", "subject_code"],
+          "name": "subject_teacher_allocations_schedule_id_person_id_subject_code_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "subject_teacher_allocations_hours_positive": {
+          "name": "subject_teacher_allocations_hours_positive",
+          "value": "\"subject_teacher_allocations\".\"weekly_hours\" > 0"
+        },
+        "subject_teacher_allocations_subject_allowed": {
+          "name": "subject_teacher_allocations_subject_allowed",
+          "value": "\"subject_teacher_allocations\".\"subject_code\" in ('MATHEMATICS', 'SOCIAL_SCIENCES_MATHEMATICS', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'SPANISH_LANGUAGE', 'ENGLISH')"
+        }
+      }
+    },
+    "teacher_available_slots": {
+      "name": "teacher_available_slots",
+      "columns": {
+        "teacher_id": {
+          "name": "teacher_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slot_id": {
+          "name": "slot_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "teacher_available_slots_teacher_id_teachers_id_fk": {
+          "name": "teacher_available_slots_teacher_id_teachers_id_fk",
+          "tableFrom": "teacher_available_slots",
+          "tableTo": "teachers",
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "teacher_available_slots_slot_id_weekly_slots_id_fk": {
+          "name": "teacher_available_slots_slot_id_weekly_slots_id_fk",
+          "tableFrom": "teacher_available_slots",
+          "tableTo": "weekly_slots",
+          "columnsFrom": ["slot_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "teacher_available_slots_teacher_id_slot_id_pk": {
+          "columns": ["teacher_id", "slot_id"],
+          "name": "teacher_available_slots_teacher_id_slot_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "teacher_courses": {
+      "name": "teacher_courses",
+      "columns": {
+        "teacher_id": {
+          "name": "teacher_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "course_code": {
+          "name": "course_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "teacher_courses_teacher_id_teachers_id_fk": {
+          "name": "teacher_courses_teacher_id_teachers_id_fk",
+          "tableFrom": "teacher_courses",
+          "tableTo": "teachers",
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "teacher_courses_teacher_id_course_code_pk": {
+          "columns": ["teacher_id", "course_code"],
+          "name": "teacher_courses_teacher_id_course_code_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "teacher_courses_course_allowed": {
+          "name": "teacher_courses_course_allowed",
+          "value": "\"teacher_courses\".\"course_code\" in ('ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1', 'BACH_2', 'OTHER')"
+        }
+      }
+    },
+    "teacher_subjects": {
+      "name": "teacher_subjects",
+      "columns": {
+        "teacher_id": {
+          "name": "teacher_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "subject_code": {
+          "name": "subject_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "teacher_subjects_teacher_id_teachers_id_fk": {
+          "name": "teacher_subjects_teacher_id_teachers_id_fk",
+          "tableFrom": "teacher_subjects",
+          "tableTo": "teachers",
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "teacher_subjects_teacher_id_subject_code_pk": {
+          "columns": ["teacher_id", "subject_code"],
+          "name": "teacher_subjects_teacher_id_subject_code_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "teacher_subjects_subject_allowed": {
+          "name": "teacher_subjects_subject_allowed",
+          "value": "\"teacher_subjects\".\"subject_code\" in ('MATHEMATICS', 'SOCIAL_SCIENCES_MATHEMATICS', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'SPANISH_LANGUAGE', 'ENGLISH')"
+        }
+      }
+    },
+    "teachers": {
+      "name": "teachers",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile": {
+          "name": "profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "teachers_display_name_not_blank": {
+          "name": "teachers_display_name_not_blank",
+          "value": "length(trim(\"teachers\".\"display_name\")) > 0"
+        },
+        "teachers_profile_allowed": {
+          "name": "teachers_profile_allowed",
+          "value": "\"teachers\".\"profile\" in ('SENIOR_SCIENCES', 'GENERAL_SCIENCES', 'LANGUAGES')"
+        }
+      }
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "token_version": {
+          "name": "token_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "last_login_at": {
+          "name": "last_login_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "users_username_ci_uq": {
+          "name": "users_username_ci_uq",
+          "columns": ["lower(\"username\")"],
+          "isUnique": true
+        },
+        "users_email_ci_uq": {
+          "name": "users_email_ci_uq",
+          "columns": ["lower(\"email\")"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "users_token_version_non_negative": {
+          "name": "users_token_version_non_negative",
+          "value": "\"users\".\"token_version\" >= 0"
+        }
+      }
+    },
+    "weekly_slots": {
+      "name": "weekly_slots",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "day_of_week": {
+          "name": "day_of_week",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "weekly_slots_period_uq": {
+          "name": "weekly_slots_period_uq",
+          "columns": ["day_of_week", "start_time", "end_time"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "weekly_slots_start_format": {
+          "name": "weekly_slots_start_format",
+          "value": "\"weekly_slots\".\"start_time\" glob '[0-2][0-9]:[0-5][0-9]'"
+        },
+        "weekly_slots_end_format": {
+          "name": "weekly_slots_end_format",
+          "value": "\"weekly_slots\".\"end_time\" glob '[0-2][0-9]:[0-5][0-9]'"
+        },
+        "weekly_slots_ordered": {
+          "name": "weekly_slots_ordered",
+          "value": "\"weekly_slots\".\"start_time\" < \"weekly_slots\".\"end_time\""
+        },
+        "weekly_slots_day_allowed": {
+          "name": "weekly_slots_day_allowed",
+          "value": "\"weekly_slots\".\"day_of_week\" in ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY')"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {
+      "users_username_ci_uq": {
+        "columns": {
+          "lower(\"username\")": {
+            "isExpression": true
+          }
+        }
+      },
+      "users_email_ci_uq": {
+        "columns": {
+          "lower(\"email\")": {
+            "isExpression": true
+          }
+        }
+      }
+    }
+  }
+}
