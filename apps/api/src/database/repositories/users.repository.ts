@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, or, sql } from 'drizzle-orm';
+import { count, eq, or, sql } from 'drizzle-orm';
 import { DatabaseConnection } from '../database.connection';
 import { type NewUserRow, type UserRow, users } from '../schema';
 import { BaseRepository } from './base.repository';
@@ -13,6 +13,24 @@ export class UsersRepository extends BaseRepository {
   async insert(user: NewUserRow): Promise<UserRow> {
     const [created] = await this.db.insert(users).values(user).returning();
     return created;
+  }
+
+  async count(): Promise<number> {
+    const [result] = await this.db.select({ value: count() }).from(users);
+    return result.value;
+  }
+
+  async insertInitialUsers(
+    initialUsers: NewUserRow[],
+  ): Promise<UserRow[] | undefined> {
+    return this.db.transaction(async (transaction) => {
+      const [result] = await transaction.select({ value: count() }).from(users);
+      if (result.value !== 0) {
+        return undefined;
+      }
+
+      return transaction.insert(users).values(initialUsers).returning();
+    });
   }
 
   async findById(id: string): Promise<UserRow | undefined> {
@@ -44,5 +62,22 @@ export class UsersRepository extends BaseRepository {
         updatedAt: occurredAt,
       })
       .where(eq(users.id, id));
+  }
+
+  async updatePasswordAndTokenVersion(
+    id: string,
+    passwordHash: string,
+    occurredAt: string,
+  ): Promise<UserRow | undefined> {
+    const [updated] = await this.db
+      .update(users)
+      .set({
+        passwordHash,
+        tokenVersion: sql`${users.tokenVersion} + 1`,
+        updatedAt: occurredAt,
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
   }
 }

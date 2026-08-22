@@ -37,3 +37,25 @@ npm run build:api
 
 Las pruebas de persistencia crean una base local aislada, aplican las migraciones
 reales y comprueban repositorios, claves foráneas e invariantes relacionales.
+
+## Cuentas administrativas
+
+Las dos cuentas iniciales se crean exclusivamente desde una terminal interactiva:
+
+```bash
+npm run admin:create-users
+```
+
+Para cambiar o restablecer una contraseña e invalidar todas las sesiones anteriores:
+
+```bash
+npm run admin:reset-password
+```
+
+Los comandos no aceptan argumentos: solicitan usuario, email y contraseña de forma
+interactiva, y la contraseña no se muestra en pantalla. Se exige un mínimo de 15
+caracteres y se almacena un hash Argon2id con salt individual.
+
+Los costes pueden incrementarse mediante `ARGON2_MEMORY_COST_KIB`,
+`ARGON2_TIME_COST` y `ARGON2_PARALLELISM`. No se permiten valores inferiores a
+19 456 KiB, 2 iteraciones y paralelismo 1, respectivamente.
