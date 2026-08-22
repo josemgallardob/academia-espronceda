@@ -1,0 +1,22 @@
+<div class="workspace">
+  <header>
+    <a class="brand" routerLink="/" aria-label="Academia Espronceda, inicio">
+      <span aria-hidden="true">AE</span>
+      <strong>Academia Espronceda</strong>
+    </a>
+
+    <div class="session-actions">
+      @if (authStore.user(); as user) {
+        <div class="user-summary">
+          <strong>{{ user.username }}</strong>
+          <span>{{ user.email }}</span>
+        </div>
+      }
+      <button type="button" (click)="logout()" [disabled]="signingOut()">
+        {{ signingOut() ? 'Saliendo…' : 'Cerrar sesión' }}
+      </button>
+    </div>
+  </header>
+
+  <router-outlet />
+</div>

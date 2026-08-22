@@ -15,8 +15,8 @@
               "state": {
                 "file": "Project.canvas",
                 "viewState": {
-                  "x": 1214.469701341264,
-                  "y": 449.34078113979695,
+                  "x": 1264.967334182477,
+                  "y": 746.9161175255176,
                   "zoom": -0.9554863122661266
                 }
               },
@@ -189,16 +189,16 @@
   "active": "bc7eec1f3b9670b2",
   "lastOpenFiles": [
     "apps/api/dist/tsconfig.build.tsbuildinfo",
-    "apps/api/dist/src/administration/scripts/reset-administrative-password.d.ts",
     "apps/api/dist/src/administration/scripts/reset-administrative-password.js.map",
     "apps/api/dist/src/administration/scripts/create-administrative-users.d.ts",
-    "apps/api/dist/src/administration/scripts/create-administrative-users.js",
-    "apps/api/dist/src/administration/scripts/create-administrative-users.js.map",
     "apps/api/dist/src/administration/interactive-prompt.d.ts",
     "apps/api/dist/src/administration/interactive-prompt.js",
     "apps/api/dist/src/administration/interactive-prompt.js.map",
     "apps/api/dist/src/administration/administrative-context.d.ts",
     "apps/api/dist/src/administration/administrative-context.js",
+    "apps/api/dist/src/administration/administrative-context.js.map",
+    "apps/api/dist/src/administration/administrative-cli.d.ts",
+    "apps/api/dist/src/administration/administrative-cli.js",
     "node_modules/@types/cookie-parser/README.md",
     "node_modules/libphonenumber-js/README.md",
     "node_modules/libphonenumber-js/CODE_OF_CONDUCT.md",

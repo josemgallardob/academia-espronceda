@@ -1,0 +1,13 @@
+<main class="home">
+  <p class="eyebrow">Panel de gestión</p>
+  <h1>Hola, {{ user()?.username }}.</h1>
+  <p class="lead">Tu sesión está activa. Las herramientas de gestión se incorporarán aquí.</p>
+
+  <section aria-labelledby="session-title">
+    <span class="status" aria-hidden="true"></span>
+    <div>
+      <h2 id="session-title">Sesión protegida</h2>
+      <p>La API ha verificado tu identidad y las rutas privadas están habilitadas.</p>
+    </div>
+  </section>
+</main>

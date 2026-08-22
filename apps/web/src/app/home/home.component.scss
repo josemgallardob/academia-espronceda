@@ -1,0 +1,65 @@
+.home {
+  width: min(100% - 2.5rem, 76rem);
+  margin: 0 auto;
+  padding: clamp(4rem, 10vw, 8rem) 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.8rem;
+  color: #9b742c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  color: #172235;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.6rem, 7vw, 5rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+
+.lead {
+  max-width: 40rem;
+  margin: 0;
+  color: #66635d;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+section {
+  display: flex;
+  max-width: 38rem;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 4rem;
+  padding: 1.25rem;
+  border: 1px solid #d9d4c9;
+  border-radius: 0.7rem;
+  background: #fffdf8;
+}
+
+.status {
+  width: 0.65rem;
+  height: 0.65rem;
+  flex: 0 0 auto;
+  margin-top: 0.35rem;
+  border-radius: 50%;
+  background: #578466;
+  box-shadow: 0 0 0 4px rgb(87 132 102 / 13%);
+}
+
+h2 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+section p {
+  margin: 0;
+  color: #6d6a63;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}

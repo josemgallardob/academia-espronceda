@@ -12,6 +12,10 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+Las llamadas de la aplicación usan el prefijo relativo `/api`. Durante el desarrollo,
+`proxy.conf.json` lo reenvía a NestJS en `127.0.0.1:3000`, manteniendo web, cookies y
+XSRF en el mismo origen del navegador.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
