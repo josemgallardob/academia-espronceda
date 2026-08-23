@@ -8,6 +8,7 @@ import { PeopleRepository } from './repositories/people.repository';
 import { SchedulesRepository } from './repositories/schedules.repository';
 import { TeachersRepository } from './repositories/teachers.repository';
 import { UsersRepository } from './repositories/users.repository';
+import { WeeklySlotsRepository } from './repositories/weekly-slots.repository';
 
 @Global()
 @Module({
@@ -23,6 +24,7 @@ import { UsersRepository } from './repositories/users.repository';
     PeopleRepository,
     TeachersRepository,
     SchedulesRepository,
+    WeeklySlotsRepository,
   ],
   exports: [
     DatabaseConnection,
@@ -30,6 +32,7 @@ import { UsersRepository } from './repositories/users.repository';
     PeopleRepository,
     TeachersRepository,
     SchedulesRepository,
+    WeeklySlotsRepository,
   ],
 })
 export class DatabaseModule {}

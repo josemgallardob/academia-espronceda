@@ -17,7 +17,6 @@ import {
   schedules,
   scheduleTeachers,
   subjectTeacherAllocations,
-  weeklySlots,
 } from '../src/database/schema';
 import { hashPassword } from '../src/security/password-hasher';
 
@@ -32,6 +31,15 @@ interface PersonIdentifier {
 
 interface PersonBody extends PersonIdentifier {
   response: Record<string, unknown>;
+}
+
+interface SchedulingConfigurationBody {
+  slots: Array<{
+    id: string;
+    dayOfWeek: string;
+    startTime: string;
+    endTime: string;
+  }>;
 }
 
 describe('People and teacher options (e2e)', () => {
@@ -93,12 +101,6 @@ describe('People and teacher options (e2e)', () => {
       profile: 'LANGUAGES',
       isActive: false,
     });
-    await connection.db.insert(weeklySlots).values({
-      id: 'slot-monday-16',
-      dayOfWeek: 'MONDAY',
-      startTime: '16:00',
-      endTime: '17:00',
-    });
     await app.init();
 
     const login = await request(app.getHttpServer())
@@ -120,6 +122,41 @@ describe('People and teacher options (e2e)', () => {
   it('requires authentication for people and teacher data', async () => {
     await request(app.getHttpServer()).get('/api/v1/people').expect(401);
     await request(app.getHttpServer()).get('/api/v1/teachers').expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/scheduling/configuration')
+      .expect(401);
+  });
+
+  it('exposes the stable scheduling catalogue used by person forms', async () => {
+    const response = await authenticatedGet(
+      '/api/v1/scheduling/configuration',
+    ).expect(200);
+    const body = response.body as unknown as SchedulingConfigurationBody;
+
+    expect(response.body).toMatchObject({
+      timezone: 'Europe/Madrid',
+      courseLabels: {
+        ESO_1: '1.º ESO',
+        BACH_2: '2.º Bachillerato',
+      },
+      subjectLabels: {
+        MATHEMATICS: 'Matemáticas',
+        ENGLISH: 'Inglés',
+      },
+    });
+    expect(body.slots).toHaveLength(19);
+    expect(body.slots[0]).toEqual({
+      id: 'slot-monday-1600',
+      dayOfWeek: 'MONDAY',
+      startTime: '16:00',
+      endTime: '17:00',
+    });
+    expect(body.slots.at(-1)).toEqual({
+      id: 'slot-friday-1800',
+      dayOfWeek: 'FRIDAY',
+      startTime: '18:00',
+      endTime: '19:00',
+    });
   });
 
   it('exposes only active minimal teacher selector options', async () => {
@@ -138,7 +175,7 @@ describe('People and teacher options (e2e)', () => {
     const created = await createPerson({
       firstName: 'Ana',
       status: 'WAITING_LIST',
-      unavailableSlotIds: ['slot-monday-16'],
+      unavailableSlotIds: ['slot-monday-1600'],
       relatedPersonIds: [related.id],
     });
 
@@ -150,7 +187,7 @@ describe('People and teacher options (e2e)', () => {
         { subjectCode: 'MATHEMATICS', weeklyHours: 2 },
         { subjectCode: 'PHYSICS', weeklyHours: 1 },
       ],
-      unavailableSlotIds: ['slot-monday-16'],
+      unavailableSlotIds: ['slot-monday-1600'],
       relatedPersonIds: [related.id],
     });
 

@@ -4,12 +4,17 @@ import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import type {
   DeletePeopleResult,
+  CreatePersonRequest,
   PeopleListState,
+  Person,
   PersonListResponse,
   PersonStatus,
+  SchedulingConfiguration,
+  UpdatePersonRequest,
 } from './people.models';
 
 const peopleUrl = `${environment.apiBaseUrl.replace(/\/$/u, '')}/v1/people`;
+const schedulingConfigurationUrl = `${environment.apiBaseUrl.replace(/\/$/u, '')}/v1/scheduling/configuration`;
 
 @Injectable({ providedIn: 'root' })
 export class PeopleStore {
@@ -44,6 +49,26 @@ export class PeopleStore {
     });
   }
 
+  listPeople(): Observable<PersonListResponse> {
+    return this.http.get<PersonListResponse>(peopleUrl);
+  }
+
+  getPerson(personId: string): Observable<Person> {
+    return this.http.get<Person>(`${peopleUrl}/${encodeURIComponent(personId)}`);
+  }
+
+  createPerson(input: CreatePersonRequest): Observable<Person> {
+    return this.http.post<Person>(peopleUrl, input);
+  }
+
+  updatePerson(personId: string, input: UpdatePersonRequest): Observable<Person> {
+    return this.http.patch<Person>(`${peopleUrl}/${encodeURIComponent(personId)}`, input);
+  }
+
+  getSchedulingConfiguration(): Observable<SchedulingConfiguration> {
+    return this.http.get<SchedulingConfiguration>(schedulingConfigurationUrl);
+  }
+
   deleteMany(personIds: string[]): Observable<DeletePeopleResult> {
     if (personIds.length === 0) {
       return of({ deletedIds: [], failures: [] });
@@ -65,7 +90,10 @@ export class PeopleStore {
       map((results) => ({
         deletedIds: results.filter((result) => result.deleted).map(({ personId }) => personId),
         failures: results
-          .filter((result) => !result.deleted)
+          .filter(
+            (result): result is { personId: string; deleted: false; message: string } =>
+              !result.deleted,
+          )
           .map(({ personId, message }) => ({ personId, message })),
       })),
       tap(() => this.loadAll()),

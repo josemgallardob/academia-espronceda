@@ -1,0 +1,163 @@
+<main class="detail-page">
+  <a class="back-link" routerLink="/personas" [queryParams]="{ status: sourceStatus }"
+    >← Volver al listado</a
+  >
+
+  @if (loading()) {
+    <section class="state-card" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Cargando persona…</h1>
+    </section>
+  } @else if (error()) {
+    <section class="state-card error-state" role="alert">
+      <span class="state-mark" aria-hidden="true">!</span>
+      <h1>{{ notFound() ? 'Persona no encontrada' : 'No se puede mostrar el detalle' }}</h1>
+      <p>{{ error() }}</p>
+      @if (!notFound()) {
+        <button type="button" (click)="retry()">Reintentar</button>
+      }
+    </section>
+  } @else if (person(); as currentPerson) {
+    <header class="detail-heading">
+      <div>
+        <p class="eyebrow">Ficha de persona</p>
+        <h1>{{ fullName(currentPerson) }}</h1>
+        <span class="status-badge" [class.waiting]="currentPerson.status === 'WAITING_LIST'">{{
+          statusLabel(currentPerson.status)
+        }}</span>
+      </div>
+      <a
+        class="edit-action"
+        [routerLink]="['/personas', currentPerson.id, 'editar']"
+        [queryParams]="{ fromStatus: currentPerson.status }"
+        >Editar persona</a
+      >
+    </header>
+
+    @if (saved) {
+      <div class="success-notice" role="status">
+        {{
+          saved === 'created'
+            ? 'La persona se ha creado correctamente.'
+            : 'Los cambios se han guardado correctamente.'
+        }}
+      </div>
+    }
+
+    <div class="detail-grid">
+      <section>
+        <h2>Datos personales y contacto</h2>
+        <dl>
+          <div>
+            <dt>Nombre</dt>
+            <dd>{{ currentPerson.firstName }}</dd>
+          </div>
+          <div>
+            <dt>Primer apellido</dt>
+            <dd>{{ currentPerson.firstSurname }}</dd>
+          </div>
+          <div>
+            <dt>Segundo apellido</dt>
+            <dd>{{ value(currentPerson.secondSurname) }}</dd>
+          </div>
+          <div>
+            <dt>Centro educativo</dt>
+            <dd>{{ value(currentPerson.schoolName) }}</dd>
+          </div>
+          <div>
+            <dt>Teléfono principal</dt>
+            <dd>
+              <a [href]="'tel:' + currentPerson.primaryPhone">{{ currentPerson.primaryPhone }}</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Teléfono secundario</dt>
+            <dd>{{ value(currentPerson.secondaryPhone) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section>
+        <h2>Curso, asignaturas y horas</h2>
+        <dl>
+          <div>
+            <dt>Curso</dt>
+            <dd>{{ courseLabel(currentPerson.courseCode) }}</dd>
+          </div>
+          <div>
+            <dt>Horas semanales totales</dt>
+            <dd>
+              <strong>{{ currentPerson.weeklyHoursTotal }} h</strong>
+            </dd>
+          </div>
+        </dl>
+        <h3>Reparto por asignatura</h3>
+        <ul class="subject-list">
+          @for (subject of currentPerson.subjectHours; track subject.subjectCode) {
+            <li>
+              <span>{{ subjectLabel(subject.subjectCode) }}</span
+              ><strong>{{ subject.weeklyHours }} h</strong>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="wide-section">
+        <h2>Indisponibilidad semanal</h2>
+        @if (unavailableByDay().length === 0) {
+          <p class="empty-value">No ha indicado horas en las que no pueda asistir.</p>
+        } @else {
+          <div class="availability-list">
+            @for (group of unavailableByDay(); track group.day) {
+              <div>
+                <h3>{{ dayLabel(group.day) }}</h3>
+                <p>
+                  @for (slot of group.slots; track slot.id) {
+                    <span>{{ slotLabel(slot) }}</span>
+                  }
+                </p>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <section>
+        <h2>Tutoría y relaciones</h2>
+        <dl>
+          <div>
+            <dt>Recibe tutoría</dt>
+            <dd>{{ currentPerson.isTutored ? 'Sí' : 'No' }}</dd>
+          </div>
+          <div>
+            <dt>Nombre del tutor</dt>
+            <dd>{{ value(currentPerson.tutorFullName) }}</dd>
+          </div>
+        </dl>
+        <h3>Personas relacionadas</h3>
+        @if (relatedPeople().length === 0) {
+          <p class="empty-value">No indicado</p>
+        } @else {
+          <ul class="related-list">
+            @for (related of relatedPeople(); track related.id) {
+              <li>
+                <a
+                  [routerLink]="['/personas', related.id]"
+                  [queryParams]="{ fromStatus: currentPerson.status }"
+                  >{{ fullName(related) }}</a
+                ><span
+                  >{{ courseLabel(related.courseCode) }} · {{ statusLabel(related.status) }}</span
+                >
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section>
+        <h2>Comentarios</h2>
+        <p class="comments">{{ value(currentPerson.comments) }}</p>
+      </section>
+    </div>
+  }
+</main>

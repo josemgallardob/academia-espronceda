@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { PeopleStore } from './people-api';
 import { PeopleComponent } from './people.component';
@@ -40,7 +41,7 @@ describe('PeopleComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [PeopleComponent],
-      providers: [{ provide: PeopleStore, useValue: peopleStore }],
+      providers: [provideRouter([]), { provide: PeopleStore, useValue: peopleStore }],
     }).compileComponents();
   });
 

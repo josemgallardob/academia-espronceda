@@ -1,0 +1,299 @@
+<main class="form-page">
+  <a class="back-link" [routerLink]="returnTarget()" [queryParams]="returnQueryParams()"
+    >← Volver</a
+  >
+
+  <header>
+    <p class="eyebrow">Gestión de personas</p>
+    <h1>{{ editing ? 'Editar persona' : 'Nueva persona' }}</h1>
+    <p>Los campos marcados con * son obligatorios.</p>
+  </header>
+
+  @if (loading()) {
+    <section class="state-card" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h2>Cargando formulario…</h2>
+      <p>Estamos preparando cursos, asignaturas, franjas y personas relacionadas.</p>
+    </section>
+  } @else if (loadError()) {
+    <section class="state-card error-state" role="alert">
+      <span class="state-mark" aria-hidden="true">!</span>
+      <h2>{{ editing ? 'No se puede editar esta persona' : 'No se puede abrir el formulario' }}</h2>
+      <p>{{ loadError() }}</p>
+      <button type="button" (click)="retry()">Reintentar</button>
+    </section>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      @if (saveError()) {
+        <div class="save-error" role="alert">
+          <strong>No se han guardado los datos.</strong>
+          <span>{{ saveError() }}</span>
+        </div>
+      }
+
+      @if (!editing) {
+        <fieldset class="form-section status-section">
+          <legend>Estado inicial *</legend>
+          <div class="radio-row">
+            <label>
+              <input type="radio" formControlName="status" value="ACTIVE" />
+              <span
+                ><strong>Alumno activo</strong
+                ><small>Se incorpora al listado principal.</small></span
+              >
+            </label>
+            <label>
+              <input type="radio" formControlName="status" value="WAITING_LIST" />
+              <span
+                ><strong>Lista de espera</strong
+                ><small>Queda pendiente de incorporación.</small></span
+              >
+            </label>
+          </div>
+        </fieldset>
+      }
+
+      <fieldset class="form-section">
+        <legend>Datos personales y contacto</legend>
+        <div class="field-grid">
+          <label>Nombre *<input formControlName="firstName" autocomplete="given-name" /></label>
+          <label
+            >Primer apellido *<input formControlName="firstSurname" autocomplete="family-name"
+          /></label>
+          <label>Segundo apellido<input formControlName="secondSurname" /></label>
+          <label>Centro educativo<input formControlName="schoolName" /></label>
+          <label
+            >Teléfono principal *<input
+              formControlName="primaryPhone"
+              inputmode="tel"
+              autocomplete="tel"
+          /></label>
+          <label
+            >Teléfono secundario<input formControlName="secondaryPhone" inputmode="tel"
+          /></label>
+        </div>
+        @if (
+          (form.controls.firstName.touched && form.controls.firstName.invalid) ||
+          (form.controls.firstSurname.touched && form.controls.firstSurname.invalid) ||
+          (form.controls.primaryPhone.touched && form.controls.primaryPhone.invalid)
+        ) {
+          <p class="field-error">Completa nombre, primer apellido y teléfono principal.</p>
+        }
+      </fieldset>
+
+      <fieldset class="form-section">
+        <legend>Curso, asignaturas y horas</legend>
+        <label class="course-field"
+          >Curso *
+          <select formControlName="courseCode">
+            <option [ngValue]="null">Selecciona un curso</option>
+            @for (course of courseEntries(); track course[0]) {
+              <option [value]="course[0]">{{ course[1] }}</option>
+            }
+          </select>
+        </label>
+
+        <div class="subject-list" aria-describedby="subject-help">
+          @for (subject of subjectEntries(); track subject[0]) {
+            <div class="subject-row" [class.selected]="isSubjectSelected(subject[0])">
+              <label>
+                <input
+                  type="checkbox"
+                  [checked]="isSubjectSelected(subject[0])"
+                  (change)="toggleSubject(subject[0], $any($event.target).checked)"
+                />
+                {{ subject[1] }}
+              </label>
+              @if (isSubjectSelected(subject[0])) {
+                <label class="hours-input">
+                  <span>Horas *</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    [value]="subjectHours(subject[0]) ?? ''"
+                    (input)="updateSubjectHours(subject[0], $any($event.target).value)"
+                  />
+                </label>
+              }
+            </div>
+          }
+        </div>
+        <p id="subject-help" class="help">
+          Selecciona al menos una asignatura e indica horas enteras.
+        </p>
+
+        <div class="hours-summary" [class.mismatch]="form.hasError('hoursMismatch')">
+          <label
+            >Horas semanales totales contratadas *
+            <input type="number" min="1" step="1" formControlName="weeklyHoursTotal" />
+          </label>
+          <dl>
+            <div>
+              <dt>Contratadas</dt>
+              <dd>{{ form.controls.weeklyHoursTotal.value ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Asignadas</dt>
+              <dd>{{ allocatedHours() }}</dd>
+            </div>
+            <div>
+              <dt>{{ (hoursDifference() ?? 0) < 0 ? 'Exceso' : 'Pendientes' }}</dt>
+              <dd>
+                {{
+                  hoursDifference() === null
+                    ? '—'
+                    : hoursDifference()! < 0
+                      ? -hoursDifference()!
+                      : hoursDifference()
+                }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+        @if (form.touched && form.hasError('subjects')) {
+          <p class="field-error">
+            Cada asignatura seleccionada debe tener al menos una hora semanal entera.
+          </p>
+        }
+        @if (form.hasError('hoursMismatch')) {
+          <p class="field-error">
+            Las horas asignadas deben coincidir exactamente con las horas totales contratadas.
+          </p>
+        }
+      </fieldset>
+
+      <fieldset class="form-section availability-section">
+        <legend>Indisponibilidad semanal</legend>
+        <p class="section-intro">
+          <strong>Marca las horas en las que NO puede asistir.</strong> Las casillas vacías se
+          consideran disponibles.
+        </p>
+        <div class="availability-grid">
+          @for (day of days; track day) {
+            <section>
+              <h3>{{ dayLabel(day) }}</h3>
+              @for (slot of slotsForDay(day); track slot.id) {
+                <label [class.unavailable]="isUnavailable(slot.id)">
+                  <input
+                    type="checkbox"
+                    [checked]="isUnavailable(slot.id)"
+                    (change)="toggleUnavailable(slot.id, $any($event.target).checked)"
+                  />
+                  <span>{{ slot.startTime }}–{{ slot.endTime }}</span>
+                </label>
+              }
+            </section>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="form-section">
+        <legend>Tutoría y relaciones</legend>
+        <p class="field-label">¿Recibe tutoría? *</p>
+        <div class="inline-radios">
+          <label
+            ><input
+              type="radio"
+              name="tutored-choice"
+              [checked]="form.controls.isTutored.value === true"
+              (click)="changeTutored(true, $event)"
+            />
+            Sí</label
+          >
+          <label
+            ><input
+              type="radio"
+              name="tutored-choice"
+              [checked]="form.controls.isTutored.value === false"
+              (click)="changeTutored(false, $event)"
+            />
+            No</label
+          >
+        </div>
+        @if (form.controls.isTutored.value === true) {
+          <label class="tutor-field"
+            >Nombre completo del tutor *<input formControlName="tutorFullName"
+          /></label>
+          @if (form.touched && form.hasError('tutorName')) {
+            <p class="field-error">Indica el nombre completo del tutor.</p>
+          }
+        }
+
+        <div class="relations">
+          <label
+            >Buscar personas relacionadas
+            <input
+              type="search"
+              [value]="relationQuery()"
+              (input)="relationQuery.set($any($event.target).value)"
+              placeholder="Nombre o curso"
+            />
+          </label>
+          @if (relationQuery().trim()) {
+            <div class="relation-results">
+              @for (person of filteredRelationPeople(); track person.id) {
+                <button type="button" (click)="addRelated(person.id)">
+                  <strong>{{ fullName(person) }}</strong>
+                  <span
+                    >{{ courseLabel(person.courseCode) }} · {{ statusLabel(person.status) }}</span
+                  >
+                </button>
+              } @empty {
+                <p>No hay coincidencias disponibles.</p>
+              }
+            </div>
+          }
+          <div class="relation-chips" aria-label="Personas relacionadas seleccionadas">
+            @for (personId of form.controls.relatedPersonIds.value; track personId) {
+              @if (relatedPerson(personId); as person) {
+                <span
+                  >{{ fullName(person)
+                  }}<button
+                    type="button"
+                    [attr.aria-label]="'Quitar a ' + fullName(person)"
+                    (click)="removeRelated(personId)"
+                  >
+                    ×
+                  </button></span
+                >
+              }
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-section">
+        <legend>Comentarios</legend>
+        <label class="comments-field"
+          >Observaciones adicionales<textarea formControlName="comments" rows="5"></textarea>
+        </label>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="button" class="secondary-action" (click)="cancel()" [disabled]="saving()">
+          Cancelar
+        </button>
+        <button type="submit" class="primary-action" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear persona' }}
+        </button>
+      </div>
+    </form>
+  }
+</main>
+
+@if (confirmation()) {
+  <div class="dialog-backdrop">
+    <dialog open aria-modal="true" aria-labelledby="confirmation-title">
+      <p class="eyebrow">Confirmación</p>
+      <h2 id="confirmation-title">{{ confirmationTitle() }}</h2>
+      <p>{{ confirmationMessage() }}</p>
+      <div class="dialog-actions">
+        <button type="button" (click)="answerConfirmation(false)">Conservar</button>
+        <button type="button" class="danger-action" (click)="answerConfirmation(true)">
+          Descartar
+        </button>
+      </div>
+    </dialog>
+  </div>
+}

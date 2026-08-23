@@ -10,6 +10,7 @@ import {
   viewChild,
   type WritableSignal,
 } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { PeopleStore, problemMessage } from './people-api';
 import type {
@@ -50,11 +51,14 @@ const subjectLabels: Record<SubjectCode, string> = {
 
 @Component({
   selector: 'app-people',
+  imports: [RouterLink],
   templateUrl: './people.component.html',
   styleUrl: './people.component.scss',
 })
 export class PeopleComponent implements OnInit {
   readonly store = inject(PeopleStore);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly activeTab = signal<PersonStatus>('ACTIVE');
   readonly activeSelection = signal<ReadonlySet<string>>(new Set());
   readonly waitingSelection = signal<ReadonlySet<string>>(new Set());
@@ -96,11 +100,19 @@ export class PeopleComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('status') === 'WAITING_LIST') {
+      this.activeTab.set('WAITING_LIST');
+    }
     this.store.loadAll();
   }
 
   selectTab(status: PersonStatus): void {
     this.activeTab.set(status);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { status },
+      replaceUrl: true,
+    });
   }
 
   retry(): void {

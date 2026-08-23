@@ -8,6 +8,13 @@
         listados.
       </p>
     </div>
+    <a
+      class="new-person-action"
+      routerLink="/personas/nueva"
+      [queryParams]="{ fromStatus: activeTab() }"
+    >
+      Nueva persona
+    </a>
   </header>
 
   <section class="people-panel" aria-labelledby="people-panel-title">
@@ -157,7 +164,13 @@
                         />
                       </td>
                       <th scope="row" data-label="Persona">
-                        <span class="person-name">{{ fullName(person) }}</span>
+                        <a
+                          class="person-name"
+                          [routerLink]="['/personas', person.id]"
+                          [queryParams]="{ fromStatus: activeTab() }"
+                        >
+                          {{ fullName(person) }}
+                        </a>
                       </th>
                       <td data-label="Curso">
                         <span class="course-badge">{{ courseLabel(person.courseCode) }}</span>

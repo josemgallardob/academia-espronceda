@@ -60,6 +60,9 @@ describe('Drizzle/libSQL persistence', () => {
         'schedule_confirmations',
       ]),
     );
+    await expect(
+      connection.db.select().from(weeklySlots),
+    ).resolves.toHaveLength(19);
   });
 
   it('supports base repositories and case-insensitive login identities', async () => {
@@ -158,12 +161,6 @@ describe('Drizzle/libSQL persistence', () => {
       displayName: 'Profesor Dos',
       profile: 'SENIOR_SCIENCES',
     });
-    await connection.db.insert(weeklySlots).values({
-      id: 'slot-1',
-      dayOfWeek: 'MONDAY',
-      startTime: '16:00',
-      endTime: '17:00',
-    });
     await schedulesRepository.insert({
       id: 'schedule-1',
       ruleCatalogVersion: '1.0.0',
@@ -184,7 +181,7 @@ describe('Drizzle/libSQL persistence', () => {
     ]);
     await connection.db.insert(scheduleSlots).values({
       scheduleId: 'schedule-1',
-      slotId: 'slot-1',
+      slotId: 'slot-monday-1600',
       dayOfWeek: 'MONDAY',
       startTime: '16:00',
       endTime: '17:00',
@@ -194,20 +191,20 @@ describe('Drizzle/libSQL persistence', () => {
         id: 'class-1',
         scheduleId: 'schedule-1',
         teacherId: 'teacher-1',
-        slotId: 'slot-1',
+        slotId: 'slot-monday-1600',
       },
       {
         id: 'class-2',
         scheduleId: 'schedule-1',
         teacherId: 'teacher-2',
-        slotId: 'slot-1',
+        slotId: 'slot-monday-1600',
       },
     ]);
     await connection.db.insert(scheduleAssignments).values({
       id: 'assignment-1',
       classId: 'class-1',
       scheduleId: 'schedule-1',
-      slotId: 'slot-1',
+      slotId: 'slot-monday-1600',
       personId: 'person-1',
       studentDisplayName: 'Ana Ruiz',
     });
@@ -217,7 +214,7 @@ describe('Drizzle/libSQL persistence', () => {
         id: 'assignment-2',
         classId: 'class-2',
         scheduleId: 'schedule-1',
-        slotId: 'slot-1',
+        slotId: 'slot-monday-1600',
         personId: 'person-1',
         studentDisplayName: 'Ana Ruiz',
       }),

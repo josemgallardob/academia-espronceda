@@ -2,7 +2,6 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { DatabaseConnection } from '../database.connection';
-import { weeklySlots } from '../schema';
 import {
   PeopleActivationConflictError,
   PeopleRepository,
@@ -20,12 +19,6 @@ describe('PeopleRepository', () => {
     });
     await connection.migrate(resolve(__dirname, '../../../drizzle'));
     repository = new PeopleRepository(connection);
-    await connection.db.insert(weeklySlots).values({
-      id: 'slot-1',
-      dayOfWeek: 'MONDAY',
-      startTime: '16:00',
-      endTime: '17:00',
-    });
   });
 
   afterEach(async () => {
@@ -38,7 +31,7 @@ describe('PeopleRepository', () => {
     await repository.insert({
       person: person('person-1', 'WAITING_LIST'),
       subjects: [{ subjectCode: 'MATHEMATICS', weeklyHours: 3 }],
-      unavailableSlotIds: ['slot-1'],
+      unavailableSlotIds: ['slot-monday-1600'],
       relatedPersonIds: ['person-2'],
     });
 
@@ -46,7 +39,7 @@ describe('PeopleRepository', () => {
       repository.findAggregateById('person-1'),
     ).resolves.toMatchObject({
       subjects: [{ subjectCode: 'MATHEMATICS', weeklyHours: 3 }],
-      unavailableSlotIds: ['slot-1'],
+      unavailableSlotIds: ['slot-monday-1600'],
       relatedPersonIds: ['person-2'],
     });
     await expect(
