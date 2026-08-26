@@ -1,0 +1,26 @@
+{
+  "name": "Academia Espronceda",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "web",
+      "command": "npm run dev:web",
+      "description": "Angular dev server on http://127.0.0.1:4200 (proxies /api to the NestJS API)."
+    },
+    {
+      "name": "api",
+      "command": "npm run dev:api",
+      "description": "NestJS API in watch mode on http://127.0.0.1:3000 (health at GET /health)."
+    },
+    {
+      "name": "solver",
+      "command": "npm run dev:solver",
+      "description": "FastAPI solver with autoreload on http://127.0.0.1:8001 (health at GET /health)."
+    }
+  ],
+  "ports": [
+    { "name": "web", "port": 4200 },
+    { "name": "api", "port": 3000 },
+    { "name": "solver", "port": 8001 }
+  ]
+}
