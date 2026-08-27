@@ -34,6 +34,10 @@ import {
 import type { ScheduleState, SubjectCode } from '../schema/catalog';
 import { BaseRepository } from './base.repository';
 
+type DbSession = Parameters<
+  Parameters<DatabaseConnection['db']['transaction']>[0]
+>[0];
+
 const entityTypes = new Set<EntityType>([
   'SCHEDULE',
   'CLASS',
@@ -400,7 +404,7 @@ function toHeader(schedule: Schedule): NewScheduleRow {
 }
 
 async function persistEvaluation(
-  transaction: DatabaseConnection['db'],
+  transaction: DbSession,
   evaluation: ScheduleEvaluation,
 ): Promise<void> {
   const [existing] = await transaction
@@ -462,7 +466,7 @@ async function persistEvaluation(
 }
 
 async function persistConfirmation(
-  transaction: DatabaseConnection['db'],
+  transaction: DbSession,
   schedule: Schedule,
 ): Promise<void> {
   if (

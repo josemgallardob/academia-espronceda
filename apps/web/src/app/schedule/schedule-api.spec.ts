@@ -3,7 +3,12 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { ScheduleStore } from './schedule-api';
 import type { Person, PersonListResponse } from '../people/people.models';
-import type { Schedule, ScheduleListResponse, TeacherOption } from './schedule.models';
+import type {
+  Schedule,
+  ScheduleEvaluation,
+  ScheduleListResponse,
+  TeacherOption,
+} from './schedule.models';
 
 describe('ScheduleStore', () => {
   let store: ScheduleStore;
@@ -101,6 +106,39 @@ describe('ScheduleStore', () => {
     expect(store.workspace()).toMatchObject({
       kind: 'ready',
       schedule: { revision: 2 },
+    });
+  });
+
+  it('validates the working draft and stores the confirmation evaluation', () => {
+    store.load();
+    flushWorkspace();
+    store.validate().subscribe();
+    const request = httpTesting.expectOne('/api/v1/schedules/schedule-1/validate');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ expectedRevision: 1 });
+    const evaluation = evaluationFixture({
+      outcome: 'HAS_RELAXABLE_CONFLICTS',
+      canConfirm: true,
+    });
+    request.flush(evaluation);
+    expect(store.schedule()?.evaluation).toEqual(evaluation);
+  });
+
+  it('confirms the draft with explicit acceptance of relaxable conflicts', () => {
+    store.load();
+    flushWorkspace();
+    store.confirm(true).subscribe();
+    const request = httpTesting.expectOne('/api/v1/schedules/schedule-1/confirm');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      expectedRevision: 1,
+      validationFingerprint: schedule().evaluation?.validationFingerprint,
+      acceptRelaxableConflicts: true,
+    });
+    request.flush(schedule({ state: 'CONFIRMED', isCurrent: true }));
+    expect(store.workspace()).toMatchObject({
+      kind: 'ready',
+      schedule: { state: 'CONFIRMED', isCurrent: true },
     });
   });
 
@@ -205,6 +243,23 @@ function schedule(overrides: Partial<Schedule> = {}): Schedule {
       findings: [],
     },
     acceptedFindingFingerprints: [],
+    ...overrides,
+  };
+}
+
+function evaluationFixture(
+  overrides: Partial<ScheduleEvaluation> = {},
+): ScheduleEvaluation {
+  return {
+    validationFingerprint: `sha256:${'c'.repeat(64)}`,
+    scheduleId: 'schedule-1',
+    scheduleRevision: 1,
+    ruleCatalogVersion: '1.0.0',
+    evaluatedAt: '2026-08-27T10:00:00.000Z',
+    outcome: 'IDEAL',
+    canConfirm: true,
+    counts: { blockingErrors: 0, relaxableErrors: 0, warnings: 0, information: 0 },
+    findings: [],
     ...overrides,
   };
 }

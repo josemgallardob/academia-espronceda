@@ -175,6 +175,45 @@ describe('ScheduleBoardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Confirmar horario con incidencias');
   });
 
+  it('highlights conflicted classes and lists global findings in Avisos', () => {
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.slot-card.conflict')).not.toBeNull();
+    const warningsTab = [...fixture.nativeElement.querySelectorAll('[role="tab"]')].find((item) =>
+      (item as HTMLButtonElement).textContent?.includes('Avisos'),
+    ) as HTMLButtonElement;
+    warningsTab.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Avisos del horario semanal global');
+    expect(fixture.nativeElement.textContent).toContain('La clase tiene pocos alumnos.');
+    expect(fixture.nativeElement.textContent).toContain('Incidencia');
+  });
+
+  it('blocks confirmation when the evaluation is BLOCKED', () => {
+    const blocked = scheduleFixture();
+    blocked.evaluation = {
+      ...blocked.evaluation!,
+      outcome: 'BLOCKED',
+      canConfirm: false,
+      counts: { blockingErrors: 1, relaxableErrors: 0, warnings: 0, information: 0 },
+    };
+    workspace.set({ kind: 'ready', schedule: blocked });
+    schedule.set(blocked);
+    store.validate.mockReturnValue(of(blocked.evaluation));
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    const confirmButton = [...fixture.nativeElement.querySelectorAll('button')].find((item) =>
+      (item as HTMLButtonElement).textContent?.includes('Confirmar horario'),
+    ) as HTMLButtonElement;
+    confirmButton.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('No se puede confirmar el horario');
+    const dialogConfirm = [...fixture.nativeElement.querySelectorAll('dialog button')].find(
+      (item) => (item as HTMLButtonElement).textContent?.trim() === 'Confirmar',
+    );
+    expect(dialogConfirm).toBeUndefined();
+  });
+
   it('shows assignment errors from the API', () => {
     store.addAssignment.mockReturnValue(
       throwError(() => ({ error: { detail: 'Horas excedidas' } })),
