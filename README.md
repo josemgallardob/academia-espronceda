@@ -93,4 +93,6 @@ que el propio código no pueda expresar con claridad.
 ## Flujo de trabajo
 
 El backlog se gestiona mediante `Project.canvas`. Sus tarjetas solo se modifican a través de
-`canvas-tool.py`, siguiendo las reglas de [AGENTS.md](./AGENTS.md).
+`canvas-tool.py`, siguiendo las reglas de [AGENTS.md](./AGENTS.md). El trabajo en Git (rama por
+grupo funcional, commit/push por tarea y PR a `main`) es obligatorio y está definido en
+[GIT.md](./GIT.md).

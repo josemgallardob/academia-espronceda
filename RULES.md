@@ -107,9 +107,14 @@ The tool enforces all of these rules. Invalid operations return an error and exi
 
 ### Requesting completion
 When the agent finishes work on an orange task:
-1. Run `finish <TASK-ID>` (changes orange → cyan)
-2. Inform the human what was done
-3. The human reviews and marks cyan → green (or back to red for rework)
+1. Run tests; if they fail, do not commit, push, or `finish`
+2. Commit (`feat: short description`) and push on the group's `feature/…` branch while the card is still orange
+3. Run `finish <TASK-ID>` (changes orange → cyan)
+4. If this was the last approved task of that prefix, open one PR to `main`
+5. Inform the human what was done
+6. The human reviews and marks cyan → green (or back to red for rework)
+
+Git rules are mandatory and defined in [GIT.md](./GIT.md).
 
 ---
 
@@ -190,10 +195,11 @@ python canvas-tool.py "Project.canvas" edit <TASK-ID> "Updated description with 
 ```
 
 ### 4. Complete
+After tests pass, commit (`feat: short description`) and push on the group's `feature/…` branch while the card is still orange, then:
 ```bash
 python canvas-tool.py "Project.canvas" finish <TASK-ID>
 ```
-Inform the human the task is done. Do NOT attempt to set the card green.
+If this was the last approved task of the prefix, open one PR to `main`. Inform the human the task is done. Do NOT attempt to set the card green. See [GIT.md](./GIT.md).
 
 ### 5. Repeat
 Once the human marks the task green, check for newly unblocked tasks:

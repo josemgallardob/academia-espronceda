@@ -1,104 +1,812 @@
 {
-	"nodes":[
-		{"id":"group-produc","type":"group","x":880,"y":0,"width":380,"height":1300,"label":"Product"},
-		{"id":"group-resear","type":"group","x":0,"y":0,"width":380,"height":1120,"label":"Research"},
-		{"id":"group-schedu","type":"group","x":1320,"y":0,"width":380,"height":1120,"label":"Scheduling"},
-		{"id":"group-founda","type":"group","x":440,"y":0,"width":380,"height":940,"label":"Foundation"},
-		{"id":"group-solver","type":"group","x":1760,"y":0,"width":380,"height":940,"label":"Solver"},
-		{"id":"group-delive","type":"group","x":2200,"y":0,"width":380,"height":940,"label":"Delivery"},
-		{"id":"canvas-errors","type":"text","text":"## Errors\n✓ None","x":-540,"y":-750,"width":380,"height":200,"color":"1"},
-		{"id":"legend","type":"text","text":"## Legend\n🔴 **Red** = To Do (ready)\n⬜ **Gray** = Blocked\n🟠 **Orange** = Doing\n🔵 **Cyan** = Ready to review\n🟢 **Green** = Done\n🟣 **Purple** = Proposed by agent","x":-540,"y":-310,"width":380,"height":230,"color":"0"},
-		{"id":"canvas-warnings","type":"text","text":"## Warnings\n✓ None","x":-540,"y":-530,"width":380,"height":200,"color":"3"},
-		{"id":"b16fa6be","type":"text","text":"## RE-01 Definir motivo de ser\nAclarar por qué existe este proyecto: qué problema real resuelve para la academia, qué dolores operativos ataca y qué resultado debería justificar construir una plataforma propia.","x":20,"y":40,"width":280,"height":160,"color":"4"},
-		{"id":"0ea9be59","type":"text","text":"## RE-02 Definir objetivo principal\nConvertir el motivo de ser en un objetivo principal claro, medible y útil para orientar decisiones de producto, arquitectura y prioridades del MVP.","x":20,"y":220,"width":280,"height":160,"color":"4"},
-		{"id":"7ee4050d","type":"text","text":"## RE-03 Definir scope y alcance inicial\nDelimitar qué entra y qué queda fuera de la primera versión: procesos cubiertos, usuarios contemplados, límites explícitos y criterios para evitar crecimiento descontrolado del MVP.","x":20,"y":400,"width":280,"height":160,"color":"4"},
-		{"id":"80a3c47c","type":"text","text":"## RE-04 Levantar requisitos funcionales\nIdentificar las funciones necesarias para la primera versión: gestión de alumnos, familias, profesores, cursos, horarios, pagos, comunicaciones, asistencia, informes y roles de usuario, separando MVP de futuras fases.","x":20,"y":580,"width":280,"height":160,"color":"4"},
-		{"id":"8e57536c","type":"text","text":"## RE-05 Definir stack tecnologico\nElegir una pila técnica pragmática para el MVP considerando velocidad de desarrollo, mantenibilidad, despliegue, coste, autenticación, base de datos, frontend, backend, testing y capacidad futura de ampliación.","x":20,"y":760,"width":280,"height":160,"color":"4"},
-		{"id":"8dd722f2","type":"text","text":"## RE-06 Consolidar documento de research\nRecoger las decisiones anteriores en una especificación inicial del proyecto que sirva como base para crear tareas de diseño, desarrollo y planificación del MVP.","x":20,"y":940,"width":280,"height":160,"color":"4"},
-		{"id":"93e882f6","type":"text","text":"## FO-01 Scaffold monorepo and toolchain\nMonorepositorio preparado con npm workspaces para Angular 22 y NestJS 11, junto con un servicio Python 3.14/FastAPI independiente. Los paquetes usan de forma uniforme la identidad completa del proyecto: @academia-espronceda/web, @academia-espronceda/api y academia-espronceda-solver, con el modulo Python academia_espronceda_solver. Se han fijado las versiones de Node, npm y Python; añadido configuracion comun de editor, formato, lint e ignores; documentado el arranque y la estructura; y creado un smoke test por cada servicio con endpoints de salud para API y solver. Los comandos setup, desarrollo, formato, lint, test, build y check se ejecutan desde la raiz. Verificacion final: npm run check correcto y npm audit --omit=dev sin vulnerabilidades de produccion.","x":460,"y":40,"width":280,"height":160,"color":"4"},
-		{"id":"37fa5760","type":"text","text":"## FO-02 Configure local environments and secrets\n## FO-02 Configure local environments and secrets\nConfiguracion completada para development y production. Incluye ejemplos versionados sin secretos, .env.local ignorado, arranque coordinado de Angular/NestJS/FastAPI, libSQL local file: en .data, validacion fail-fast de puertos/CORS/Turso/cookies/proxy/tokens, configuracion Angular por build, procesos de produccion y documentacion del dominio HTTPS con /api hacia NestJS y FastAPI privado. Verificado con npm run check y smoke test HTTP de los tres servicios.","x":460,"y":220,"width":280,"height":160,"color":"4"},
-		{"id":"ef998ccb","type":"text","text":"## FO-03 Define API contracts and rule catalog v1\n## FO-03 Define API contracts and rule catalog v1\n\nImplementados los contratos neutrales y versionados de Angular-NestJS y NestJS-FastAPI con OpenAPI 3.1 JSON, componentes compartidos, identificadores estables, errores, conflictos, estados del solver y puntuacion lexicografica.\n\nCatalogo 1.0.0 definido con 19 entradas: 12 reglas hard, 2 reglas de capacidad relajables y 5 preferencias. Incluye prioridades, severidades, condiciones, entidades, evidencia y metricas neutrales.\n\nAnadidos 13 fixtures contractuales positivos y negativos, validador automatico de esquemas, referencias e invariantes semanticas, documentacion de consumo y comando npm run validate:contracts integrado en npm run check.\n\nVerificacion final: npm run check completado correctamente con formato, contratos, lint, tests y builds de Angular, NestJS y Python.","x":460,"y":400,"width":280,"height":160,"color":"4"},
-		{"id":"e19291b1","type":"text","text":"## FO-04 Configure CI for main\nConfigurar la integracion continua en cada push a main con formato, lint, tipos, tests y builds de TypeScript y Python. Dejar preparada la ampliacion posterior con integracion, contratos y recorridos E2E sin exigir pull requests.","x":460,"y":580,"width":280,"height":160,"color":"6"},
-		{"id":"83075eef","type":"text","text":"## PR-01 Implement Drizzle persistence foundation\nDisenar el modelo relacional del MVP e implementar esquema TypeScript, migraciones Drizzle Kit, modulo de base de datos y repositorios base sobre Turso/libSQL. Cubrir usuarios, personas, profesores, horarios, clases, asignaciones y resultados de validacion con tests de migracion e integracion.","x":900,"y":40,"width":280,"height":160,"color":"4"},
-		{"id":"675bc8af","type":"text","text":"## PR-02 Create administrative user scripts\nImplementar scripts seguros para crear las dos cuentas y cambiar o restablecer contrasenas de forma interactiva. Generar hashes Argon2id, evitar secretos en argumentos y logs, e incrementar token_version para invalidar sesiones.","x":900,"y":220,"width":280,"height":160,"color":"4"},
-		{"id":"1fbb4b88","type":"text","text":"## PR-03 Implement backend authentication\nImplementar login por usuario o email, logout y consulta de sesion en NestJS. Emitir JWT en cookie HttpOnly/Secure/SameSite, aplicar guard global, XSRF, CORS estricto, expiracion, token_version, rate limiting y tests de seguridad e integracion.","x":900,"y":400,"width":280,"height":160,"color":"4"},
-		{"id":"7e6eca49","type":"text","text":"## PR-07 Build person detail and editing forms\nImplementar alta, detalle y edicion de personas con curso, asignaturas, horas totales y por asignatura, indisponibilidades y relaciones. Aplicar validaciones de formulario y mantener la validacion definitiva en NestJS.","x":900,"y":1120,"width":280,"height":160,"color":"4"},
-		{"id":"d1434331","type":"text","text":"## PR-04 Implement Angular authentication flow\nConstruir pantalla de login, consulta de sesion, logout, proteccion de rutas y redireccion al expirar la sesion. Integrar cookies con credenciales y XSRF sin almacenar JWT en localStorage o sessionStorage, incluyendo tests de componentes.","x":900,"y":580,"width":280,"height":160,"color":"4"},
-		{"id":"ebeb1bfd","type":"text","text":"## PR-05 Implement people and teachers backend\nImplementar en NestJS los casos de uso y endpoints para alumnos activos, lista de espera, profesores y detalle de persona. Incluir altas, edicion, transiciones sin duplicados, eliminacion consistente, validacion de horas y tests de dominio, API y persistencia.","x":900,"y":760,"width":280,"height":160,"color":"4"},
-		{"id":"aba84035","type":"text","text":"## PR-06 Build active students and waiting list UI\nCrear los listados de alumnos activos y lista de espera, con seleccion multiple, movimientos entre listas, eliminacion y estados de carga, vacio y error. Conectar con la API protegida y cubrir el comportamiento principal con tests Angular.","x":900,"y":940,"width":280,"height":160,"color":"4"},
-		{"id":"cea8e123","type":"text","text":"## SC-01 Implement schedule domain and persistence\nImplementar el modelo de dominio y persistencia para horario semanal global, cuadrantes, clases de una hora, asignaciones, borradores, horarios confirmados y resultados de validacion aceptados. Incluir repositorios y tests de transiciones e integridad.","x":1340,"y":40,"width":280,"height":160,"color":"6"},
-		{"id":"8b4c4008","type":"text","text":"## SC-02 Implement deterministic global validator\nCrear en NestJS el validador independiente del solver que evalua el horario semanal completo. Implementar todas las reglas y preferencias con conflictos estructurados, explicaciones, severidades, puntuacion y tests unitarios, de limites y property-based.","x":1340,"y":220,"width":280,"height":160,"color":"6"},
-		{"id":"e8c3e398","type":"text","text":"## SC-03 Implement schedule commands and confirmation API\nExponer operaciones para crear borradores, asignar y retirar alumnos, recalcular avisos y confirmar horarios con o sin incidencias. Validar siempre el horario global, exigir confirmacion consciente y persistir los conflictos aceptados con tests HTTP y de base de datos.","x":1340,"y":400,"width":280,"height":160,"color":"6"},
-		{"id":"92bf60be","type":"text","text":"## SC-04 Build daily teacher schedule view\nCrear la vista operativa filtrada por profesor y un unico dia, con navegacion anterior y siguiente, clases por franja y listado de alumnos. Mantener el contexto semanal global y cubrir carga, cambio de filtro y errores.","x":1340,"y":580,"width":280,"height":160,"color":"6"},
-		{"id":"33b9705a","type":"text","text":"## SC-05 Implement manual drag and drop scheduling\nPermitir arrastrar alumnos activos a clases y retirarlos, actualizando contadores de horas restantes o excedidas. Ante un conflicto, mostrar la advertencia y permitir cancelar o mantener la asignacion, sincronizando correctamente el borrador global.","x":1340,"y":760,"width":280,"height":160,"color":"6"},
-		{"id":"7a748163","type":"text","text":"## SC-06 Implement warnings and confirmation experience\nAnadir resaltado danger de clases conflictivas, pestana global de avisos y dialogo final de confirmacion con resumen de incidencias. Cubrir horarios validos, excepciones manuales, cancelacion y persistencia bajo responsabilidad del usuario.","x":1340,"y":940,"width":280,"height":160,"color":"6"},
-		{"id":"d3f1eacd","type":"text","text":"## SO-01 Implement FastAPI scheduling service contract\nImplementar el servicio interno FastAPI con endpoint de salud y POST /v1/schedules/solve. Validar el contrato versionado, autenticar la llamada de servicio, aplicar limites de tiempo y devolver estados y errores estructurados sin acceder a la base de datos.","x":1780,"y":40,"width":280,"height":160,"color":"6"},
-		{"id":"35dcc386","type":"text","text":"## SO-02 Implement strict CP-SAT scheduling model\nModelar en OR-Tools CP-SAT variables, disponibilidad, compatibilidades, horas, capacidades y no solapes para buscar primero un horario completamente valido. Incorporar preferencias al objetivo sin permitir que compensen reglas de mayor gravedad y cubrir casos factibles conocidos.","x":1780,"y":220,"width":280,"height":160,"color":"6"},
-		{"id":"f86b4431","type":"text","text":"## SO-03 Implement relaxed optimization and diagnostics\nCrear la segunda fase de resolucion para devolver la mejor solucion posible cuando la estricta no exista o no se encuentre. Introducir variables de violacion y pesos jerarquicos, producir conflictos explicables y probar casos imposibles, timeouts y reproducibilidad por semilla.","x":1780,"y":400,"width":280,"height":160,"color":"6"},
-		{"id":"158d6990","type":"text","text":"## SO-04 Integrate NestJS with scheduling solver\nImplementar el cliente HTTP interno, timeouts y traduccion entre el dominio y el contrato FastAPI. Convertir la propuesta en borrador, revalidarla siempre con NestJS y detectar cualquier divergencia de reglas, versiones, puntuaciones o conflictos.","x":1780,"y":580,"width":280,"height":160,"color":"6"},
-		{"id":"231618e0","type":"text","text":"## SO-05 Connect automatic generation to Angular\nAnadir la accion Generar horario, estados de ejecucion y presentacion del resultado valido o aproximado. Integrar el borrador generado con la misma vista, avisos, edicion manual y confirmacion utilizados por los horarios creados desde cero.","x":1780,"y":760,"width":280,"height":160,"color":"6"},
-		{"id":"177b8461","type":"text","text":"## DE-01 Consolidate cross-runtime test fixtures\nConstruir la bateria compartida de fixtures y regresiones para NestJS y Python, incluyendo casos validos, multiples soluciones, indisponibilidad imposible, solapes, capacidad insuficiente, profesores por asignatura, exceso de horas y best effort. Hacer fallar la suite ante divergencias entre solver y validador.","x":2220,"y":40,"width":280,"height":160,"color":"6"},
-		{"id":"1fb51cf7","type":"text","text":"## DE-02 Implement critical Playwright journeys\nAutomatizar los recorridos completos de login, gestion de alumnos, horario manual, conflictos aceptados, generacion automatica aproximada y confirmacion. Ejecutar los casos criticos en Chromium y reservar la suite multinavegador y regresion visual para versionado o despliegue.","x":2220,"y":220,"width":280,"height":160,"color":"6"},
-		{"id":"731145b6","type":"text","text":"## DE-03 Add operational guardrails and observability\nIncorporar logs estructurados sin secretos, health checks, correlacion de llamadas NestJS-FastAPI, metricas basicas, timeouts, limites de concurrencia y tratamiento uniforme de errores. Documentar diagnostico operativo y verificar los escenarios de fallo del solver y autenticacion.","x":2220,"y":400,"width":280,"height":160,"color":"6"},
-		{"id":"542b607c","type":"text","text":"## DE-04 Select deployment platform and environments\nComparar las opciones previstas y cerrar la plataforma para Angular, NestJS, FastAPI y Turso. Definir entornos, red privada, secretos, dominios, HTTPS, estrategia de migraciones, CI de despliegue y costes esperados.","x":2220,"y":580,"width":280,"height":160,"color":"6"},
-		{"id":"5e8f54d7","type":"text","text":"## DE-05 Deploy MVP and run smoke validation\nDesplegar el MVP con migraciones, dos cuentas administrativas y conectividad privada al solver. Ejecutar builds, suite obligatoria, smoke tests de autenticacion, CRUD, horario manual y generacion automatica, y documentar operacion y recuperacion basica.","x":2220,"y":760,"width":280,"height":160,"color":"6"}
+	"nodes": [
+		{
+			"id": "group-produc",
+			"type": "group",
+			"x": 880,
+			"y": 0,
+			"width": 380,
+			"height": 1300,
+			"label": "Product"
+		},
+		{
+			"id": "group-schedu",
+			"type": "group",
+			"x": 1320,
+			"y": 0,
+			"width": 380,
+			"height": 1120,
+			"label": "Scheduling"
+		},
+		{
+			"id": "group-founda",
+			"type": "group",
+			"x": 440,
+			"y": 0,
+			"width": 380,
+			"height": 940,
+			"label": "Foundation"
+		},
+		{
+			"id": "group-solver",
+			"type": "group",
+			"x": 1760,
+			"y": 0,
+			"width": 380,
+			"height": 940,
+			"label": "Solver"
+		},
+		{
+			"id": "group-delive",
+			"type": "group",
+			"x": 2200,
+			"y": 0,
+			"width": 380,
+			"height": 940,
+			"label": "Delivery"
+		},
+		{
+			"id": "group-resear",
+			"type": "group",
+			"x": 0,
+			"y": 0,
+			"width": 380,
+			"height": 1120,
+			"label": "Research"
+		},
+		{
+			"id": "canvas-errors",
+			"type": "text",
+			"text": "## Errors\n✓ None",
+			"x": -540,
+			"y": -750,
+			"width": 380,
+			"height": 200,
+			"color": "1"
+		},
+		{
+			"id": "legend",
+			"type": "text",
+			"text": "## Legend\n🔴 **Red** = To Do (ready)\n⬜ **Gray** = Blocked\n🟠 **Orange** = Doing\n🔵 **Cyan** = Ready to review\n🟢 **Green** = Done\n🟣 **Purple** = Proposed by agent",
+			"x": -540,
+			"y": -310,
+			"width": 380,
+			"height": 230,
+			"color": "0"
+		},
+		{
+			"id": "canvas-warnings",
+			"type": "text",
+			"text": "## Warnings\n✓ None",
+			"x": -540,
+			"y": -530,
+			"width": 380,
+			"height": 200,
+			"color": "3"
+		},
+		{
+			"id": "b16fa6be",
+			"type": "text",
+			"text": "## RE-01 Definir motivo de ser\nAclarar por qué existe este proyecto: qué problema real resuelve para la academia, qué dolores operativos ataca y qué resultado debería justificar construir una plataforma propia.",
+			"x": 20,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "0ea9be59",
+			"type": "text",
+			"text": "## RE-02 Definir objetivo principal\nConvertir el motivo de ser en un objetivo principal claro, medible y útil para orientar decisiones de producto, arquitectura y prioridades del MVP.",
+			"x": 20,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "7ee4050d",
+			"type": "text",
+			"text": "## RE-03 Definir scope y alcance inicial\nDelimitar qué entra y qué queda fuera de la primera versión: procesos cubiertos, usuarios contemplados, límites explícitos y criterios para evitar crecimiento descontrolado del MVP.",
+			"x": 20,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "80a3c47c",
+			"type": "text",
+			"text": "## RE-04 Levantar requisitos funcionales\nIdentificar las funciones necesarias para la primera versión: gestión de alumnos, familias, profesores, cursos, horarios, pagos, comunicaciones, asistencia, informes y roles de usuario, separando MVP de futuras fases.",
+			"x": 20,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "8e57536c",
+			"type": "text",
+			"text": "## RE-05 Definir stack tecnologico\nElegir una pila técnica pragmática para el MVP considerando velocidad de desarrollo, mantenibilidad, despliegue, coste, autenticación, base de datos, frontend, backend, testing y capacidad futura de ampliación.",
+			"x": 20,
+			"y": 760,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "8dd722f2",
+			"type": "text",
+			"text": "## RE-06 Consolidar documento de research\nRecoger las decisiones anteriores en una especificación inicial del proyecto que sirva como base para crear tareas de diseño, desarrollo y planificación del MVP.",
+			"x": 20,
+			"y": 940,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "cea8e123",
+			"type": "text",
+			"text": "## SC-01 Implement schedule domain and persistence\nImplementar el modelo de dominio y persistencia para horario semanal global, cuadrantes, clases de una hora, asignaciones, borradores, horarios confirmados y resultados de validacion aceptados. Incluir repositorios y tests de transiciones e integridad.",
+			"x": 1340,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "8b4c4008",
+			"type": "text",
+			"text": "## SC-02 Implement deterministic global validator\nCrear en NestJS el validador independiente del solver que evalua el horario semanal completo. Implementar todas las reglas y preferencias con conflictos estructurados, explicaciones, severidades, puntuacion y tests unitarios, de limites y property-based.",
+			"x": 1340,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "1"
+		},
+		{
+			"id": "e8c3e398",
+			"type": "text",
+			"text": "## SC-03 Implement schedule commands and confirmation API\nExponer operaciones para crear borradores, asignar y retirar alumnos, recalcular avisos y confirmar horarios con o sin incidencias. Validar siempre el horario global, exigir confirmacion consciente y persistir los conflictos aceptados con tests HTTP y de base de datos.",
+			"x": 1340,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "0"
+		},
+		{
+			"id": "92bf60be",
+			"type": "text",
+			"text": "## SC-04 Build daily teacher schedule view\nCrear la vista operativa filtrada por profesor y un unico dia, con navegacion anterior y siguiente, clases por franja y listado de alumnos. Mantener el contexto semanal global y cubrir carga, cambio de filtro y errores.",
+			"x": 1340,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "0"
+		},
+		{
+			"id": "d3f1eacd",
+			"type": "text",
+			"text": "## SO-01 Implement FastAPI scheduling service contract\nImplementar el servicio interno FastAPI con endpoint de salud y POST /v1/schedules/solve. Validar el contrato versionado, autenticar la llamada de servicio, aplicar limites de tiempo y devolver estados y errores estructurados sin acceder a la base de datos.",
+			"x": 1780,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "35dcc386",
+			"type": "text",
+			"text": "## SO-02 Implement strict CP-SAT scheduling model\nModelar en OR-Tools CP-SAT variables, disponibilidad, compatibilidades, horas, capacidades y no solapes para buscar primero un horario completamente valido. Incorporar preferencias al objetivo sin permitir que compensen reglas de mayor gravedad y cubrir casos factibles conocidos.",
+			"x": 1780,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "f86b4431",
+			"type": "text",
+			"text": "## SO-03 Implement relaxed optimization and diagnostics\nCrear la segunda fase de resolucion para devolver la mejor solucion posible cuando la estricta no exista o no se encuentre. Introducir variables de violacion y pesos jerarquicos, producir conflictos explicables y probar casos imposibles, timeouts y reproducibilidad por semilla.",
+			"x": 1780,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "158d6990",
+			"type": "text",
+			"text": "## SO-04 Integrate NestJS with scheduling solver\nImplementar el cliente HTTP interno, timeouts y traduccion entre el dominio y el contrato FastAPI. Convertir la propuesta en borrador, revalidarla siempre con NestJS y detectar cualquier divergencia de reglas, versiones, puntuaciones o conflictos.",
+			"x": 1780,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "231618e0",
+			"type": "text",
+			"text": "## SO-05 Connect automatic generation to Angular\nAnadir la accion Generar horario, estados de ejecucion y presentacion del resultado valido o aproximado. Integrar el borrador generado con la misma vista, avisos, edicion manual y confirmacion utilizados por los horarios creados desde cero.",
+			"x": 1780,
+			"y": 760,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "1fbb4b88",
+			"type": "text",
+			"text": "## PR-03 Implement backend authentication\nImplementar login por usuario o email, logout y consulta de sesion en NestJS. Emitir JWT en cookie HttpOnly/Secure/SameSite, aplicar guard global, XSRF, CORS estricto, expiracion, token_version, rate limiting y tests de seguridad e integracion.",
+			"x": 900,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "7e6eca49",
+			"type": "text",
+			"text": "## PR-07 Build person detail and editing forms\nImplementar alta, detalle y edicion de personas con curso, asignaturas, horas totales y por asignatura, indisponibilidades y relaciones. Aplicar validaciones de formulario y mantener la validacion definitiva en NestJS.",
+			"x": 900,
+			"y": 1120,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "d1434331",
+			"type": "text",
+			"text": "## PR-04 Implement Angular authentication flow\nConstruir pantalla de login, consulta de sesion, logout, proteccion de rutas y redireccion al expirar la sesion. Integrar cookies con credenciales y XSRF sin almacenar JWT en localStorage o sessionStorage, incluyendo tests de componentes.",
+			"x": 900,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "ebeb1bfd",
+			"type": "text",
+			"text": "## PR-05 Implement people and teachers backend\nImplementar en NestJS los casos de uso y endpoints para alumnos activos, lista de espera, profesores y detalle de persona. Incluir altas, edicion, transiciones sin duplicados, eliminacion consistente, validacion de horas y tests de dominio, API y persistencia.",
+			"x": 900,
+			"y": 760,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "177b8461",
+			"type": "text",
+			"text": "## DE-01 Consolidate cross-runtime test fixtures\nConstruir la bateria compartida de fixtures y regresiones para NestJS y Python, incluyendo casos validos, multiples soluciones, indisponibilidad imposible, solapes, capacidad insuficiente, profesores por asignatura, exceso de horas y best effort. Hacer fallar la suite ante divergencias entre solver y validador.",
+			"x": 2220,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "1fb51cf7",
+			"type": "text",
+			"text": "## DE-02 Implement critical Playwright journeys\nAutomatizar los recorridos completos de login, gestion de alumnos, horario manual, conflictos aceptados, generacion automatica aproximada y confirmacion. Ejecutar los casos criticos en Chromium y reservar la suite multinavegador y regresion visual para versionado o despliegue.",
+			"x": 2220,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "731145b6",
+			"type": "text",
+			"text": "## DE-03 Add operational guardrails and observability\nIncorporar logs estructurados sin secretos, health checks, correlacion de llamadas NestJS-FastAPI, metricas basicas, timeouts, limites de concurrencia y tratamiento uniforme de errores. Documentar diagnostico operativo y verificar los escenarios de fallo del solver y autenticacion.",
+			"x": 2220,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "542b607c",
+			"type": "text",
+			"text": "## DE-04 Select deployment platform and environments\nComparar las opciones previstas y cerrar la plataforma para Angular, NestJS, FastAPI y Turso. Definir entornos, red privada, secretos, dominios, HTTPS, estrategia de migraciones, CI de despliegue y costes esperados.",
+			"x": 2220,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "5e8f54d7",
+			"type": "text",
+			"text": "## DE-05 Deploy MVP and run smoke validation\nDesplegar el MVP con migraciones, dos cuentas administrativas y conectividad privada al solver. Ejecutar builds, suite obligatoria, smoke tests de autenticacion, CRUD, horario manual y generacion automatica, y documentar operacion y recuperacion basica.",
+			"x": 2220,
+			"y": 760,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "83075eef",
+			"type": "text",
+			"text": "## PR-01 Implement Drizzle persistence foundation\nDisenar el modelo relacional del MVP e implementar esquema TypeScript, migraciones Drizzle Kit, modulo de base de datos y repositorios base sobre Turso/libSQL. Cubrir usuarios, personas, profesores, horarios, clases, asignaciones y resultados de validacion con tests de migracion e integracion.",
+			"x": 900,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "675bc8af",
+			"type": "text",
+			"text": "## PR-02 Create administrative user scripts\nImplementar scripts seguros para crear las dos cuentas y cambiar o restablecer contrasenas de forma interactiva. Generar hashes Argon2id, evitar secretos en argumentos y logs, e incrementar token_version para invalidar sesiones.",
+			"x": 900,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "aba84035",
+			"type": "text",
+			"text": "## PR-06 Build active students and waiting list UI\nCrear los listados de alumnos activos y lista de espera, con seleccion multiple, movimientos entre listas, eliminacion y estados de carga, vacio y error. Conectar con la API protegida y cubrir el comportamiento principal con tests Angular.",
+			"x": 900,
+			"y": 940,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "33b9705a",
+			"type": "text",
+			"text": "## SC-05 Implement manual drag and drop scheduling\nPermitir arrastrar alumnos activos a clases y retirarlos, actualizando contadores de horas restantes o excedidas. Ante un conflicto, mostrar la advertencia y permitir cancelar o mantener la asignacion, sincronizando correctamente el borrador global.",
+			"x": 1340,
+			"y": 760,
+			"width": 280,
+			"height": 160,
+			"color": "0"
+		},
+		{
+			"id": "7a748163",
+			"type": "text",
+			"text": "## SC-06 Implement warnings and confirmation experience\nAnadir resaltado danger de clases conflictivas, pestana global de avisos y dialogo final de confirmacion con resumen de incidencias. Cubrir horarios validos, excepciones manuales, cancelacion y persistencia bajo responsabilidad del usuario.",
+			"x": 1340,
+			"y": 940,
+			"width": 280,
+			"height": 160,
+			"color": "0"
+		},
+		{
+			"id": "93e882f6",
+			"type": "text",
+			"text": "## FO-01 Scaffold monorepo and toolchain\nMonorepositorio preparado con npm workspaces para Angular 22 y NestJS 11, junto con un servicio Python 3.14/FastAPI independiente. Los paquetes usan de forma uniforme la identidad completa del proyecto: @academia-espronceda/web, @academia-espronceda/api y academia-espronceda-solver, con el modulo Python academia_espronceda_solver. Se han fijado las versiones de Node, npm y Python; añadido configuracion comun de editor, formato, lint e ignores; documentado el arranque y la estructura; y creado un smoke test por cada servicio con endpoints de salud para API y solver. Los comandos setup, desarrollo, formato, lint, test, build y check se ejecutan desde la raiz. Verificacion final: npm run check correcto y npm audit --omit=dev sin vulnerabilidades de produccion.",
+			"x": 460,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "37fa5760",
+			"type": "text",
+			"text": "## FO-02 Configure local environments and secrets\n## FO-02 Configure local environments and secrets\nConfiguracion completada para development y production. Incluye ejemplos versionados sin secretos, .env.local ignorado, arranque coordinado de Angular/NestJS/FastAPI, libSQL local file: en .data, validacion fail-fast de puertos/CORS/Turso/cookies/proxy/tokens, configuracion Angular por build, procesos de produccion y documentacion del dominio HTTPS con /api hacia NestJS y FastAPI privado. Verificado con npm run check y smoke test HTTP de los tres servicios.",
+			"x": 460,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "ef998ccb",
+			"type": "text",
+			"text": "## FO-03 Define API contracts and rule catalog v1\n## FO-03 Define API contracts and rule catalog v1\n\nImplementados los contratos neutrales y versionados de Angular-NestJS y NestJS-FastAPI con OpenAPI 3.1 JSON, componentes compartidos, identificadores estables, errores, conflictos, estados del solver y puntuacion lexicografica.\n\nCatalogo 1.0.0 definido con 19 entradas: 12 reglas hard, 2 reglas de capacidad relajables y 5 preferencias. Incluye prioridades, severidades, condiciones, entidades, evidencia y metricas neutrales.\n\nAnadidos 13 fixtures contractuales positivos y negativos, validador automatico de esquemas, referencias e invariantes semanticas, documentacion de consumo y comando npm run validate:contracts integrado en npm run check.\n\nVerificacion final: npm run check completado correctamente con formato, contratos, lint, tests y builds de Angular, NestJS y Python.",
+			"x": 460,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "e19291b1",
+			"type": "text",
+			"text": "## FO-04 Configure CI for main\nConfigurar la integracion continua en cada push a main con formato, lint, tipos, tests y builds de TypeScript y Python. Dejar preparada la ampliacion posterior con integracion, contratos y recorridos E2E sin exigir pull requests.",
+			"x": 460,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		}
 	],
-	"edges":[
-		{"id":"edge-001","fromNode":"b16fa6be","fromSide":"bottom","toNode":"0ea9be59","toSide":"top"},
-		{"id":"edge-002","fromNode":"0ea9be59","fromSide":"bottom","toNode":"7ee4050d","toSide":"top"},
-		{"id":"edge-003","fromNode":"7ee4050d","fromSide":"bottom","toNode":"80a3c47c","toSide":"top"},
-		{"id":"edge-004","fromNode":"80a3c47c","fromSide":"bottom","toNode":"8e57536c","toSide":"top"},
-		{"id":"edge-005","fromNode":"8e57536c","fromSide":"bottom","toNode":"8dd722f2","toSide":"top"},
-		{"id":"edge-006","fromNode":"8dd722f2","fromSide":"top","toNode":"93e882f6","toSide":"bottom"},
-		{"id":"edge-007","fromNode":"93e882f6","fromSide":"bottom","toNode":"37fa5760","toSide":"top"},
-		{"id":"edge-008","fromNode":"93e882f6","fromSide":"bottom","toNode":"ef998ccb","toSide":"top"},
-		{"id":"edge-009","fromNode":"93e882f6","fromSide":"bottom","toNode":"e19291b1","toSide":"top"},
-		{"id":"edge-010","fromNode":"93e882f6","fromSide":"right","toNode":"83075eef","toSide":"left"},
-		{"id":"edge-011","fromNode":"ef998ccb","fromSide":"right","toNode":"83075eef","toSide":"left"},
-		{"id":"edge-012","fromNode":"83075eef","fromSide":"bottom","toNode":"675bc8af","toSide":"top"},
-		{"id":"edge-013","fromNode":"37fa5760","fromSide":"right","toNode":"675bc8af","toSide":"left"},
-		{"id":"edge-014","fromNode":"675bc8af","fromSide":"bottom","toNode":"1fbb4b88","toSide":"top"},
-		{"id":"edge-015","fromNode":"37fa5760","fromSide":"bottom","toNode":"1fbb4b88","toSide":"top"},
-		{"id":"edge-016","fromNode":"1fbb4b88","fromSide":"bottom","toNode":"d1434331","toSide":"top"},
-		{"id":"edge-017","fromNode":"83075eef","fromSide":"bottom","toNode":"ebeb1bfd","toSide":"top"},
-		{"id":"edge-018","fromNode":"1fbb4b88","fromSide":"bottom","toNode":"ebeb1bfd","toSide":"top"},
-		{"id":"edge-019","fromNode":"d1434331","fromSide":"bottom","toNode":"aba84035","toSide":"top"},
-		{"id":"edge-020","fromNode":"ebeb1bfd","fromSide":"bottom","toNode":"aba84035","toSide":"top"},
-		{"id":"edge-021","fromNode":"aba84035","fromSide":"bottom","toNode":"7e6eca49","toSide":"top"},
-		{"id":"edge-022","fromNode":"ebeb1bfd","fromSide":"bottom","toNode":"7e6eca49","toSide":"top"},
-		{"id":"edge-023","fromNode":"83075eef","fromSide":"right","toNode":"cea8e123","toSide":"left"},
-		{"id":"edge-024","fromNode":"ef998ccb","fromSide":"right","toNode":"cea8e123","toSide":"left"},
-		{"id":"edge-025","fromNode":"1fbb4b88","fromSide":"right","toNode":"cea8e123","toSide":"left"},
-		{"id":"edge-026","fromNode":"cea8e123","fromSide":"bottom","toNode":"8b4c4008","toSide":"top"},
-		{"id":"edge-027","fromNode":"ef998ccb","fromSide":"right","toNode":"8b4c4008","toSide":"left"},
-		{"id":"edge-028","fromNode":"8b4c4008","fromSide":"bottom","toNode":"e8c3e398","toSide":"top"},
-		{"id":"edge-029","fromNode":"d1434331","fromSide":"right","toNode":"92bf60be","toSide":"left"},
-		{"id":"edge-030","fromNode":"e8c3e398","fromSide":"bottom","toNode":"92bf60be","toSide":"top"},
-		{"id":"edge-031","fromNode":"92bf60be","fromSide":"bottom","toNode":"33b9705a","toSide":"top"},
-		{"id":"edge-032","fromNode":"33b9705a","fromSide":"bottom","toNode":"7a748163","toSide":"top"},
-		{"id":"edge-033","fromNode":"e8c3e398","fromSide":"bottom","toNode":"7a748163","toSide":"top"},
-		{"id":"edge-034","fromNode":"37fa5760","fromSide":"right","toNode":"d3f1eacd","toSide":"left"},
-		{"id":"edge-035","fromNode":"ef998ccb","fromSide":"right","toNode":"d3f1eacd","toSide":"left"},
-		{"id":"edge-036","fromNode":"d3f1eacd","fromSide":"bottom","toNode":"35dcc386","toSide":"top"},
-		{"id":"edge-037","fromNode":"ef998ccb","fromSide":"right","toNode":"35dcc386","toSide":"left"},
-		{"id":"edge-038","fromNode":"35dcc386","fromSide":"bottom","toNode":"f86b4431","toSide":"top"},
-		{"id":"edge-039","fromNode":"f86b4431","fromSide":"bottom","toNode":"158d6990","toSide":"top"},
-		{"id":"edge-040","fromNode":"8b4c4008","fromSide":"bottom","toNode":"158d6990","toSide":"top"},
-		{"id":"edge-041","fromNode":"e8c3e398","fromSide":"bottom","toNode":"158d6990","toSide":"top"},
-		{"id":"edge-042","fromNode":"158d6990","fromSide":"bottom","toNode":"231618e0","toSide":"top"},
-		{"id":"edge-043","fromNode":"7a748163","fromSide":"right","toNode":"231618e0","toSide":"left"},
-		{"id":"edge-044","fromNode":"8b4c4008","fromSide":"right","toNode":"177b8461","toSide":"left"},
-		{"id":"edge-045","fromNode":"f86b4431","fromSide":"right","toNode":"177b8461","toSide":"left"},
-		{"id":"edge-046","fromNode":"7e6eca49","fromSide":"right","toNode":"1fb51cf7","toSide":"left"},
-		{"id":"edge-047","fromNode":"231618e0","fromSide":"top","toNode":"1fb51cf7","toSide":"bottom"},
-		{"id":"edge-048","fromNode":"1fbb4b88","fromSide":"right","toNode":"731145b6","toSide":"left"},
-		{"id":"edge-049","fromNode":"158d6990","fromSide":"right","toNode":"731145b6","toSide":"left"},
-		{"id":"edge-050","fromNode":"37fa5760","fromSide":"bottom","toNode":"542b607c","toSide":"top"},
-		{"id":"edge-051","fromNode":"e19291b1","fromSide":"right","toNode":"542b607c","toSide":"left"},
-		{"id":"edge-052","fromNode":"231618e0","fromSide":"right","toNode":"5e8f54d7","toSide":"left"},
-		{"id":"edge-053","fromNode":"177b8461","fromSide":"bottom","toNode":"5e8f54d7","toSide":"top"},
-		{"id":"edge-054","fromNode":"1fb51cf7","fromSide":"bottom","toNode":"5e8f54d7","toSide":"top"},
-		{"id":"edge-055","fromNode":"731145b6","fromSide":"bottom","toNode":"5e8f54d7","toSide":"top"},
-		{"id":"edge-056","fromNode":"542b607c","fromSide":"bottom","toNode":"5e8f54d7","toSide":"top"}
+	"edges": [
+		{
+			"id": "edge-001",
+			"fromNode": "b16fa6be",
+			"fromSide": "bottom",
+			"toNode": "0ea9be59",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-002",
+			"fromNode": "0ea9be59",
+			"fromSide": "bottom",
+			"toNode": "7ee4050d",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-003",
+			"fromNode": "7ee4050d",
+			"fromSide": "bottom",
+			"toNode": "80a3c47c",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-004",
+			"fromNode": "80a3c47c",
+			"fromSide": "bottom",
+			"toNode": "8e57536c",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-005",
+			"fromNode": "8e57536c",
+			"fromSide": "bottom",
+			"toNode": "8dd722f2",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-006",
+			"fromNode": "8dd722f2",
+			"fromSide": "top",
+			"toNode": "93e882f6",
+			"toSide": "bottom"
+		},
+		{
+			"id": "edge-007",
+			"fromNode": "93e882f6",
+			"fromSide": "bottom",
+			"toNode": "37fa5760",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-008",
+			"fromNode": "93e882f6",
+			"fromSide": "bottom",
+			"toNode": "ef998ccb",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-009",
+			"fromNode": "93e882f6",
+			"fromSide": "bottom",
+			"toNode": "e19291b1",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-010",
+			"fromNode": "93e882f6",
+			"fromSide": "right",
+			"toNode": "83075eef",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-011",
+			"fromNode": "ef998ccb",
+			"fromSide": "right",
+			"toNode": "83075eef",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-012",
+			"fromNode": "83075eef",
+			"fromSide": "bottom",
+			"toNode": "675bc8af",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-013",
+			"fromNode": "37fa5760",
+			"fromSide": "right",
+			"toNode": "675bc8af",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-014",
+			"fromNode": "675bc8af",
+			"fromSide": "bottom",
+			"toNode": "1fbb4b88",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-015",
+			"fromNode": "37fa5760",
+			"fromSide": "bottom",
+			"toNode": "1fbb4b88",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-016",
+			"fromNode": "1fbb4b88",
+			"fromSide": "bottom",
+			"toNode": "d1434331",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-017",
+			"fromNode": "83075eef",
+			"fromSide": "bottom",
+			"toNode": "ebeb1bfd",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-018",
+			"fromNode": "1fbb4b88",
+			"fromSide": "bottom",
+			"toNode": "ebeb1bfd",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-019",
+			"fromNode": "d1434331",
+			"fromSide": "bottom",
+			"toNode": "aba84035",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-020",
+			"fromNode": "ebeb1bfd",
+			"fromSide": "bottom",
+			"toNode": "aba84035",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-021",
+			"fromNode": "aba84035",
+			"fromSide": "bottom",
+			"toNode": "7e6eca49",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-022",
+			"fromNode": "ebeb1bfd",
+			"fromSide": "bottom",
+			"toNode": "7e6eca49",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-023",
+			"fromNode": "83075eef",
+			"fromSide": "right",
+			"toNode": "cea8e123",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-024",
+			"fromNode": "ef998ccb",
+			"fromSide": "right",
+			"toNode": "cea8e123",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-025",
+			"fromNode": "1fbb4b88",
+			"fromSide": "right",
+			"toNode": "cea8e123",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-026",
+			"fromNode": "cea8e123",
+			"fromSide": "bottom",
+			"toNode": "8b4c4008",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-027",
+			"fromNode": "ef998ccb",
+			"fromSide": "right",
+			"toNode": "8b4c4008",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-028",
+			"fromNode": "8b4c4008",
+			"fromSide": "bottom",
+			"toNode": "e8c3e398",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-029",
+			"fromNode": "d1434331",
+			"fromSide": "right",
+			"toNode": "92bf60be",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-030",
+			"fromNode": "e8c3e398",
+			"fromSide": "bottom",
+			"toNode": "92bf60be",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-031",
+			"fromNode": "92bf60be",
+			"fromSide": "bottom",
+			"toNode": "33b9705a",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-032",
+			"fromNode": "33b9705a",
+			"fromSide": "bottom",
+			"toNode": "7a748163",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-033",
+			"fromNode": "e8c3e398",
+			"fromSide": "bottom",
+			"toNode": "7a748163",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-034",
+			"fromNode": "37fa5760",
+			"fromSide": "right",
+			"toNode": "d3f1eacd",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-035",
+			"fromNode": "ef998ccb",
+			"fromSide": "right",
+			"toNode": "d3f1eacd",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-036",
+			"fromNode": "d3f1eacd",
+			"fromSide": "bottom",
+			"toNode": "35dcc386",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-037",
+			"fromNode": "ef998ccb",
+			"fromSide": "right",
+			"toNode": "35dcc386",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-038",
+			"fromNode": "35dcc386",
+			"fromSide": "bottom",
+			"toNode": "f86b4431",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-039",
+			"fromNode": "f86b4431",
+			"fromSide": "bottom",
+			"toNode": "158d6990",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-040",
+			"fromNode": "8b4c4008",
+			"fromSide": "bottom",
+			"toNode": "158d6990",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-041",
+			"fromNode": "e8c3e398",
+			"fromSide": "bottom",
+			"toNode": "158d6990",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-042",
+			"fromNode": "158d6990",
+			"fromSide": "bottom",
+			"toNode": "231618e0",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-043",
+			"fromNode": "7a748163",
+			"fromSide": "right",
+			"toNode": "231618e0",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-044",
+			"fromNode": "8b4c4008",
+			"fromSide": "right",
+			"toNode": "177b8461",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-045",
+			"fromNode": "f86b4431",
+			"fromSide": "right",
+			"toNode": "177b8461",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-046",
+			"fromNode": "7e6eca49",
+			"fromSide": "right",
+			"toNode": "1fb51cf7",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-047",
+			"fromNode": "231618e0",
+			"fromSide": "top",
+			"toNode": "1fb51cf7",
+			"toSide": "bottom"
+		},
+		{
+			"id": "edge-048",
+			"fromNode": "1fbb4b88",
+			"fromSide": "right",
+			"toNode": "731145b6",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-049",
+			"fromNode": "158d6990",
+			"fromSide": "right",
+			"toNode": "731145b6",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-050",
+			"fromNode": "37fa5760",
+			"fromSide": "bottom",
+			"toNode": "542b607c",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-051",
+			"fromNode": "e19291b1",
+			"fromSide": "right",
+			"toNode": "542b607c",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-052",
+			"fromNode": "231618e0",
+			"fromSide": "right",
+			"toNode": "5e8f54d7",
+			"toSide": "left"
+		},
+		{
+			"id": "edge-053",
+			"fromNode": "177b8461",
+			"fromSide": "bottom",
+			"toNode": "5e8f54d7",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-054",
+			"fromNode": "1fb51cf7",
+			"fromSide": "bottom",
+			"toNode": "5e8f54d7",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-055",
+			"fromNode": "731145b6",
+			"fromSide": "bottom",
+			"toNode": "5e8f54d7",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-056",
+			"fromNode": "542b607c",
+			"fromSide": "bottom",
+			"toNode": "5e8f54d7",
+			"toSide": "top"
+		}
 	]
 }

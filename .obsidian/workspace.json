@@ -15,8 +15,8 @@
               "state": {
                 "file": "Project.canvas",
                 "viewState": {
-                  "x": 1497.6171426294945,
-                  "y": 654.9382862790221,
+                  "x": 1140.5267389666294,
+                  "y": 586.4057845659464,
                   "zoom": -0.9554863122661266
                 }
               },
@@ -44,7 +44,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "Files"
@@ -81,7 +83,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200
   },
   "right": {
     "id": "1a3ef9a6c66fd4f8",
@@ -183,22 +185,23 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "canvas-watcher:Run Canvas Watcher": false
     }
   },
-  "active": "6286079bf966db95",
+  "active": "bc7eec1f3b9670b2",
   "lastOpenFiles": [
+    "GIT.md",
+    "apps/api/src/scheduling/schedules.service.ts",
+    "apps/api/src/scheduling/schedules.service.spec.ts",
+    "apps/api/src/scheduling/schedules.module.ts",
+    "apps/api/src/scheduling/schedule.ts",
+    "apps/api/src/scheduling/schedule-errors.ts",
+    "apps/api/src/scheduling/schedule-aggregate.ts",
+    "apps/api/src/scheduling/schedule-aggregate.spec.ts",
+    "apps/api/src/scheduling",
+    "apps/api/src/database/repositories/schedules.repository.integration.spec.ts",
     "apps/api/dist/tsconfig.build.tsbuildinfo",
-    "apps/api/dist/src/administration/scripts/create-administrative-users.d.ts",
-    "apps/api/dist/src/administration/scripts/create-administrative-users.js",
-    "apps/api/dist/src/administration/scripts/create-administrative-users.js.map",
-    "apps/api/dist/src/administration/interactive-prompt.d.ts",
-    "apps/api/dist/src/administration/interactive-prompt.js",
-    "apps/api/dist/src/administration/interactive-prompt.js.map",
-    "apps/api/dist/src/administration/administrative-context.d.ts",
-    "apps/api/dist/src/administration/administrative-context.js",
-    "apps/api/dist/src/administration/administrative-context.js.map",
-    "apps/api/dist/src/administration/administrative-cli.d.ts",
     "node_modules/@types/cookie-parser/README.md",
     "node_modules/libphonenumber-js/README.md",
     "node_modules/libphonenumber-js/CODE_OF_CONDUCT.md",

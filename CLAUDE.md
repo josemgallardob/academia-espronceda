@@ -10,6 +10,16 @@ python canvas-tool.py "<file>.canvas" <command> [args]
 
 Direct JSON editing of `.canvas` files is **forbidden**. The CLI tool enforces workflow rules (valid transitions, cycle detection, blocked states) so you don't have to remember them.
 
+## CRITICAL: Git workflow
+
+Agents **must** follow [GIT.md](./GIT.md). Summary:
+
+- One branch per functional group (prefix `XX` of `XX-NN`). Name: `feature/{short-descriptive-name}` in kebab-case, **3–4 words max**. Infer the branch from the group's task descriptions and existing `feature/*` names (e.g. SC tasks about validator, daily view, drag-and-drop → `feature/manual-scheduling`). Never work on `main`.
+- After tests pass, **commit and push on that branch while the card is still orange**, then `finish` (orange → cyan). Commit message: `feat: short description of what this task did`.
+- When the last approved task of that prefix is completed (none left red/orange/gray), open **one PR to `main`**. Do not merge it.
+
+No commit, push, or `finish` if tests are red. Full rules, commands, and prohibitions: [GIT.md](./GIT.md).
+
 ## Session Protocol
 
 ### 1. Start of session — read the board
@@ -46,11 +56,13 @@ python canvas-tool.py "Project.canvas" edit <TASK-ID> "Updated description with 
 
 ### 4. Finish the task
 
+After tests pass, commit (`feat: short description`) and push on the group's `feature/…` branch while the card is still orange. Then:
+
 ```bash
 python canvas-tool.py "Project.canvas" finish <TASK-ID>   # orange → cyan
 ```
 
-Tell the user what was done. Do NOT attempt to set the card green — only the human does that.
+If this was the last approved task of the prefix, open one PR to `main`. Tell the user what was done. Do NOT attempt to set the card green — only the human does that. See [GIT.md](./GIT.md).
 
 ### 5. Repeat
 
