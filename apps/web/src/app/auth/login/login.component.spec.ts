@@ -120,4 +120,27 @@ describe('LoginComponent', () => {
     fixture.componentInstance.submit();
     expect(fixture.componentInstance.submitting()).toBe(false);
   });
+
+  it('exposes the local demo account and opens Horario after a demo login', () => {
+    authStore.login.mockReturnValue(of(session));
+    const fixture = TestBed.createComponent(LoginComponent);
+    const route = TestBed.inject(ActivatedRoute);
+    Object.assign(route.snapshot, { queryParamMap: convertToParamMap({}) });
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.textContent).toContain('profesor1');
+    expect(element.textContent).toContain('local-only-admin-password-1');
+
+    element.querySelector<HTMLButtonElement>('.demo-action')?.click();
+    fixture.detectChanges();
+
+    expect(authStore.login).toHaveBeenCalledWith({
+      identifier: 'profesor1',
+      password: 'local-only-admin-password-1',
+    });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/horario', {
+      replaceUrl: true,
+    });
+  });
 });

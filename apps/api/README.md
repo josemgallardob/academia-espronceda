@@ -56,6 +56,15 @@ Los comandos no aceptan argumentos: solicitan usuario, email y contraseña de fo
 interactiva, y la contraseña no se muestra en pantalla. Se exige un mínimo de 15
 caracteres y se almacena un hash Argon2id con salt individual.
 
+Para un flujo local completo (cuentas `profesor1`/`profesor2`, tres profesores y alumnos):
+
+```bash
+npm run seed:local
+```
+
+Solo se ejecuta contra una base `file:` fuera de production. Las credenciales de demostración
+están documentadas en `.env.development.example` y en la pantalla de login de desarrollo.
+
 Los costes pueden incrementarse mediante `ARGON2_MEMORY_COST_KIB`,
 `ARGON2_TIME_COST` y `ARGON2_PARALLELISM`. No se permiten valores inferiores a
 19 456 KiB, 2 iteraciones y paralelismo 1, respectivamente.

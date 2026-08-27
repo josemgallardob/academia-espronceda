@@ -64,6 +64,24 @@
         </button>
       </form>
 
+      @if (localDemo) {
+        <aside class="demo-panel" aria-label="Acceso local de demostración">
+          <p class="eyebrow">Entorno local</p>
+          <p>
+            Usuario <code>{{ localDemo.identifier }}</code> · contraseña
+            <code>{{ localDemo.password }}</code>
+          </p>
+          <button
+            type="button"
+            class="demo-action"
+            (click)="useLocalDemo()"
+            [disabled]="submitting()"
+          >
+            Entrar y abrir Horario
+          </button>
+        </aside>
+      }
+
       <p class="security-note">
         <span aria-hidden="true">●</span>
         Conexión protegida mediante una cookie segura y privada.
