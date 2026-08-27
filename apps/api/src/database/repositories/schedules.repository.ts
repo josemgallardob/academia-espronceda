@@ -34,6 +34,10 @@ import {
 import type { ScheduleState, SubjectCode } from '../schema/catalog';
 import { BaseRepository } from './base.repository';
 
+type DbSession = Parameters<
+  Parameters<DatabaseConnection['db']['transaction']>[0]
+>[0];
+
 const entityTypes = new Set<EntityType>([
   'SCHEDULE',
   'CLASS',
@@ -400,7 +404,7 @@ function toHeader(schedule: Schedule): NewScheduleRow {
 }
 
 async function persistEvaluation(
-  transaction: DatabaseConnection['db'],
+  transaction: DbSession,
   evaluation: ScheduleEvaluation,
 ): Promise<void> {
   const [existing] = await transaction
@@ -409,6 +413,23 @@ async function persistEvaluation(
     .where(eq(scheduleValidations.id, evaluation.id))
     .limit(1);
   if (existing) {
+    return;
+  }
+  const [sameFingerprint] = await transaction
+    .select({ id: scheduleValidations.id })
+    .from(scheduleValidations)
+    .where(
+      and(
+        eq(scheduleValidations.scheduleId, evaluation.scheduleId),
+        eq(scheduleValidations.scheduleRevision, evaluation.scheduleRevision),
+        eq(
+          scheduleValidations.validationFingerprint,
+          evaluation.validationFingerprint,
+        ),
+      ),
+    )
+    .limit(1);
+  if (sameFingerprint) {
     return;
   }
 
@@ -445,7 +466,7 @@ async function persistEvaluation(
 }
 
 async function persistConfirmation(
-  transaction: DatabaseConnection['db'],
+  transaction: DbSession,
   schedule: Schedule,
 ): Promise<void> {
   if (

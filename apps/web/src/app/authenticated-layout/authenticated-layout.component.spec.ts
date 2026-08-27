@@ -27,6 +27,7 @@ describe('AuthenticatedLayoutComponent', () => {
 
     expect(text).toContain('admin');
     expect(text).toContain('admin@example.com');
+    expect(text).toContain('Horario');
     expect(text.toLowerCase()).not.toContain('jwt');
   });
 

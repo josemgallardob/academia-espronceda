@@ -74,6 +74,9 @@ Puntos de comprobacion:
 - Solver: `http://localhost:8001/health`
 - Base local: `.data/academia-espronceda.db`
 
+Tras migrar, `npm run seed:local` deja cuentas, profesores y alumnos para recorrer Horario
+desde el navegador. En el login de desarrollo aparece un acceso de demostración.
+
 La base local usa una URL `file:` compatible con `@libsql/client`. No necesita Docker, un
 daemon ni credenciales de Turso. La dependencia de persistencia se incorporara en PR-01.
 

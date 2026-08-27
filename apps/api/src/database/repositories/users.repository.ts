@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { count, eq, or, sql } from 'drizzle-orm';
+import { asc, count, eq, or, sql } from 'drizzle-orm';
 import { DatabaseConnection } from '../database.connection';
 import { type NewUserRow, type UserRow, users } from '../schema';
 import { BaseRepository } from './base.repository';
@@ -18,6 +18,36 @@ export class UsersRepository extends BaseRepository {
   async count(): Promise<number> {
     const [result] = await this.db.select({ value: count() }).from(users);
     return result.value;
+  }
+
+  async listChronological(): Promise<UserRow[]> {
+    return this.db
+      .select()
+      .from(users)
+      .orderBy(asc(users.createdAt), asc(users.username));
+  }
+
+  async updateIdentityAndPassword(
+    id: string,
+    input: {
+      username: string;
+      email: string;
+      passwordHash: string;
+      occurredAt: string;
+    },
+  ): Promise<UserRow | undefined> {
+    const [updated] = await this.db
+      .update(users)
+      .set({
+        username: input.username,
+        email: input.email,
+        passwordHash: input.passwordHash,
+        tokenVersion: sql`${users.tokenVersion} + 1`,
+        updatedAt: input.occurredAt,
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
   }
 
   async insertInitialUsers(

@@ -15,7 +15,7 @@
 			"x": 1320,
 			"y": 0,
 			"width": 380,
-			"height": 1120,
+			"height": 1300,
 			"label": "Scheduling"
 		},
 		{
@@ -162,7 +162,7 @@
 			"y": 220,
 			"width": 280,
 			"height": 160,
-			"color": "1"
+			"color": "4"
 		},
 		{
 			"id": "e8c3e398",
@@ -172,7 +172,7 @@
 			"y": 400,
 			"width": 280,
 			"height": 160,
-			"color": "0"
+			"color": "4"
 		},
 		{
 			"id": "92bf60be",
@@ -182,7 +182,7 @@
 			"y": 580,
 			"width": 280,
 			"height": 160,
-			"color": "0"
+			"color": "4"
 		},
 		{
 			"id": "d3f1eacd",
@@ -192,7 +192,7 @@
 			"y": 40,
 			"width": 280,
 			"height": 160,
-			"color": "6"
+			"color": "2"
 		},
 		{
 			"id": "35dcc386",
@@ -362,7 +362,7 @@
 			"y": 760,
 			"width": 280,
 			"height": 160,
-			"color": "0"
+			"color": "4"
 		},
 		{
 			"id": "7a748163",
@@ -372,7 +372,7 @@
 			"y": 940,
 			"width": 280,
 			"height": 160,
-			"color": "0"
+			"color": "4"
 		},
 		{
 			"id": "93e882f6",
@@ -413,6 +413,16 @@
 			"width": 280,
 			"height": 160,
 			"color": "6"
+		},
+		{
+			"id": "6e2e72b2",
+			"type": "text",
+			"text": "## SC-07 Seed teacher catalog for local scheduling\nThe local database has weekly slots and people, but no teacher rows or capabilities. Empty-draft creation and the daily board need at least the three operational teachers with subjects, courses, and available slots. Add a checked-in seed (or admin path) so Horario can be used without manual SQLite inserts.",
+			"x": 1340,
+			"y": 1120,
+			"width": 280,
+			"height": 160,
+			"color": "5"
 		}
 	],
 	"edges": [

@@ -42,6 +42,25 @@ header {
   font-size: 1.05rem;
 }
 
+.primary-nav {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.primary-nav a {
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.4rem;
+  color: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.primary-nav a.active,
+.primary-nav a:hover {
+  background: #f3ead7;
+}
+
 .session-actions {
   display: flex;
   align-items: center;
