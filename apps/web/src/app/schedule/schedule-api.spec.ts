@@ -68,6 +68,42 @@ describe('ScheduleStore', () => {
     expect(store.workspace()).toMatchObject({ kind: 'ready' });
   });
 
+  it('posts a new assignment and refreshes the workspace', () => {
+    store.load();
+    flushWorkspace();
+    store.addAssignment('student-1', 'teacher-1', 'slot-monday-1600').subscribe();
+    const request = httpTesting.expectOne('/api/v1/schedules/schedule-1/assignments');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      expectedRevision: 1,
+      studentId: 'student-1',
+      teacherId: 'teacher-1',
+      slotId: 'slot-monday-1600',
+    });
+    request.flush({ schedule: schedule({ revision: 2 }) });
+    expect(store.workspace()).toMatchObject({
+      kind: 'ready',
+      schedule: { revision: 2 },
+    });
+  });
+
+  it('deletes an assignment by id', () => {
+    store.load();
+    flushWorkspace();
+    store.removeAssignment('assignment-1').subscribe();
+    const request = httpTesting.expectOne(
+      (candidate) =>
+        candidate.url === '/api/v1/schedules/schedule-1/assignments/assignment-1' &&
+        candidate.method === 'DELETE',
+    );
+    expect(request.request.params.get('expectedRevision')).toBe('1');
+    request.flush({ schedule: schedule({ revision: 2 }) });
+    expect(store.workspace()).toMatchObject({
+      kind: 'ready',
+      schedule: { revision: 2 },
+    });
+  });
+
   function flushWorkspace(): void {
     httpTesting.expectOne('/api/v1/teachers').flush([teacher()]);
     httpTesting
@@ -125,7 +161,7 @@ function listResponse(items: Schedule[]): ScheduleListResponse {
   };
 }
 
-function schedule(): Schedule {
+function schedule(overrides: Partial<Schedule> = {}): Schedule {
   return {
     id: 'schedule-1',
     state: 'DRAFT',
@@ -169,5 +205,6 @@ function schedule(): Schedule {
       findings: [],
     },
     acceptedFindingFingerprints: [],
+    ...overrides,
   };
 }
