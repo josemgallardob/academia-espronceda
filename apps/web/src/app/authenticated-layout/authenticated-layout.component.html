@@ -5,6 +5,11 @@
       <strong>Academia Espronceda</strong>
     </a>
 
+    <nav class="primary-nav" aria-label="Secciones">
+      <a routerLink="/personas" routerLinkActive="active">Personas</a>
+      <a routerLink="/horario" routerLinkActive="active">Horario</a>
+    </nav>
+
     <div class="session-actions">
       @if (authStore.user(); as user) {
         <div class="user-summary">

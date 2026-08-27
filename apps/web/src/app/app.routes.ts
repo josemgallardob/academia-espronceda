@@ -6,6 +6,7 @@ import { PeopleComponent } from './people/people.component';
 import { PersonDetailComponent } from './people/person-detail/person-detail.component';
 import { PersonFormComponent } from './people/person-form/person-form.component';
 import { pendingPersonChangesGuard } from './people/person-form/pending-person-changes.guard';
+import { ScheduleBoardComponent } from './schedule/schedule-board.component';
 
 export const routes: Routes = [
   {
@@ -41,6 +42,11 @@ export const routes: Routes = [
         path: 'personas/:personId',
         component: PersonDetailComponent,
         title: 'Detalle de persona · Academia Espronceda',
+      },
+      {
+        path: 'horario',
+        component: ScheduleBoardComponent,
+        title: 'Horario · Academia Espronceda',
       },
     ],
   },

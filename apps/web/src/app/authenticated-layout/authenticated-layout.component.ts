@@ -1,10 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../auth/auth.store';
 
 @Component({
   selector: 'app-authenticated-layout',
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './authenticated-layout.component.html',
   styleUrl: './authenticated-layout.component.scss',
 })
