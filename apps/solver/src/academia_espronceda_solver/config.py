@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from os import environ
 from typing import Literal
 
+from academia_espronceda_solver.constants import DEFAULT_MAX_TIME_LIMIT_SECONDS
+
 RuntimeEnvironment = Literal["development", "test", "production"]
 
 
@@ -12,6 +14,7 @@ class SolverSettings:
     host: str
     port: int
     internal_service_token: str
+    max_time_limit_seconds: float
 
 
 def load_settings(source: Mapping[str, str] | None = None) -> SolverSettings:
@@ -23,6 +26,9 @@ def load_settings(source: Mapping[str, str] | None = None) -> SolverSettings:
         "INTERNAL_SERVICE_TOKEN",
         "local-only-service-token-replace-in-every-deployed-environment",
     ).strip()
+    max_time_limit_seconds = _read_time_limit(
+        values.get("SOLVER_MAX_TIME_LIMIT_SECONDS", str(DEFAULT_MAX_TIME_LIMIT_SECONDS))
+    )
 
     if not host:
         raise ValueError("SOLVER_HOST cannot be empty")
@@ -39,7 +45,12 @@ def load_settings(source: Mapping[str, str] | None = None) -> SolverSettings:
         host=host,
         port=port,
         internal_service_token=service_token,
+        max_time_limit_seconds=max_time_limit_seconds,
     )
+
+
+def get_settings() -> SolverSettings:
+    return load_settings()
 
 
 def _read_environment(value: str | None) -> RuntimeEnvironment:
@@ -58,3 +69,14 @@ def _read_port(value: str) -> int:
     if not 1 <= port <= 65_535:
         raise ValueError("SOLVER_PORT must be an integer between 1 and 65535")
     return port
+
+
+def _read_time_limit(value: str) -> float:
+    try:
+        time_limit = float(value)
+    except ValueError as error:
+        raise ValueError("SOLVER_MAX_TIME_LIMIT_SECONDS must be a positive number") from error
+
+    if not 0 < time_limit < float("inf"):
+        raise ValueError("SOLVER_MAX_TIME_LIMIT_SECONDS must be a positive number")
+    return time_limit

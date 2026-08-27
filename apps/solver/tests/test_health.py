@@ -12,4 +12,5 @@ def test_health_endpoint_reports_solver_is_ready() -> None:
     assert response.json() == {
         "service": "solver",
         "status": "ok",
+        "version": "1.0.0",
     }
