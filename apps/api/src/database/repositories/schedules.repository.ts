@@ -411,6 +411,23 @@ async function persistEvaluation(
   if (existing) {
     return;
   }
+  const [sameFingerprint] = await transaction
+    .select({ id: scheduleValidations.id })
+    .from(scheduleValidations)
+    .where(
+      and(
+        eq(scheduleValidations.scheduleId, evaluation.scheduleId),
+        eq(scheduleValidations.scheduleRevision, evaluation.scheduleRevision),
+        eq(
+          scheduleValidations.validationFingerprint,
+          evaluation.validationFingerprint,
+        ),
+      ),
+    )
+    .limit(1);
+  if (sameFingerprint) {
+    return;
+  }
 
   await transaction.insert(scheduleValidations).values({
     id: evaluation.id,
