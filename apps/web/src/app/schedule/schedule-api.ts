@@ -53,7 +53,16 @@ export class ScheduleStore {
   readonly daySlots = computed(() => {
     const schedule = this.schedule();
     const day = this.selectedDaySignal();
-    return (schedule?.slots ?? []).filter((slot) => slot.dayOfWeek === day);
+    const teacherId = this.selectedTeacherIdSignal();
+    const availableSlotIds = this.teachersSignal().find(
+      (teacher) => teacher.id === teacherId,
+    )?.availableSlotIds;
+    return (schedule?.slots ?? []).filter((slot) => {
+      if (slot.dayOfWeek !== day) {
+        return false;
+      }
+      return availableSlotIds === undefined || availableSlotIds.includes(slot.id);
+    });
   });
 
   readonly studentHours = computed((): StudentHours[] => {

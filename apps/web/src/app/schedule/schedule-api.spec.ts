@@ -41,6 +41,96 @@ describe('ScheduleStore', () => {
     expect(store.studentHours()[0].remainingHours).toBe(2);
   });
 
+  it('hides 20:00–21:00 when the selected teacher is not available that day', () => {
+    store.load();
+    httpTesting.expectOne('/api/v1/teachers').flush([
+      {
+        id: 'teacher-1',
+        displayName: 'Profesor Uno',
+        availableSlotIds: ['slot-monday-1600'],
+      },
+    ]);
+    httpTesting
+      .expectOne(
+        (request) => request.url === '/api/v1/people' && request.params.get('status') === 'ACTIVE',
+      )
+      .flush(peopleResponse([person()]));
+    httpTesting.expectOne('/api/v1/schedules').flush(listResponse([schedule()]));
+    httpTesting.expectOne('/api/v1/schedules/schedule-1').flush(
+      schedule({
+        slots: [
+          {
+            id: 'slot-monday-1600',
+            dayOfWeek: 'MONDAY',
+            startTime: '16:00',
+            endTime: '17:00',
+          },
+          {
+            id: 'slot-monday-2000',
+            dayOfWeek: 'MONDAY',
+            startTime: '20:00',
+            endTime: '21:00',
+          },
+          {
+            id: 'slot-tuesday-2000',
+            dayOfWeek: 'TUESDAY',
+            startTime: '20:00',
+            endTime: '21:00',
+          },
+        ],
+      }),
+    );
+
+    expect(store.daySlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
+    store.selectDay('TUESDAY');
+    expect(store.daySlots()).toEqual([]);
+  });
+
+  it('shows 20:00–21:00 only on days the selected teacher works', () => {
+    store.load();
+    httpTesting.expectOne('/api/v1/teachers').flush([
+      {
+        id: 'teacher-1',
+        displayName: 'Profesor Uno',
+        availableSlotIds: ['slot-monday-1600', 'slot-tuesday-2000'],
+      },
+    ]);
+    httpTesting
+      .expectOne(
+        (request) => request.url === '/api/v1/people' && request.params.get('status') === 'ACTIVE',
+      )
+      .flush(peopleResponse([person()]));
+    httpTesting.expectOne('/api/v1/schedules').flush(listResponse([schedule()]));
+    httpTesting.expectOne('/api/v1/schedules/schedule-1').flush(
+      schedule({
+        slots: [
+          {
+            id: 'slot-monday-1600',
+            dayOfWeek: 'MONDAY',
+            startTime: '16:00',
+            endTime: '17:00',
+          },
+          {
+            id: 'slot-monday-2000',
+            dayOfWeek: 'MONDAY',
+            startTime: '20:00',
+            endTime: '21:00',
+          },
+          {
+            id: 'slot-tuesday-2000',
+            dayOfWeek: 'TUESDAY',
+            startTime: '20:00',
+            endTime: '21:00',
+          },
+        ],
+      }),
+    );
+
+    expect(store.daySlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
+    store.selectDay('TUESDAY');
+    expect(store.daySlots().map((slot) => slot.id)).toEqual(['slot-tuesday-2000']);
+  });
+
   it('keeps the weekly schedule in memory when the day filter changes', () => {
     store.load();
     flushWorkspace();
@@ -247,9 +337,7 @@ function schedule(overrides: Partial<Schedule> = {}): Schedule {
   };
 }
 
-function evaluationFixture(
-  overrides: Partial<ScheduleEvaluation> = {},
-): ScheduleEvaluation {
+function evaluationFixture(overrides: Partial<ScheduleEvaluation> = {}): ScheduleEvaluation {
   return {
     validationFingerprint: `sha256:${'c'.repeat(64)}`,
     scheduleId: 'schedule-1',

@@ -144,13 +144,26 @@ describe('People and teacher options (e2e)', () => {
         ENGLISH: 'Inglés',
       },
     });
-    expect(body.slots).toHaveLength(19);
+    expect(body.slots).toHaveLength(23);
     expect(body.slots[0]).toEqual({
       id: 'slot-monday-1600',
       dayOfWeek: 'MONDAY',
       startTime: '16:00',
       endTime: '17:00',
     });
+    expect(body.slots.map((slot) => slot.id)).toEqual(
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
+    );
+    expect(
+      body.slots.some(
+        (slot) => slot.dayOfWeek === 'FRIDAY' && slot.startTime === '20:00',
+      ),
+    ).toBe(false);
     expect(body.slots.at(-1)).toEqual({
       id: 'slot-friday-1800',
       dayOfWeek: 'FRIDAY',
@@ -162,7 +175,11 @@ describe('People and teacher options (e2e)', () => {
   it('exposes only active minimal teacher selector options', async () => {
     const response = await authenticatedGet('/api/v1/teachers').expect(200);
     expect(response.body).toEqual([
-      { id: 'teacher-active', displayName: 'Profesor Activo' },
+      {
+        id: 'teacher-active',
+        displayName: 'Profesor Activo',
+        availableSlotIds: [],
+      },
     ]);
   });
 

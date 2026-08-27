@@ -9,6 +9,7 @@ export type FindingSeverity = 'ERROR' | 'WARNING' | 'INFO';
 export interface TeacherOption {
   id: string;
   displayName: string;
+  availableSlotIds?: string[];
 }
 
 export interface WeeklySlot {
