@@ -227,26 +227,6 @@
   }
 </main>
 
-@if (dropWarning(); as warning) {
-  <div class="dialog-backdrop">
-    <dialog open class="confirmation-dialog" aria-modal="true">
-      <p class="dialog-eyebrow">Conflicto de asignación</p>
-      <h2>¿Mantener a {{ warning.studentName }} en esta clase?</h2>
-      <ul class="finding-list">
-        @for (finding of warning.findings; track finding.fingerprint) {
-          <li>{{ finding.message }}</li>
-        }
-      </ul>
-      <div class="dialog-actions">
-        <button type="button" (click)="cancelAssignment()">Cancelar</button>
-        <button type="button" class="primary-action" (click)="keepAssignment()">
-          Mantener asignación
-        </button>
-      </div>
-    </dialog>
-  </div>
-}
-
 @if (confirmOpen()) {
   <div class="dialog-backdrop">
     <dialog open class="confirmation-dialog" aria-modal="true">

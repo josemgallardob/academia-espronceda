@@ -6,7 +6,6 @@ import {
   DAY_LABELS,
   WEEK_DAYS,
   type ScheduleAssignment,
-  type ScheduleFinding,
   type StudentHours,
   type WeeklySlot,
 } from './schedule.models';
@@ -18,12 +17,6 @@ interface Notice {
   message: string;
 }
 
-interface DropWarning {
-  studentName: string;
-  findings: ScheduleFinding[];
-  assignmentId: string;
-}
-
 @Component({
   selector: 'app-schedule-board',
   templateUrl: './schedule-board.component.html',
@@ -33,7 +26,6 @@ export class ScheduleBoardComponent implements OnInit {
   readonly store = inject(ScheduleStore);
   readonly tab = signal<BoardTab>('quadrant');
   readonly notice = signal<Notice | null>(null);
-  readonly dropWarning = signal<DropWarning | null>(null);
   readonly confirmOpen = signal(false);
   readonly draggingStudentId = signal<string | null>(null);
 
@@ -127,8 +119,7 @@ export class ScheduleBoardComponent implements OnInit {
     if (!studentId || !teacherId || !this.isEditable()) {
       return;
     }
-    const hours = this.store.studentHours().find((item) => item.person.id === studentId);
-    this.assignStudent(studentId, teacherId, slot.id, hours);
+    this.assignStudent(studentId, teacherId, slot.id);
   }
 
   removeStudent(assignment: ScheduleAssignment): void {
@@ -141,25 +132,6 @@ export class ScheduleBoardComponent implements OnInit {
         this.notice.set({
           tone: 'error',
           message: problemMessage(error, 'No se ha podido retirar al alumno.'),
-        }),
-    });
-  }
-
-  keepAssignment(): void {
-    this.dropWarning.set(null);
-  }
-
-  cancelAssignment(): void {
-    const warning = this.dropWarning();
-    if (!warning) {
-      return;
-    }
-    this.store.removeAssignment(warning.assignmentId).subscribe({
-      next: () => this.dropWarning.set(null),
-      error: (error: unknown) =>
-        this.notice.set({
-          tone: 'error',
-          message: problemMessage(error, 'No se ha podido deshacer la asignación.'),
         }),
     });
   }
@@ -256,35 +228,9 @@ export class ScheduleBoardComponent implements OnInit {
     return 'El horario no tiene conflictos. Puedes confirmarlo como horario vigente.';
   }
 
-  private assignStudent(
-    studentId: string,
-    teacherId: string,
-    slotId: string,
-    hours: StudentHours | undefined,
-  ): void {
-    const previous = this.store.schedule();
+  private assignStudent(studentId: string, teacherId: string, slotId: string): void {
     this.notice.set(null);
     this.store.addAssignment(studentId, teacherId, slotId).subscribe({
-      next: (schedule) => {
-        const newAssignment = findNewAssignment(previous, schedule, studentId, teacherId, slotId);
-        const classFindings = (schedule.evaluation?.findings ?? []).filter((finding) =>
-          finding.entityRefs.some(
-            (reference) =>
-              (reference.type === 'CLASS' &&
-                reference.id === this.store.classForSlot(slotId)?.id) ||
-              (reference.type === 'STUDENT' && reference.id === studentId),
-          ),
-        );
-        if (newAssignment && classFindings.length > 0) {
-          this.dropWarning.set({
-            studentName: hours?.person
-              ? `${hours.person.firstName} ${hours.person.firstSurname}`
-              : 'el alumno',
-            findings: classFindings,
-            assignmentId: newAssignment.id,
-          });
-        }
-      },
       error: (error: unknown) =>
         this.notice.set({
           tone: 'error',
@@ -292,24 +238,4 @@ export class ScheduleBoardComponent implements OnInit {
         }),
     });
   }
-}
-
-function findNewAssignment(
-  previous: ReturnType<ScheduleStore['schedule']>,
-  next: NonNullable<ReturnType<ScheduleStore['schedule']>>,
-  studentId: string,
-  teacherId: string,
-  slotId: string,
-): ScheduleAssignment | undefined {
-  const previousIds = new Set(
-    (previous?.classes ?? []).flatMap((weeklyClass) =>
-      weeklyClass.assignments.map((assignment) => assignment.id),
-    ),
-  );
-  const weeklyClass = next.classes.find(
-    (item) => item.teacherId === teacherId && item.slotId === slotId,
-  );
-  return weeklyClass?.assignments.find(
-    (assignment) => assignment.studentId === studentId && !previousIds.has(assignment.id),
-  );
 }
