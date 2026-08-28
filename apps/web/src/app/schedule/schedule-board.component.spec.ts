@@ -122,13 +122,13 @@ describe('ScheduleBoardComponent', () => {
     expect(store.load).toHaveBeenCalledTimes(2);
   });
 
-  it('assigns by drop and offers to cancel when the class has findings', () => {
+  it('assigns by drop without a keep-or-cancel dialog when the class has findings', () => {
     const assigned = scheduleFixture();
     assigned.evaluation = {
       ...assigned.evaluation!,
       findings: [
         {
-          fingerprint: `sha256:${'b'.repeat(64)}`,
+          fingerprint: `sha256:${'c'.repeat(64)}`,
           ruleId: 'CLASS_CAPACITY_MINIMUM',
           enforcement: 'RELAXABLE',
           severity: 'ERROR',
@@ -148,17 +148,28 @@ describe('ScheduleBoardComponent', () => {
       studentId: 'student-2',
       studentDisplayName: 'Luis Ruiz',
     });
-    store.addAssignment.mockReturnValue(of(assigned));
+    assigned.classes[0].findingFingerprints = [`sha256:${'c'.repeat(64)}`];
+    store.addAssignment.mockImplementation(() => {
+      schedule.set(assigned);
+      workspace.set({ kind: 'ready', schedule: assigned });
+      return of(assigned);
+    });
     const fixture = TestBed.createComponent(ScheduleBoardComponent);
-    const component = fixture.componentInstance;
     fixture.detectChanges();
-    component.onDrop(scheduleFixture().slots[0], dragEvent('student-2'));
+    fixture.componentInstance.onDrop(scheduleFixture().slots[0], dragEvent('student-2'));
     fixture.detectChanges();
     expect(store.addAssignment).toHaveBeenCalledWith('student-2', 'teacher-1', 'slot-monday-1600');
-    expect(fixture.nativeElement.textContent).toContain('¿Mantener');
-    store.removeAssignment.mockReturnValue(of(scheduleFixture()));
-    component.cancelAssignment();
-    expect(store.removeAssignment).toHaveBeenCalledWith('assignment-2');
+    expect(store.removeAssignment).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('dialog')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('¿Mantener');
+    expect(fixture.nativeElement.textContent).not.toContain('Conflicto de asignación');
+    const warningsTab = [...fixture.nativeElement.querySelectorAll('[role="tab"]')].find((item) =>
+      (item as HTMLButtonElement).textContent?.includes('Avisos'),
+    ) as HTMLButtonElement;
+    warningsTab.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Avisos del horario semanal global');
+    expect(fixture.nativeElement.textContent).toContain('La clase tiene pocos alumnos.');
   });
 
   it('opens the confirmation dialog with the global incidence summary', () => {
@@ -212,6 +223,17 @@ describe('ScheduleBoardComponent', () => {
       (item) => (item as HTMLButtonElement).textContent?.trim() === 'Confirmar',
     );
     expect(dialogConfirm).toBeUndefined();
+  });
+
+  it('removes a student from a class without opening a dialog', () => {
+    store.removeAssignment.mockImplementation(() => of(scheduleFixture()));
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    const removeButton = fixture.nativeElement.querySelector('button.remove') as HTMLButtonElement;
+    removeButton.click();
+    fixture.detectChanges();
+    expect(store.removeAssignment).toHaveBeenCalledWith('assignment-1');
+    expect(fixture.nativeElement.querySelector('dialog')).toBeNull();
   });
 
   it('shows assignment errors from the API', () => {
