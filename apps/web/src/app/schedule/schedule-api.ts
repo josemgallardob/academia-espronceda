@@ -17,6 +17,7 @@ import type {
   WeeklySlot,
 } from './schedule.models';
 import { WEEK_DAYS } from './schedule.models';
+import { teacherCompatibleWithStudent } from './teacher-student-compatibility';
 
 const apiRoot = environment.apiBaseUrl.replace(/\/$/u, '');
 const schedulesUrl = `${apiRoot}/v1/schedules`;
@@ -67,14 +68,22 @@ export class ScheduleStore {
 
   readonly studentHours = computed((): StudentHours[] => {
     const schedule = this.schedule();
-    return this.studentsSignal().map((person) => {
-      const assignedHours = schedule ? countAssignments(schedule, person.id) : 0;
-      return {
-        person,
-        assignedHours,
-        remainingHours: person.weeklyHoursTotal - assignedHours,
-      };
-    });
+    const teacher = this.selectedTeacher();
+    if (!teacher) {
+      return [];
+    }
+    return this.studentsSignal()
+      .filter(
+        (person) => person.status === 'ACTIVE' && teacherCompatibleWithStudent(teacher, person),
+      )
+      .map((person) => {
+        const assignedHours = schedule ? countAssignments(schedule, person.id) : 0;
+        return {
+          person,
+          assignedHours,
+          remainingHours: person.weeklyHoursTotal - assignedHours,
+        };
+      });
   });
 
   load(): void {

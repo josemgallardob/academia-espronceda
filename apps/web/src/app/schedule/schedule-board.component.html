@@ -131,7 +131,13 @@
           <aside class="roster" aria-label="Alumnos activos">
             <h2>Alumnos activos</h2>
             @if (store.studentHours().length === 0) {
-              <p class="muted">No hay alumnos activos.</p>
+              <p class="muted">
+                @if (store.students().length === 0) {
+                  No hay alumnos activos.
+                } @else {
+                  No hay alumnos compatibles con este profesor.
+                }
+              </p>
             }
             <ul>
               @for (item of store.studentHours(); track item.person.id) {

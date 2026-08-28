@@ -95,6 +95,17 @@ describe('People and teacher options (e2e)', () => {
       profile: 'GENERAL_SCIENCES',
       isActive: true,
     });
+    await teachers.replaceCapabilities('teacher-active', {
+      subjectCodes: [
+        'MATHEMATICS',
+        'SOCIAL_SCIENCES_MATHEMATICS',
+        'PHYSICS',
+        'CHEMISTRY',
+        'BIOLOGY',
+      ],
+      courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1'],
+      availableSlotIds: [],
+    });
     await teachers.insert({
       id: 'teacher-inactive',
       displayName: 'Profesor Inactivo',
@@ -172,13 +183,21 @@ describe('People and teacher options (e2e)', () => {
     });
   });
 
-  it('exposes only active minimal teacher selector options', async () => {
+  it('exposes only active teacher selector options with persisted capabilities', async () => {
     const response = await authenticatedGet('/api/v1/teachers').expect(200);
     expect(response.body).toEqual([
       {
         id: 'teacher-active',
         displayName: 'Profesor Activo',
         availableSlotIds: [],
+        subjectCodes: [
+          'BIOLOGY',
+          'CHEMISTRY',
+          'MATHEMATICS',
+          'PHYSICS',
+          'SOCIAL_SCIENCES_MATHEMATICS',
+        ],
+        courseCodes: ['BACH_1', 'ESO_1', 'ESO_2', 'ESO_3', 'ESO_4'],
       },
     ]);
   });
