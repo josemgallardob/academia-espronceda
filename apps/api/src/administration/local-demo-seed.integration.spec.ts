@@ -97,15 +97,13 @@ describe('seedLocalDemo', () => {
       capabilities.find((teacher) => teacher.id === 'teacher-general-sciences')
         ?.availableSlotIds,
     ).toEqual(
-      expect.arrayContaining(['slot-tuesday-2000', 'slot-thursday-2000']),
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
     );
-    expect(
-      capabilities
-        .find((teacher) => teacher.id === 'teacher-general-sciences')
-        ?.availableSlotIds.filter((slotId) =>
-          ['slot-monday-2000', 'slot-wednesday-2000'].includes(slotId),
-        ),
-    ).toEqual([]);
     expect(
       capabilities
         .find((teacher) => teacher.id === 'teacher-languages')
@@ -118,7 +116,7 @@ describe('seedLocalDemo', () => {
     expect(
       capabilities.find((teacher) => teacher.id === 'teacher-general-sciences')
         ?.availableSlotIds.length,
-    ).toBe(21);
+    ).toBe(23);
     expect(
       capabilities.find((teacher) => teacher.id === 'teacher-languages')
         ?.availableSlotIds.length,
