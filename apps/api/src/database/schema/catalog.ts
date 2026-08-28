@@ -26,6 +26,15 @@ export const teacherProfiles = [
   'LANGUAGES',
 ] as const;
 
+export const teacherProfileSortIndex: Record<
+  (typeof teacherProfiles)[number],
+  number
+> = {
+  SENIOR_SCIENCES: 0,
+  GENERAL_SCIENCES: 1,
+  LANGUAGES: 2,
+};
+
 export const daysOfWeek = [
   'MONDAY',
   'TUESDAY',

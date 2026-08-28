@@ -34,17 +34,21 @@ export interface LocalDemoSeedReport {
 
 interface TeacherSeed {
   id: string;
-  displayName: string;
   profile: TeacherProfile;
   subjectCodes: SubjectCode[];
   courseCodes: CourseCode[];
   windows: { dayOfWeek: DayOfWeek; startTime: string; endTime: string }[];
 }
 
+const DEFAULT_TEACHER_DISPLAY_NAMES: Record<TeacherProfile, string> = {
+  SENIOR_SCIENCES: 'Profesor 1',
+  GENERAL_SCIENCES: 'Profesor 2',
+  LANGUAGES: 'Profesor 3',
+};
+
 const DEMO_TEACHERS: TeacherSeed[] = [
   {
     id: 'teacher-senior-sciences',
-    displayName: 'Profesor 1',
     profile: 'SENIOR_SCIENCES',
     subjectCodes: [
       'MATHEMATICS',
@@ -63,7 +67,6 @@ const DEMO_TEACHERS: TeacherSeed[] = [
   },
   {
     id: 'teacher-general-sciences',
-    displayName: 'Profesor 2',
     profile: 'GENERAL_SCIENCES',
     subjectCodes: [
       'MATHEMATICS',
@@ -83,7 +86,6 @@ const DEMO_TEACHERS: TeacherSeed[] = [
   },
   {
     id: 'teacher-languages',
-    displayName: 'Profesor 3',
     profile: 'LANGUAGES',
     subjectCodes: ['SPANISH_LANGUAGE', 'ENGLISH'],
     courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1', 'BACH_2'],
@@ -96,6 +98,22 @@ const DEMO_TEACHERS: TeacherSeed[] = [
     ],
   },
 ];
+
+export function resolveTeacherDisplayNames(
+  source: NodeJS.ProcessEnv = process.env,
+): Record<TeacherProfile, string> {
+  return {
+    SENIOR_SCIENCES:
+      source.TEACHER_1_DISPLAY_NAME?.trim() ||
+      DEFAULT_TEACHER_DISPLAY_NAMES.SENIOR_SCIENCES,
+    GENERAL_SCIENCES:
+      source.TEACHER_2_DISPLAY_NAME?.trim() ||
+      DEFAULT_TEACHER_DISPLAY_NAMES.GENERAL_SCIENCES,
+    LANGUAGES:
+      source.TEACHER_3_DISPLAY_NAME?.trim() ||
+      DEFAULT_TEACHER_DISPLAY_NAMES.LANGUAGES,
+  };
+}
 
 export function assertLocalDemoAllowed(input: {
   nodeEnv: string;
@@ -115,6 +133,7 @@ export function assertLocalDemoAllowed(input: {
 
 export async function seedLocalDemo(
   connection: DatabaseConnection,
+  source: NodeJS.ProcessEnv = process.env,
 ): Promise<LocalDemoSeedReport> {
   const users = new UsersRepository(connection);
   const teachers = new TeachersRepository(connection);
@@ -128,7 +147,11 @@ export async function seedLocalDemo(
   }
 
   const alignedUsers = await alignAdministrativeAccounts(users);
-  const teacherIds = await seedTeachers(teachers, slots);
+  const teacherIds = await seedTeachers(
+    teachers,
+    slots,
+    resolveTeacherDisplayNames(source),
+  );
   const personIds = await seedPeople(people);
 
   return {
@@ -204,16 +227,25 @@ async function alignAdministrativeAccounts(
 async function seedTeachers(
   teachers: TeachersRepository,
   slots: Awaited<ReturnType<WeeklySlotsRepository['listActive']>>,
+  displayNames: Record<TeacherProfile, string>,
 ): Promise<string[]> {
   const ids: string[] = [];
   for (const teacher of DEMO_TEACHERS) {
+    const displayName = displayNames[teacher.profile];
     const current = await teachers.findById(teacher.id);
     if (!current) {
       await teachers.insert({
         id: teacher.id,
-        displayName: teacher.displayName,
+        displayName,
         profile: teacher.profile,
       });
+    } else {
+      if (current.displayName !== displayName) {
+        await teachers.syncDisplayName(teacher.id, displayName);
+      }
+      if (!current.isActive) {
+        await teachers.setActive(teacher.id, true);
+      }
     }
     await teachers.replaceCapabilities(teacher.id, {
       subjectCodes: teacher.subjectCodes,
@@ -231,6 +263,7 @@ async function seedTeachers(
     });
     ids.push(teacher.id);
   }
+  await teachers.deactivateExcept(ids);
   return ids;
 }
 

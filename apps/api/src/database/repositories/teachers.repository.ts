@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { asc, eq, inArray } from 'drizzle-orm';
+import { eq, inArray, notInArray } from 'drizzle-orm';
 import { DatabaseConnection } from '../database.connection';
 import {
   type NewTeacherRow,
   type TeacherRow,
+  scheduleTeachers,
   teacherAvailableSlots,
   teacherCourses,
   teacherSubjects,
   teachers,
 } from '../schema';
-import type {
-  CourseCode,
-  SubjectCode,
-  TeacherProfile,
+import {
+  type CourseCode,
+  type SubjectCode,
+  type TeacherProfile,
+  teacherProfileSortIndex,
 } from '../schema/catalog';
 import { BaseRepository } from './base.repository';
 
@@ -46,16 +48,47 @@ export class TeachersRepository extends BaseRepository {
     return created;
   }
 
+  async syncDisplayName(id: string, displayName: string): Promise<void> {
+    const updatedAt = new Date().toISOString();
+    await this.db.transaction(async (transaction) => {
+      await transaction
+        .update(teachers)
+        .set({ displayName, updatedAt })
+        .where(eq(teachers.id, id));
+      await transaction
+        .update(scheduleTeachers)
+        .set({ displayName })
+        .where(eq(scheduleTeachers.teacherId, id));
+    });
+  }
+
+  async setActive(id: string, isActive: boolean): Promise<void> {
+    await this.db
+      .update(teachers)
+      .set({ isActive, updatedAt: new Date().toISOString() })
+      .where(eq(teachers.id, id));
+  }
+
+  async deactivateExcept(keepIds: string[]): Promise<void> {
+    if (keepIds.length === 0) {
+      return;
+    }
+    await this.db
+      .update(teachers)
+      .set({ isActive: false, updatedAt: new Date().toISOString() })
+      .where(notInArray(teachers.id, keepIds));
+  }
+
   async findById(id: string): Promise<TeacherRow | undefined> {
     return this.db.query.teachers.findFirst({ where: eq(teachers.id, id) });
   }
 
   async listActive(): Promise<TeacherRow[]> {
-    return this.db
+    const rows = await this.db
       .select()
       .from(teachers)
-      .where(eq(teachers.isActive, true))
-      .orderBy(asc(teachers.displayName));
+      .where(eq(teachers.isActive, true));
+    return rows.sort(compareTeachersByProfile);
   }
 
   async listCapabilities(ids?: string[]): Promise<TeacherCapability[]> {
@@ -82,26 +115,24 @@ export class TeachersRepository extends BaseRepository {
         .where(inArray(teacherAvailableSlots.teacherId, teacherIds)),
     ]);
 
-    return rows
-      .sort((left, right) => left.displayName.localeCompare(right.displayName))
-      .map((row) => ({
-        id: row.id,
-        displayName: row.displayName,
-        profile: row.profile,
-        isActive: row.isActive,
-        subjectCodes: subjectRows
-          .filter((item) => item.teacherId === row.id)
-          .map((item) => item.subjectCode)
-          .sort(),
-        courseCodes: courseRows
-          .filter((item) => item.teacherId === row.id)
-          .map((item) => item.courseCode)
-          .sort(),
-        availableSlotIds: slotRows
-          .filter((item) => item.teacherId === row.id)
-          .map((item) => item.slotId)
-          .sort(),
-      }));
+    return rows.sort(compareTeachersByProfile).map((row) => ({
+      id: row.id,
+      displayName: row.displayName,
+      profile: row.profile,
+      isActive: row.isActive,
+      subjectCodes: subjectRows
+        .filter((item) => item.teacherId === row.id)
+        .map((item) => item.subjectCode)
+        .sort(),
+      courseCodes: courseRows
+        .filter((item) => item.teacherId === row.id)
+        .map((item) => item.courseCode)
+        .sort(),
+      availableSlotIds: slotRows
+        .filter((item) => item.teacherId === row.id)
+        .map((item) => item.slotId)
+        .sort(),
+    }));
   }
 
   async replaceCapabilities(
@@ -142,4 +173,14 @@ export class TeachersRepository extends BaseRepository {
       }
     });
   }
+}
+
+function compareTeachersByProfile(
+  left: { id: string; profile: TeacherProfile },
+  right: { id: string; profile: TeacherProfile },
+): number {
+  const byProfile =
+    teacherProfileSortIndex[left.profile] -
+    teacherProfileSortIndex[right.profile];
+  return byProfile !== 0 ? byProfile : left.id.localeCompare(right.id);
 }

@@ -1,8 +1,9 @@
 # Flujo Git obligatorio para agentes
 
-Estas reglas son de **cumplimiento obligatorio**. No hay excepciones salvo instrucción
-explícita del humano en el mismo turno. Complementan el protocolo de canvas de
-[AGENTS.md](./AGENTS.md); no lo sustituyen.
+Estas reglas son de **cumplimiento obligatorio** para **todos los agentes**, tanto
+**locales** como **cloud**. No hay excepciones salvo instrucción explícita del humano
+en el mismo turno. Complementan el protocolo de canvas de [AGENTS.md](./AGENTS.md);
+no lo sustituyen.
 
 ## Principio
 
@@ -109,17 +110,21 @@ aprobada del mismo prefijo** en rojo, naranja o gris.
 - No esperar a propuestas moradas (`propose`); no están aprobadas.
 - Tarjetas ya verdes o cianes del mismo prefijo no impiden el PR.
 
-Si esta era la última, abrir **un** PR de la rama `feature/…` del grupo hacia `main`:
+Si esta era la última, abrir **un** PR de la rama `feature/…` del grupo hacia `main`.
+
+El **título**, el **resumen** (`## Summary`) y el resto de la **descripción** del PR
+(`--body`, incluido `## Test plan`) se escriben **siempre en inglés**. La misma regla
+vale para agentes locales y cloud. No usar español en el PR.
 
 ```bash
 git push -u origin HEAD
 gh pr create --title "feat: manual scheduling" --body "$(cat <<'EOF'
 ## Summary
-- Completa el grupo funcional de horarios manuales (tareas `SC-02` … `SC-06`).
+- Completes the manual scheduling functional group (tasks `SC-02` … `SC-06`).
 
 ## Test plan
-- [ ] `npm test` en verde
-- [ ] Flujos afectados revisados
+- [ ] `npm test` is green
+- [ ] Affected flows reviewed
 
 EOF
 )"
@@ -139,6 +144,7 @@ No fusionar el PR. No pushear a `main`. No marcar tarjetas en verde.
 - Abrir el PR antes de terminar todas las tareas **aprobadas** del prefijo.
 - Abrir un segundo PR para la misma rama.
 - Mensajes de commit que no empiecen por `feat:`.
+- Títulos, resúmenes o descripciones de PR en un idioma que no sea inglés.
 - Incluir secretos, `.env`, `.obsidian/workspace.json` o basura local.
 
 ## Arranque de sesión
