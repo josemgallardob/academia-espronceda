@@ -8,6 +8,8 @@ import type {
   ScheduleWorkspaceState,
   StudentHours,
   TeacherOption,
+  WeekHourRow,
+  WeeklySlot,
 } from './schedule.models';
 import type { Person } from '../people/people.models';
 
@@ -15,20 +17,18 @@ describe('ScheduleBoardComponent', () => {
   const workspace = signal<ScheduleWorkspaceState>({ kind: 'loading' });
   const teachers = signal<TeacherOption[]>([]);
   const selectedTeacherId = signal<string | null>(null);
-  const selectedDay = signal<'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY'>('MONDAY');
   const pending = signal(false);
   const schedule = signal<Schedule | null>(null);
-  const daySlots = signal(scheduleFixture().slots);
+  const weekHourRows = signal<WeekHourRow[]>([]);
   const studentHours = signal<StudentHours[]>([]);
   const store = {
     workspace,
     teachers,
     selectedTeacherId,
-    selectedDay,
     pending,
     schedule,
     studentHours,
-    daySlots,
+    weekHourRows,
     selectedTeacher: signal<TeacherOption | null>(null),
     load: vi.fn(),
     createEmptyDraft: vi.fn(),
@@ -38,7 +38,6 @@ describe('ScheduleBoardComponent', () => {
     validate: vi.fn(),
     confirm: vi.fn(),
     selectTeacher: vi.fn((id: string) => selectedTeacherId.set(id)),
-    goToAdjacentDay: vi.fn(),
     classForSlot: vi.fn((slotId: string) =>
       schedule()?.classes.find((weeklyClass) => weeklyClass.slotId === slotId),
     ),
@@ -48,9 +47,8 @@ describe('ScheduleBoardComponent', () => {
     workspace.set({ kind: 'ready', schedule: scheduleFixture() });
     teachers.set([{ id: 'teacher-1', displayName: 'Profesor Uno' }]);
     selectedTeacherId.set('teacher-1');
-    selectedDay.set('MONDAY');
     schedule.set(scheduleFixture());
-    daySlots.set(scheduleFixture().slots);
+    weekHourRows.set(weekHourRowsFromSlots(scheduleFixture().slots));
     studentHours.set([
       {
         person: personFixture(),
@@ -75,15 +73,51 @@ describe('ScheduleBoardComponent', () => {
     }).compileComponents();
   });
 
-  it('renders the daily teacher quadrant and student roster', () => {
+  it('renders the weekly teacher quadrant and student roster', () => {
     const fixture = TestBed.createComponent(ScheduleBoardComponent);
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent as string;
     expect(store.load).toHaveBeenCalledOnce();
-    expect(text).toContain('Cuadrante diario');
+    expect(text).toContain('Cuadrante semanal');
     expect(text).toContain('Profesor Uno');
     expect(text).toContain('Ana Ruiz');
     expect(text).toContain('16:00');
+    expect(text).toContain('Lunes');
+    expect(text).toContain('Martes');
+    expect(text).toContain('Miércoles');
+    expect(text).toContain('Jueves');
+    expect(text).toContain('Viernes');
+    expect(text).not.toContain('Anterior');
+    expect(text).not.toContain('Siguiente');
+    expect(fixture.nativeElement.querySelector('[aria-label="Día anterior"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Día siguiente"]')).toBeNull();
+  });
+
+  it('does not render a droppable card for hours the teacher does not work', () => {
+    weekHourRows.set(
+      weekHourRowsFromSlots([
+        {
+          id: 'slot-monday-1600',
+          dayOfWeek: 'MONDAY',
+          startTime: '16:00',
+          endTime: '17:00',
+        },
+        {
+          id: 'slot-tuesday-2000',
+          dayOfWeek: 'TUESDAY',
+          startTime: '20:00',
+          endTime: '21:00',
+        },
+      ]),
+    );
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    const cards = [...fixture.nativeElement.querySelectorAll('.slot-card')] as HTMLElement[];
+    expect(cards).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('.slot-empty').length).toBeGreaterThan(0);
+    expect(cards.map((card) => card.textContent)).toEqual(
+      expect.arrayContaining([expect.stringContaining('16:00'), expect.stringContaining('20:00')]),
+    );
   });
 
   it('changes the teacher filter without reloading the weekly schedule', () => {
@@ -255,6 +289,18 @@ function dragEvent(studentId: string): DragEvent {
       getData: () => studentId,
     },
   } as unknown as DragEvent;
+}
+
+function weekHourRowsFromSlots(slots: WeeklySlot[]): WeekHourRow[] {
+  const hours = [...new Map(slots.map((slot) => [slot.startTime, slot.endTime] as const))];
+  const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'] as const;
+  return hours.map(([startTime, endTime]) => ({
+    startTime,
+    endTime,
+    cells: days.map(
+      (day) => slots.find((slot) => slot.dayOfWeek === day && slot.startTime === startTime) ?? null,
+    ),
+  }));
 }
 
 function personFixture(): Person {
