@@ -75,7 +75,9 @@ Puntos de comprobacion:
 - Base local: `.data/academia-espronceda.db`
 
 Tras migrar, `npm run seed:local` deja cuentas, profesores y alumnos para recorrer Horario
-desde el navegador. En el login de desarrollo aparece un acceso de demostración.
+desde el navegador. En el login de desarrollo aparece un acceso de demostración. Las
+etiquetas visibles de los tres profesores se leen de `.env.local` si están definidas;
+el ejemplo versionado usa solo nombres genéricos.
 
 La base local usa una URL `file:` compatible con `@libsql/client`. No necesita Docker, un
 daemon ni credenciales de Turso. La dependencia de persistencia se incorporara en PR-01.
@@ -134,6 +136,9 @@ secretos.
 | `AUTH_LOGIN_IDENTIFIER_LIMIT`    | `5`                         | Intentos por identidad y ventana      | NestJS          |
 | `COOKIE_SECURE`                  | `false`                     | `true`                                | NestJS          |
 | `TRUST_PROXY`                    | `false`                     | `true`                                | NestJS          |
+| `TEACHER_1_DISPLAY_NAME`         | `Profesor 1`                | No aplica al seed local               | `seed:local`    |
+| `TEACHER_2_DISPLAY_NAME`         | `Profesor 2`                | No aplica al seed local               | `seed:local`    |
+| `TEACHER_3_DISPLAY_NAME`         | `Profesor 3`                | No aplica al seed local               | `seed:local`    |
 
 `API_CORS_ORIGINS` acepta una lista separada por comas, sin rutas ni comodines. En produccion
 todos los origenes deben usar HTTPS.

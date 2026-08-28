@@ -18,7 +18,7 @@ Agents **must** follow [GIT.md](./GIT.md). Summary:
 
 - One branch per functional group (prefix `XX` of `XX-NN`). Name: `feature/{short-descriptive-name}` in kebab-case, **3–4 words max**. Infer the branch from the group's task descriptions and existing `feature/*` names (e.g. SC tasks about validator, daily view, drag-and-drop → `feature/manual-scheduling`). Never work on `main`.
 - After tests pass, **commit and push on that branch while the card is still orange**, then `finish` (orange → cyan). Commit message: `feat: short description of what this task did`.
-- When the last approved task of that prefix is completed (none left red/orange/gray), open **one PR to `main`**. Do not merge it.
+- When the last approved task of that prefix is completed (none left red/orange/gray), open **one PR to `main`**. Do not merge it. PR title, summary, and description are always in **English** (local and cloud agents).
 
 No commit, push, or `finish` if tests are red. Full rules, commands, and prohibitions: [GIT.md](./GIT.md).
 
@@ -64,7 +64,7 @@ After tests pass, commit (`feat: short description`) and push on the group's `fe
 python canvas-tool.py "Project.canvas" finish <TASK-ID>   # orange → cyan
 ```
 
-If this was the last approved task of the prefix, open one PR to `main`. Tell the user what was done. Do NOT attempt to set the card green — only the human does that. See [GIT.md](./GIT.md).
+If this was the last approved task of the prefix, open one PR to `main` (title, summary, and description in English). Tell the user what was done. Do NOT attempt to set the card green — only the human does that. See [GIT.md](./GIT.md).
 
 ### 5. Repeat
 

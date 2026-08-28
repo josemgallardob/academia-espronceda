@@ -67,7 +67,13 @@ describe('seedLocalDemo', () => {
     ).resolves.toBe(true);
 
     const capabilities = await teachers.listCapabilities();
-    expect(capabilities.map((teacher) => teacher.displayName).sort()).toEqual([
+    const active = await teachers.listActive();
+    expect(active.map((teacher) => teacher.displayName)).toEqual([
+      'Profesor 1',
+      'Profesor 2',
+      'Profesor 3',
+    ]);
+    expect(capabilities.map((teacher) => teacher.displayName)).toEqual([
       'Profesor 1',
       'Profesor 2',
       'Profesor 3',
@@ -149,5 +155,40 @@ describe('seedLocalDemo', () => {
         LOCAL_DEMO_ACCOUNTS[0].password,
       ),
     ).resolves.toBe(true);
+  });
+
+  it('realigns teacher labels from local configuration without printing them', async () => {
+    await seedLocalDemo(connection);
+    await seedLocalDemo(connection, {
+      TEACHER_1_DISPLAY_NAME: 'Teacher One Local',
+      TEACHER_2_DISPLAY_NAME: 'Teacher Two Local',
+      TEACHER_3_DISPLAY_NAME: 'Teacher Three Local',
+    });
+
+    const teachers = new TeachersRepository(connection);
+    const capabilities = await teachers.listCapabilities();
+    expect(capabilities.map((teacher) => teacher.displayName)).toEqual([
+      'Teacher One Local',
+      'Teacher Two Local',
+      'Teacher Three Local',
+    ]);
+  });
+
+  it('keeps only the three demo teachers active', async () => {
+    const teachers = new TeachersRepository(connection);
+    await teachers.insert({
+      id: 'teacher-legacy',
+      displayName: 'Profesor Extra',
+      profile: 'GENERAL_SCIENCES',
+    });
+
+    await seedLocalDemo(connection);
+
+    expect((await teachers.listActive()).map((teacher) => teacher.id)).toEqual([
+      'teacher-senior-sciences',
+      'teacher-general-sciences',
+      'teacher-languages',
+    ]);
+    expect((await teachers.findById('teacher-legacy'))?.isActive).toBe(false);
   });
 });
