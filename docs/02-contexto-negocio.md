@@ -155,9 +155,9 @@ Horario:
 
 | Dia | Horario |
 | --- | --- |
-| Lunes | 16:00-20:00 |
+| Lunes | 16:00-21:00 |
 | Martes | 16:00-21:00 |
-| Miercoles | 16:00-20:00 |
+| Miercoles | 16:00-21:00 |
 | Jueves | 16:00-21:00 |
 | Viernes | 16:00-19:00 |
 

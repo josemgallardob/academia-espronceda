@@ -29,6 +29,13 @@
       "when": 1788000000000,
       "tag": "0003_backfill_late_schedule_slots",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788100000000,
+      "tag": "0004_general_sciences_late_slots",
+      "breakpoints": true
     }
   ]
 }
