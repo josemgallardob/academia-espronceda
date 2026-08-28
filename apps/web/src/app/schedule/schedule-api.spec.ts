@@ -37,7 +37,11 @@ describe('ScheduleStore', () => {
 
     expect(store.workspace()).toMatchObject({ kind: 'ready' });
     expect(store.selectedTeacherId()).toBe('teacher-1');
-    expect(store.daySlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
+    expect(store.teacherSlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
+    expect(
+      store.weekHourRows().map((row) => row.cells.map((slot) => slot?.id ?? null)),
+    ).toEqual([['slot-monday-1600', null, null, null, null]]);
+    expect(store.studentHours()).toHaveLength(1);
     expect(store.studentHours()[0].remainingHours).toBe(2);
   });
 
@@ -81,9 +85,10 @@ describe('ScheduleStore', () => {
       }),
     );
 
-    expect(store.daySlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
-    store.selectDay('TUESDAY');
-    expect(store.daySlots()).toEqual([]);
+    expect(store.teacherSlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
+    expect(store.weekHourRows().flatMap((row) => row.cells.map((slot) => slot?.id ?? null))).toEqual(
+      ['slot-monday-1600', null, null, null, null],
+    );
   });
 
   it('shows 20:00–21:00 only on days the selected teacher works', () => {
@@ -126,19 +131,24 @@ describe('ScheduleStore', () => {
       }),
     );
 
-    expect(store.daySlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
-    store.selectDay('TUESDAY');
-    expect(store.daySlots().map((slot) => slot.id)).toEqual(['slot-tuesday-2000']);
+    expect(store.teacherSlots().map((slot) => slot.id)).toEqual([
+      'slot-monday-1600',
+      'slot-tuesday-2000',
+    ]);
+    expect(
+      store.weekHourRows().map((row) => row.cells.map((slot) => slot?.id ?? null)),
+    ).toEqual([
+      ['slot-monday-1600', null, null, null, null],
+      [null, 'slot-tuesday-2000', null, null, null],
+    ]);
   });
 
-  it('keeps the weekly schedule in memory when the day filter changes', () => {
+  it('keeps the weekly schedule in memory when the teacher filter changes', () => {
     store.load();
     flushWorkspace();
-    store.selectDay('TUESDAY');
+    store.selectTeacher('teacher-1');
     expect(store.schedule()?.id).toBe('schedule-1');
-    expect(store.daySlots()).toEqual([]);
-    store.selectDay('MONDAY');
-    expect(store.daySlots()).toHaveLength(1);
+    expect(store.teacherSlots()).toHaveLength(1);
   });
 
   it('surfaces a load error without leaving a partial workspace', () => {

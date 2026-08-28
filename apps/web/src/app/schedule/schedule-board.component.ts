@@ -33,10 +33,6 @@ export class ScheduleBoardComponent implements OnInit {
   readonly dayLabels = DAY_LABELS;
   readonly slotLabel = slotLabel;
 
-  readonly canGoPrevious = computed(() => WEEK_DAYS.indexOf(this.store.selectedDay()) > 0);
-  readonly canGoNext = computed(
-    () => WEEK_DAYS.indexOf(this.store.selectedDay()) < WEEK_DAYS.length - 1,
-  );
   readonly isEditable = computed(() => this.store.schedule()?.state === 'DRAFT');
   readonly findings = computed(() => this.store.schedule()?.evaluation?.findings ?? []);
 

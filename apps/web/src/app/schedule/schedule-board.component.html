@@ -2,10 +2,10 @@
   <header class="page-heading">
     <div>
       <p class="eyebrow">Horario semanal</p>
-      <h1>Cuadrante diario</h1>
+      <h1>Cuadrante semanal</h1>
       <p class="lead">
-        El horario es global. Esta vista muestra un profesor y un día; la validación cubre toda la
-        semana.
+        El horario es global. Esta vista muestra la semana completa del profesor seleccionado; la
+        validación cubre todas las asignaciones.
       </p>
     </div>
     @if (store.schedule(); as schedule) {
@@ -78,30 +78,11 @@
             }
           </select>
         </label>
-        <div class="day-nav">
-          <button
-            type="button"
-            (click)="store.goToAdjacentDay(-1)"
-            [disabled]="!canGoPrevious()"
-            aria-label="Día anterior"
-          >
-            Anterior
-          </button>
-          <p>
-            {{ dayLabels[store.selectedDay()] }}
-            @if (store.schedule(); as schedule) {
-              <span> · {{ schedule.state === 'DRAFT' ? 'Borrador' : 'Confirmado' }}</span>
-            }
+        @if (store.schedule(); as schedule) {
+          <p class="schedule-state">
+            {{ schedule.state === 'DRAFT' ? 'Borrador' : 'Confirmado' }}
           </p>
-          <button
-            type="button"
-            (click)="store.goToAdjacentDay(1)"
-            [disabled]="!canGoNext()"
-            aria-label="Día siguiente"
-          >
-            Siguiente
-          </button>
-        </div>
+        }
       </section>
 
       <div class="tabs" role="tablist" aria-label="Vista del horario">
@@ -153,50 +134,70 @@
             </ul>
           </aside>
 
-          <div class="slots">
+          <div class="week-panel">
             @if (!store.selectedTeacher()) {
               <p class="muted">Selecciona un profesor para ver su cuadrante.</p>
-            } @else if (store.daySlots().length === 0) {
-              <p class="muted">No hay franjas para este día.</p>
+            } @else if (store.weekHourRows().length === 0) {
+              <p class="muted">No hay franjas para este profesor.</p>
             } @else {
-              @for (slot of store.daySlots(); track slot.id) {
-                <article
-                  class="slot-card"
-                  [class.conflict]="classHasConflict(slot)"
-                  (dragover)="onDragOver($event)"
-                  (drop)="onDrop(slot, $event)"
-                >
-                  <header>
-                    <h3>{{ slotLabel(slot) }}</h3>
-                    @if (store.classForSlot(slot.id); as weeklyClass) {
-                      <span>{{ weeklyClass.assignments.length }} / 5</span>
-                    } @else {
-                      <span>Libre</span>
-                    }
-                  </header>
-                  <ul>
-                    @if (store.classForSlot(slot.id); as weeklyClass) {
-                      @for (assignment of weeklyClass.assignments; track assignment.id) {
-                        <li>
-                          <span>{{ assignment.studentDisplayName }}</span>
-                          @if (isEditable()) {
-                            <button
-                              type="button"
-                              class="remove"
-                              (click)="removeStudent(assignment)"
-                              [attr.aria-label]="'Retirar a ' + assignment.studentDisplayName"
-                            >
-                              ×
-                            </button>
-                          }
-                        </li>
+              <div class="week-grid" role="grid" aria-label="Cuadrante semanal del profesor">
+                <div class="week-grid-head" role="row">
+                  <div class="hour-heading" role="columnheader">Hora</div>
+                  @for (day of weekDays; track day) {
+                    <div role="columnheader">{{ dayLabels[day] }}</div>
+                  }
+                </div>
+                @for (row of store.weekHourRows(); track row.startTime) {
+                  <div class="week-grid-row" role="row">
+                    <div class="hour-label" role="rowheader">
+                      {{ row.startTime }} – {{ row.endTime }}
+                    </div>
+                    @for (slot of row.cells; track slot?.id ?? $index) {
+                      @if (slot) {
+                        <article
+                          class="slot-card"
+                          [class.conflict]="classHasConflict(slot)"
+                          [attr.aria-label]="dayLabels[slot.dayOfWeek] + ', ' + slotLabel(slot)"
+                          (dragover)="onDragOver($event)"
+                          (drop)="onDrop(slot, $event)"
+                        >
+                          <header>
+                            <h3 class="visually-hidden">{{ slotLabel(slot) }}</h3>
+                            @if (store.classForSlot(slot.id); as weeklyClass) {
+                              <span>{{ weeklyClass.assignments.length }} / 5</span>
+                            } @else {
+                              <span>Libre</span>
+                            }
+                          </header>
+                          <ul>
+                            @if (store.classForSlot(slot.id); as weeklyClass) {
+                              @for (assignment of weeklyClass.assignments; track assignment.id) {
+                                <li>
+                                  <span>{{ assignment.studentDisplayName }}</span>
+                                  @if (isEditable()) {
+                                    <button
+                                      type="button"
+                                      class="remove"
+                                      (click)="removeStudent(assignment)"
+                                      [attr.aria-label]="'Retirar a ' + assignment.studentDisplayName"
+                                    >
+                                      ×
+                                    </button>
+                                  }
+                                </li>
+                              }
+                            } @else {
+                              <li class="placeholder">Suelta un alumno aquí</li>
+                            }
+                          </ul>
+                        </article>
+                      } @else {
+                        <div class="slot-empty" aria-hidden="true"></div>
                       }
-                    } @else {
-                      <li class="placeholder">Suelta un alumno aquí</li>
                     }
-                  </ul>
-                </article>
-              }
+                  </div>
+                }
+              </div>
             }
           </div>
         </div>

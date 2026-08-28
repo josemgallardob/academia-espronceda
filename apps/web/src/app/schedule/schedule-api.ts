@@ -4,7 +4,6 @@ import { finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { problemMessage } from '../people/people-api';
 import type { Person, PersonListResponse } from '../people/people.models';
-import type { DayOfWeek } from '../people/people.models';
 import type {
   Schedule,
   ScheduleEvaluation,
@@ -13,6 +12,7 @@ import type {
   ScheduleWorkspaceState,
   StudentHours,
   TeacherOption,
+  WeekHourRow,
   WeeklyClass,
   WeeklySlot,
 } from './schedule.models';
@@ -30,14 +30,12 @@ export class ScheduleStore {
   private readonly teachersSignal = signal<TeacherOption[]>([]);
   private readonly studentsSignal = signal<Person[]>([]);
   private readonly selectedTeacherIdSignal = signal<string | null>(null);
-  private readonly selectedDaySignal = signal<DayOfWeek>('MONDAY');
   private readonly pendingSignal = signal(false);
 
   readonly workspace = this.workspaceSignal.asReadonly();
   readonly teachers = this.teachersSignal.asReadonly();
   readonly students = this.studentsSignal.asReadonly();
   readonly selectedTeacherId = this.selectedTeacherIdSignal.asReadonly();
-  readonly selectedDay = this.selectedDaySignal.asReadonly();
   readonly pending = this.pendingSignal.asReadonly();
 
   readonly schedule = computed(() => {
@@ -50,19 +48,36 @@ export class ScheduleStore {
     return this.teachersSignal().find((teacher) => teacher.id === teacherId) ?? null;
   });
 
-  readonly daySlots = computed(() => {
+  readonly teacherSlots = computed(() => {
     const schedule = this.schedule();
-    const day = this.selectedDaySignal();
     const teacherId = this.selectedTeacherIdSignal();
     const availableSlotIds = this.teachersSignal().find(
       (teacher) => teacher.id === teacherId,
     )?.availableSlotIds;
-    return (schedule?.slots ?? []).filter((slot) => {
-      if (slot.dayOfWeek !== day) {
-        return false;
+    return (schedule?.slots ?? [])
+      .filter((slot) => availableSlotIds === undefined || availableSlotIds.includes(slot.id))
+      .slice()
+      .sort(compareSlots);
+  });
+
+  readonly weekHourRows = computed((): WeekHourRow[] => {
+    const slots = this.teacherSlots();
+    const hours = new Map<string, string>();
+    for (const slot of slots) {
+      if (!hours.has(slot.startTime)) {
+        hours.set(slot.startTime, slot.endTime);
       }
-      return availableSlotIds === undefined || availableSlotIds.includes(slot.id);
-    });
+    }
+    return [...hours.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([startTime, endTime]) => ({
+        startTime,
+        endTime,
+        cells: WEEK_DAYS.map(
+          (day) =>
+            slots.find((slot) => slot.dayOfWeek === day && slot.startTime === startTime) ?? null,
+        ),
+      }));
   });
 
   readonly studentHours = computed((): StudentHours[] => {
@@ -102,18 +117,6 @@ export class ScheduleStore {
 
   selectTeacher(teacherId: string): void {
     this.selectedTeacherIdSignal.set(teacherId);
-  }
-
-  selectDay(day: DayOfWeek): void {
-    this.selectedDaySignal.set(day);
-  }
-
-  goToAdjacentDay(offset: number): void {
-    const index = WEEK_DAYS.indexOf(this.selectedDaySignal());
-    const next = WEEK_DAYS[index + offset];
-    if (next) {
-      this.selectedDaySignal.set(next);
-    }
   }
 
   classForSlot(slotId: string): WeeklyClass | undefined {
@@ -251,4 +254,12 @@ export function countAssignments(schedule: Schedule, studentId: string): number 
 
 export function slotLabel(slot: WeeklySlot): string {
   return `${slot.startTime} – ${slot.endTime}`;
+}
+
+function compareSlots(left: WeeklySlot, right: WeeklySlot): number {
+  const dayOrder = WEEK_DAYS.indexOf(left.dayOfWeek) - WEEK_DAYS.indexOf(right.dayOfWeek);
+  if (dayOrder !== 0) {
+    return dayOrder;
+  }
+  return left.startTime.localeCompare(right.startTime);
 }

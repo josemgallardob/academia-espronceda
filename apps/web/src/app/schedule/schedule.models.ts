@@ -19,6 +19,12 @@ export interface WeeklySlot {
   endTime: string;
 }
 
+export interface WeekHourRow {
+  startTime: string;
+  endTime: string;
+  cells: Array<WeeklySlot | null>;
+}
+
 export interface ScheduleAssignment {
   id: string;
   studentId: string;
