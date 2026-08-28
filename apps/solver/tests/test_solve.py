@@ -98,6 +98,31 @@ def test_solve_accepts_valid_problem_and_returns_strict_optimal(
     ]
 
 
+def test_solve_returns_relaxed_solution_when_strict_is_infeasible(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    load_fixture: LoadFixture,
+) -> None:
+    payload = deepcopy(load_fixture("strict-ideal.request.json"))
+    payload["students"] = payload["students"][:2]
+    payload["relationships"] = []
+
+    response = client.post("/v1/schedules/solve", json=payload, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    SolveScheduleResponse.model_validate(body)
+    assert body["mode"] == "RELAXED"
+    assert body["status"] == "OPTIMAL"
+    assert [attempt["mode"] for attempt in body["attempts"]] == ["STRICT", "RELAXED"]
+    assert body["attempts"][0]["status"] == "INFEASIBLE"
+    assert body["solution"]["classes"][0]["studentIds"] == ["student-1", "student-2"]
+    assert {finding["ruleId"] for finding in body["solution"]["findings"]} == {
+        "CLASS_CAPACITY_MINIMUM",
+        "CLASS_CAPACITY_IDEAL",
+    }
+
+
 def test_solve_rejects_invalid_hours_as_bad_request(
     client: TestClient,
     auth_headers: dict[str, str],

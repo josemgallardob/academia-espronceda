@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import Any
 
 from academia_espronceda_solver.cpsat import solve_strict
-from academia_espronceda_solver.engine import StrictCpSatEngine
+from academia_espronceda_solver.engine import CpSatScheduleEngine
 from academia_espronceda_solver.evaluate import evaluate_solution
 from academia_espronceda_solver.schemas import (
     SolveScheduleRequest,
@@ -143,7 +143,7 @@ def test_empty_students_yield_an_empty_optimal_schedule(load_fixture) -> None:
 def test_engine_exposes_a_single_strict_attempt(load_fixture) -> None:
     request = SolveScheduleRequest.model_validate(load_fixture("strict-ideal.request.json"))
 
-    outcome = StrictCpSatEngine().solve(request, time_limit_seconds=5)
+    outcome = CpSatScheduleEngine().solve(request, time_limit_seconds=5)
 
     assert outcome.mode == "STRICT"
     assert outcome.status == "OPTIMAL"

@@ -19,6 +19,15 @@
 			"label": "Scheduling"
 		},
 		{
+			"id": "group-resear",
+			"type": "group",
+			"x": 0,
+			"y": 0,
+			"width": 380,
+			"height": 1120,
+			"label": "Research"
+		},
+		{
 			"id": "group-founda",
 			"type": "group",
 			"x": 440,
@@ -44,15 +53,6 @@
 			"width": 380,
 			"height": 940,
 			"label": "Delivery"
-		},
-		{
-			"id": "group-resear",
-			"type": "group",
-			"x": 0,
-			"y": 0,
-			"width": 380,
-			"height": 1120,
-			"label": "Research"
 		},
 		{
 			"id": "canvas-errors",
@@ -105,6 +105,36 @@
 			"color": "4"
 		},
 		{
+			"id": "93e882f6",
+			"type": "text",
+			"text": "## FO-01 Scaffold monorepo and toolchain\nMonorepositorio preparado con npm workspaces para Angular 22 y NestJS 11, junto con un servicio Python 3.14/FastAPI independiente. Los paquetes usan de forma uniforme la identidad completa del proyecto: @academia-espronceda/web, @academia-espronceda/api y academia-espronceda-solver, con el modulo Python academia_espronceda_solver. Se han fijado las versiones de Node, npm y Python; añadido configuracion comun de editor, formato, lint e ignores; documentado el arranque y la estructura; y creado un smoke test por cada servicio con endpoints de salud para API y solver. Los comandos setup, desarrollo, formato, lint, test, build y check se ejecutan desde la raiz. Verificacion final: npm run check correcto y npm audit --omit=dev sin vulnerabilidades de produccion.",
+			"x": 460,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "37fa5760",
+			"type": "text",
+			"text": "## FO-02 Configure local environments and secrets\n## FO-02 Configure local environments and secrets\nConfiguracion completada para development y production. Incluye ejemplos versionados sin secretos, .env.local ignorado, arranque coordinado de Angular/NestJS/FastAPI, libSQL local file: en .data, validacion fail-fast de puertos/CORS/Turso/cookies/proxy/tokens, configuracion Angular por build, procesos de produccion y documentacion del dominio HTTPS con /api hacia NestJS y FastAPI privado. Verificado con npm run check y smoke test HTTP de los tres servicios.",
+			"x": 460,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "ef998ccb",
+			"type": "text",
+			"text": "## FO-03 Define API contracts and rule catalog v1\n## FO-03 Define API contracts and rule catalog v1\n\nImplementados los contratos neutrales y versionados de Angular-NestJS y NestJS-FastAPI con OpenAPI 3.1 JSON, componentes compartidos, identificadores estables, errores, conflictos, estados del solver y puntuacion lexicografica.\n\nCatalogo 1.0.0 definido con 19 entradas: 12 reglas hard, 2 reglas de capacidad relajables y 5 preferencias. Incluye prioridades, severidades, condiciones, entidades, evidencia y metricas neutrales.\n\nAnadidos 13 fixtures contractuales positivos y negativos, validador automatico de esquemas, referencias e invariantes semanticas, documentacion de consumo y comando npm run validate:contracts integrado en npm run check.\n\nVerificacion final: npm run check completado correctamente con formato, contratos, lint, tests y builds de Angular, NestJS y Python.",
+			"x": 460,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
 			"id": "7ee4050d",
 			"type": "text",
 			"text": "## RE-03 Definir scope y alcance inicial\nDelimitar qué entra y qué queda fuera de la primera versión: procesos cubiertos, usuarios contemplados, límites explícitos y criterios para evitar crecimiento descontrolado del MVP.",
@@ -145,91 +175,11 @@
 			"color": "4"
 		},
 		{
-			"id": "cea8e123",
+			"id": "e19291b1",
 			"type": "text",
-			"text": "## SC-01 Implement schedule domain and persistence\nImplementar el modelo de dominio y persistencia para horario semanal global, cuadrantes, clases de una hora, asignaciones, borradores, horarios confirmados y resultados de validacion aceptados. Incluir repositorios y tests de transiciones e integridad.",
-			"x": 1340,
-			"y": 40,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "8b4c4008",
-			"type": "text",
-			"text": "## SC-02 Implement deterministic global validator\nCrear en NestJS el validador independiente del solver que evalua el horario semanal completo. Implementar todas las reglas y preferencias con conflictos estructurados, explicaciones, severidades, puntuacion y tests unitarios, de limites y property-based.",
-			"x": 1340,
-			"y": 220,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "e8c3e398",
-			"type": "text",
-			"text": "## SC-03 Implement schedule commands and confirmation API\nExponer operaciones para crear borradores, asignar y retirar alumnos, recalcular avisos y confirmar horarios con o sin incidencias. Validar siempre el horario global, exigir confirmacion consciente y persistir los conflictos aceptados con tests HTTP y de base de datos.",
-			"x": 1340,
-			"y": 400,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "92bf60be",
-			"type": "text",
-			"text": "## SC-04 Build daily teacher schedule view\nCrear la vista operativa filtrada por profesor y un unico dia, con navegacion anterior y siguiente, clases por franja y listado de alumnos. Mantener el contexto semanal global y cubrir carga, cambio de filtro y errores.",
-			"x": 1340,
+			"text": "## FO-04 Configure CI for main\nConfigurar la integracion continua en cada push a main con formato, lint, tipos, tests y builds de TypeScript y Python. Dejar preparada la ampliacion posterior con integracion, contratos y recorridos E2E sin exigir pull requests.",
+			"x": 460,
 			"y": 580,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "d3f1eacd",
-			"type": "text",
-			"text": "## SO-01 Implement FastAPI scheduling service contract\nImplementar el servicio interno FastAPI con endpoint de salud y POST /v1/schedules/solve. Validar el contrato versionado, autenticar la llamada de servicio, aplicar limites de tiempo y devolver estados y errores estructurados sin acceder a la base de datos.",
-			"x": 1780,
-			"y": 40,
-			"width": 280,
-			"height": 160,
-			"color": "2"
-		},
-		{
-			"id": "35dcc386",
-			"type": "text",
-			"text": "## SO-02 Implement strict CP-SAT scheduling model\nModelar en OR-Tools CP-SAT variables, disponibilidad, compatibilidades, horas, capacidades y no solapes para buscar primero un horario completamente valido. Incorporar preferencias al objetivo sin permitir que compensen reglas de mayor gravedad y cubrir casos factibles conocidos.",
-			"x": 1780,
-			"y": 220,
-			"width": 280,
-			"height": 160,
-			"color": "6"
-		},
-		{
-			"id": "f86b4431",
-			"type": "text",
-			"text": "## SO-03 Implement relaxed optimization and diagnostics\nCrear la segunda fase de resolucion para devolver la mejor solucion posible cuando la estricta no exista o no se encuentre. Introducir variables de violacion y pesos jerarquicos, producir conflictos explicables y probar casos imposibles, timeouts y reproducibilidad por semilla.",
-			"x": 1780,
-			"y": 400,
-			"width": 280,
-			"height": 160,
-			"color": "6"
-		},
-		{
-			"id": "158d6990",
-			"type": "text",
-			"text": "## SO-04 Integrate NestJS with scheduling solver\nImplementar el cliente HTTP interno, timeouts y traduccion entre el dominio y el contrato FastAPI. Convertir la propuesta en borrador, revalidarla siempre con NestJS y detectar cualquier divergencia de reglas, versiones, puntuaciones o conflictos.",
-			"x": 1780,
-			"y": 580,
-			"width": 280,
-			"height": 160,
-			"color": "6"
-		},
-		{
-			"id": "231618e0",
-			"type": "text",
-			"text": "## SO-05 Connect automatic generation to Angular\nAnadir la accion Generar horario, estados de ejecucion y presentacion del resultado valido o aproximado. Integrar el borrador generado con la misma vista, avisos, edicion manual y confirmacion utilizados por los horarios creados desde cero.",
-			"x": 1780,
-			"y": 760,
 			"width": 280,
 			"height": 160,
 			"color": "6"
@@ -275,6 +225,116 @@
 			"color": "4"
 		},
 		{
+			"id": "d3f1eacd",
+			"type": "text",
+			"text": "## SO-01 Implement FastAPI scheduling service contract\nImplementar el servicio interno FastAPI con endpoint de salud y POST /v1/schedules/solve. Validar el contrato versionado, autenticar la llamada de servicio, aplicar limites de tiempo y devolver estados y errores estructurados sin acceder a la base de datos.",
+			"x": 1780,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "35dcc386",
+			"type": "text",
+			"text": "## SO-02 Implement strict CP-SAT scheduling model\nModelar en OR-Tools CP-SAT variables, disponibilidad, compatibilidades, horas, capacidades y no solapes para buscar primero un horario completamente valido. Incorporar preferencias al objetivo sin permitir que compensen reglas de mayor gravedad y cubrir casos factibles conocidos.",
+			"x": 1780,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "f86b4431",
+			"type": "text",
+			"text": "## SO-03 Implement relaxed optimization and diagnostics\nCrear la segunda fase de resolucion para devolver la mejor solucion posible cuando la estricta no exista o no se encuentre. Introducir variables de violacion y pesos jerarquicos, producir conflictos explicables y probar casos imposibles, timeouts y reproducibilidad por semilla.",
+			"x": 1780,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "5"
+		},
+		{
+			"id": "158d6990",
+			"type": "text",
+			"text": "## SO-04 Integrate NestJS with scheduling solver\nImplementar el cliente HTTP interno, timeouts y traduccion entre el dominio y el contrato FastAPI. Convertir la propuesta en borrador, revalidarla siempre con NestJS y detectar cualquier divergencia de reglas, versiones, puntuaciones o conflictos.",
+			"x": 1780,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "231618e0",
+			"type": "text",
+			"text": "## SO-05 Connect automatic generation to Angular\nAnadir la accion Generar horario, estados de ejecucion y presentacion del resultado valido o aproximado. Integrar el borrador generado con la misma vista, avisos, edicion manual y confirmacion utilizados por los horarios creados desde cero.",
+			"x": 1780,
+			"y": 760,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "83075eef",
+			"type": "text",
+			"text": "## PR-01 Implement Drizzle persistence foundation\nDisenar el modelo relacional del MVP e implementar esquema TypeScript, migraciones Drizzle Kit, modulo de base de datos y repositorios base sobre Turso/libSQL. Cubrir usuarios, personas, profesores, horarios, clases, asignaciones y resultados de validacion con tests de migracion e integracion.",
+			"x": 900,
+			"y": 40,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "675bc8af",
+			"type": "text",
+			"text": "## PR-02 Create administrative user scripts\nImplementar scripts seguros para crear las dos cuentas y cambiar o restablecer contrasenas de forma interactiva. Generar hashes Argon2id, evitar secretos en argumentos y logs, e incrementar token_version para invalidar sesiones.",
+			"x": 900,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "aba84035",
+			"type": "text",
+			"text": "## PR-06 Build active students and waiting list UI\nCrear los listados de alumnos activos y lista de espera, con seleccion multiple, movimientos entre listas, eliminacion y estados de carga, vacio y error. Conectar con la API protegida y cubrir el comportamiento principal con tests Angular.",
+			"x": 900,
+			"y": 940,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "8b4c4008",
+			"type": "text",
+			"text": "## SC-02 Implement deterministic global validator\nCrear en NestJS el validador independiente del solver que evalua el horario semanal completo. Implementar todas las reglas y preferencias con conflictos estructurados, explicaciones, severidades, puntuacion y tests unitarios, de limites y property-based.",
+			"x": 1340,
+			"y": 220,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "e8c3e398",
+			"type": "text",
+			"text": "## SC-03 Implement schedule commands and confirmation API\nExponer operaciones para crear borradores, asignar y retirar alumnos, recalcular avisos y confirmar horarios con o sin incidencias. Validar siempre el horario global, exigir confirmacion consciente y persistir los conflictos aceptados con tests HTTP y de base de datos.",
+			"x": 1340,
+			"y": 400,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
+			"id": "92bf60be",
+			"type": "text",
+			"text": "## SC-04 Build daily teacher schedule view\nCrear la vista operativa filtrada por profesor y un unico dia, con navegacion anterior y siguiente, clases por franja y listado de alumnos. Mantener el contexto semanal global y cubrir carga, cambio de filtro y errores.",
+			"x": 1340,
+			"y": 580,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
 			"id": "177b8461",
 			"type": "text",
 			"text": "## DE-01 Consolidate cross-runtime test fixtures\nConstruir la bateria compartida de fixtures y regresiones para NestJS y Python, incluyendo casos validos, multiples soluciones, indisponibilidad imposible, solapes, capacidad insuficiente, profesores por asignatura, exceso de horas y best effort. Hacer fallar la suite ante divergencias entre solver y validador.",
@@ -315,6 +375,16 @@
 			"color": "6"
 		},
 		{
+			"id": "33b9705a",
+			"type": "text",
+			"text": "## SC-05 Implement manual drag and drop scheduling\nPermitir arrastrar alumnos activos a clases y retirarlos, actualizando contadores de horas restantes o excedidas. Ante un conflicto, mostrar la advertencia y permitir cancelar o mantener la asignacion, sincronizando correctamente el borrador global.",
+			"x": 1340,
+			"y": 760,
+			"width": 280,
+			"height": 160,
+			"color": "4"
+		},
+		{
 			"id": "5e8f54d7",
 			"type": "text",
 			"text": "## DE-05 Deploy MVP and run smoke validation\nDesplegar el MVP con migraciones, dos cuentas administrativas y conectividad privada al solver. Ejecutar builds, suite obligatoria, smoke tests de autenticacion, CRUD, horario manual y generacion automatica, y documentar operacion y recuperacion basica.",
@@ -325,41 +395,11 @@
 			"color": "6"
 		},
 		{
-			"id": "83075eef",
+			"id": "cea8e123",
 			"type": "text",
-			"text": "## PR-01 Implement Drizzle persistence foundation\nDisenar el modelo relacional del MVP e implementar esquema TypeScript, migraciones Drizzle Kit, modulo de base de datos y repositorios base sobre Turso/libSQL. Cubrir usuarios, personas, profesores, horarios, clases, asignaciones y resultados de validacion con tests de migracion e integracion.",
-			"x": 900,
-			"y": 40,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "675bc8af",
-			"type": "text",
-			"text": "## PR-02 Create administrative user scripts\nImplementar scripts seguros para crear las dos cuentas y cambiar o restablecer contrasenas de forma interactiva. Generar hashes Argon2id, evitar secretos en argumentos y logs, e incrementar token_version para invalidar sesiones.",
-			"x": 900,
-			"y": 220,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "aba84035",
-			"type": "text",
-			"text": "## PR-06 Build active students and waiting list UI\nCrear los listados de alumnos activos y lista de espera, con seleccion multiple, movimientos entre listas, eliminacion y estados de carga, vacio y error. Conectar con la API protegida y cubrir el comportamiento principal con tests Angular.",
-			"x": 900,
-			"y": 940,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "33b9705a",
-			"type": "text",
-			"text": "## SC-05 Implement manual drag and drop scheduling\nPermitir arrastrar alumnos activos a clases y retirarlos, actualizando contadores de horas restantes o excedidas. Ante un conflicto, mostrar la advertencia y permitir cancelar o mantener la asignacion, sincronizando correctamente el borrador global.",
+			"text": "## SC-01 Implement schedule domain and persistence\nImplementar el modelo de dominio y persistencia para horario semanal global, cuadrantes, clases de una hora, asignaciones, borradores, horarios confirmados y resultados de validacion aceptados. Incluir repositorios y tests de transiciones e integridad.",
 			"x": 1340,
-			"y": 760,
+			"y": 40,
 			"width": 280,
 			"height": 160,
 			"color": "4"
@@ -375,46 +415,6 @@
 			"color": "4"
 		},
 		{
-			"id": "93e882f6",
-			"type": "text",
-			"text": "## FO-01 Scaffold monorepo and toolchain\nMonorepositorio preparado con npm workspaces para Angular 22 y NestJS 11, junto con un servicio Python 3.14/FastAPI independiente. Los paquetes usan de forma uniforme la identidad completa del proyecto: @academia-espronceda/web, @academia-espronceda/api y academia-espronceda-solver, con el modulo Python academia_espronceda_solver. Se han fijado las versiones de Node, npm y Python; añadido configuracion comun de editor, formato, lint e ignores; documentado el arranque y la estructura; y creado un smoke test por cada servicio con endpoints de salud para API y solver. Los comandos setup, desarrollo, formato, lint, test, build y check se ejecutan desde la raiz. Verificacion final: npm run check correcto y npm audit --omit=dev sin vulnerabilidades de produccion.",
-			"x": 460,
-			"y": 40,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "37fa5760",
-			"type": "text",
-			"text": "## FO-02 Configure local environments and secrets\n## FO-02 Configure local environments and secrets\nConfiguracion completada para development y production. Incluye ejemplos versionados sin secretos, .env.local ignorado, arranque coordinado de Angular/NestJS/FastAPI, libSQL local file: en .data, validacion fail-fast de puertos/CORS/Turso/cookies/proxy/tokens, configuracion Angular por build, procesos de produccion y documentacion del dominio HTTPS con /api hacia NestJS y FastAPI privado. Verificado con npm run check y smoke test HTTP de los tres servicios.",
-			"x": 460,
-			"y": 220,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "ef998ccb",
-			"type": "text",
-			"text": "## FO-03 Define API contracts and rule catalog v1\n## FO-03 Define API contracts and rule catalog v1\n\nImplementados los contratos neutrales y versionados de Angular-NestJS y NestJS-FastAPI con OpenAPI 3.1 JSON, componentes compartidos, identificadores estables, errores, conflictos, estados del solver y puntuacion lexicografica.\n\nCatalogo 1.0.0 definido con 19 entradas: 12 reglas hard, 2 reglas de capacidad relajables y 5 preferencias. Incluye prioridades, severidades, condiciones, entidades, evidencia y metricas neutrales.\n\nAnadidos 13 fixtures contractuales positivos y negativos, validador automatico de esquemas, referencias e invariantes semanticas, documentacion de consumo y comando npm run validate:contracts integrado en npm run check.\n\nVerificacion final: npm run check completado correctamente con formato, contratos, lint, tests y builds de Angular, NestJS y Python.",
-			"x": 460,
-			"y": 400,
-			"width": 280,
-			"height": 160,
-			"color": "4"
-		},
-		{
-			"id": "e19291b1",
-			"type": "text",
-			"text": "## FO-04 Configure CI for main\nConfigurar la integracion continua en cada push a main con formato, lint, tipos, tests y builds de TypeScript y Python. Dejar preparada la ampliacion posterior con integracion, contratos y recorridos E2E sin exigir pull requests.",
-			"x": 460,
-			"y": 580,
-			"width": 280,
-			"height": 160,
-			"color": "6"
-		},
-		{
 			"id": "6e2e72b2",
 			"type": "text",
 			"text": "## SC-07 Seed teacher catalog for local scheduling\nThe local database has weekly slots and people, but no teacher rows or capabilities. Empty-draft creation and the daily board need at least the three operational teachers with subjects, courses, and available slots. Add a checked-in seed (or admin path) so Horario can be used without manual SQLite inserts.",
@@ -422,7 +422,7 @@
 			"y": 1120,
 			"width": 280,
 			"height": 160,
-			"color": "5"
+			"color": "4"
 		}
 	],
 	"edges": [
