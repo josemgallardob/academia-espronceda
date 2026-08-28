@@ -38,9 +38,9 @@ describe('ScheduleStore', () => {
     expect(store.workspace()).toMatchObject({ kind: 'ready' });
     expect(store.selectedTeacherId()).toBe('teacher-1');
     expect(store.teacherSlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
-    expect(
-      store.weekHourRows().map((row) => row.cells.map((slot) => slot?.id ?? null)),
-    ).toEqual([['slot-monday-1600', null, null, null, null]]);
+    expect(store.weekHourRows().map((row) => row.cells.map((slot) => slot?.id ?? null))).toEqual([
+      ['slot-monday-1600', null, null, null, null],
+    ]);
     expect(store.studentHours()).toHaveLength(1);
     expect(store.studentHours()[0].remainingHours).toBe(2);
   });
@@ -171,9 +171,9 @@ describe('ScheduleStore', () => {
     );
 
     expect(store.teacherSlots().map((slot) => slot.id)).toEqual(['slot-monday-1600']);
-    expect(store.weekHourRows().flatMap((row) => row.cells.map((slot) => slot?.id ?? null))).toEqual(
-      ['slot-monday-1600', null, null, null, null],
-    );
+    expect(
+      store.weekHourRows().flatMap((row) => row.cells.map((slot) => slot?.id ?? null)),
+    ).toEqual(['slot-monday-1600', null, null, null, null]);
   });
 
   it('shows 20:00–21:00 only on days the selected teacher works', () => {
@@ -220,9 +220,7 @@ describe('ScheduleStore', () => {
       'slot-monday-1600',
       'slot-tuesday-2000',
     ]);
-    expect(
-      store.weekHourRows().map((row) => row.cells.map((slot) => slot?.id ?? null)),
-    ).toEqual([
+    expect(store.weekHourRows().map((row) => row.cells.map((slot) => slot?.id ?? null))).toEqual([
       ['slot-monday-1600', null, null, null, null],
       [null, 'slot-tuesday-2000', null, null, null],
     ]);
@@ -256,6 +254,43 @@ describe('ScheduleStore', () => {
     expect(request.request.method).toBe('POST');
     request.flush(schedule());
     expect(store.workspace()).toMatchObject({ kind: 'ready' });
+  });
+
+  it('posts automatic generation and keeps the running state until the solver returns', () => {
+    const generated = schedule({
+      id: 'schedule-generated',
+      evaluation: evaluationFixture({ outcome: 'IDEAL' }),
+    });
+    store.generateDraft().subscribe();
+    expect(store.generating()).toBe(true);
+    expect(store.pending()).toBe(true);
+    const request = httpTesting.expectOne('/api/v1/schedules/generate');
+    expect(request.request.method).toBe('POST');
+    request.flush(generated);
+    expect(store.generating()).toBe(false);
+    expect(store.pending()).toBe(false);
+    expect(store.workspace()).toMatchObject({
+      kind: 'ready',
+      schedule: { id: 'schedule-generated' },
+    });
+    expect(store.selectedTeacherId()).toBe('teacher-1');
+  });
+
+  it('keeps the current workspace when generation fails', () => {
+    store.load();
+    flushWorkspace();
+    store.generateDraft().subscribe({ error: () => undefined });
+    httpTesting
+      .expectOne('/api/v1/schedules/generate')
+      .flush(
+        { detail: 'El generador no encontró una solución válida para los datos actuales.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    expect(store.generating()).toBe(false);
+    expect(store.workspace()).toMatchObject({
+      kind: 'ready',
+      schedule: { id: 'schedule-1' },
+    });
   });
 
   it('posts a new assignment and refreshes the workspace', () => {
