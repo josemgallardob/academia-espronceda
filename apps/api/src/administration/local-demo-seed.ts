@@ -77,9 +77,9 @@ const DEMO_TEACHERS: TeacherSeed[] = [
     ],
     courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1'],
     windows: [
-      { dayOfWeek: 'MONDAY', startTime: '16:00', endTime: '20:00' },
+      { dayOfWeek: 'MONDAY', startTime: '16:00', endTime: '21:00' },
       { dayOfWeek: 'TUESDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'WEDNESDAY', startTime: '16:00', endTime: '20:00' },
+      { dayOfWeek: 'WEDNESDAY', startTime: '16:00', endTime: '21:00' },
       { dayOfWeek: 'THURSDAY', startTime: '16:00', endTime: '21:00' },
       { dayOfWeek: 'FRIDAY', startTime: '16:00', endTime: '19:00' },
     ],
