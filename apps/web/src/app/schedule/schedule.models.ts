@@ -1,4 +1,4 @@
-import type { DayOfWeek, Person } from '../people/people.models';
+import type { CourseCode, DayOfWeek, Person, SubjectCode } from '../people/people.models';
 
 export type ScheduleState = 'DRAFT' | 'CONFIRMED';
 export type EvaluationOutcome =
@@ -10,6 +10,8 @@ export interface TeacherOption {
   id: string;
   displayName: string;
   availableSlotIds?: string[];
+  subjectCodes?: SubjectCode[];
+  courseCodes?: CourseCode[];
 }
 
 export interface WeeklySlot {

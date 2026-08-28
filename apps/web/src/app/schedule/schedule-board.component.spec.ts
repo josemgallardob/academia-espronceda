@@ -21,9 +21,11 @@ describe('ScheduleBoardComponent', () => {
   const schedule = signal<Schedule | null>(null);
   const weekHourRows = signal<WeekHourRow[]>([]);
   const studentHours = signal<StudentHours[]>([]);
+  const students = signal<Person[]>([]);
   const store = {
     workspace,
     teachers,
+    students,
     selectedTeacherId,
     pending,
     schedule,
@@ -56,6 +58,7 @@ describe('ScheduleBoardComponent', () => {
         remainingHours: 2,
       },
     ]);
+    students.set([personFixture()]);
     store.selectedTeacher = signal(teachers()[0]);
     store.load.mockReset();
     store.createEmptyDraft.mockReset();
@@ -118,6 +121,16 @@ describe('ScheduleBoardComponent', () => {
     expect(cards.map((card) => card.textContent)).toEqual(
       expect.arrayContaining([expect.stringContaining('16:00'), expect.stringContaining('20:00')]),
     );
+  });
+
+  it('explains when active students exist but none are compatible with the teacher', () => {
+    studentHours.set([]);
+    students.set([personFixture()]);
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    const roster = fixture.nativeElement.querySelector('.roster') as HTMLElement;
+    expect(roster.textContent).toContain('No hay alumnos compatibles con este profesor.');
+    expect(roster.textContent).not.toContain('Ana Ruiz');
   });
 
   it('changes the teacher filter without reloading the weekly schedule', () => {

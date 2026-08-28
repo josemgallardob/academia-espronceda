@@ -45,6 +45,91 @@ describe('ScheduleStore', () => {
     expect(store.studentHours()[0].remainingHours).toBe(2);
   });
 
+  it('shows only students compatible with the selected teacher and updates immediately', () => {
+    store.load();
+    httpTesting.expectOne('/api/v1/teachers').flush([profesor1(), profesor2(), profesor3()]);
+    httpTesting
+      .expectOne(
+        (request) => request.url === '/api/v1/people' && request.params.get('status') === 'ACTIVE',
+      )
+      .flush(
+        peopleResponse([
+          person({ id: 'bach2-maths', firstName: 'Luis', courseCode: 'BACH_2' }),
+          person({
+            id: 'eso-english',
+            firstName: 'Marta',
+            courseCode: 'ESO_3',
+            subjectHours: [{ subjectCode: 'ENGLISH', weeklyHours: 1 }],
+            weeklyHoursTotal: 1,
+          }),
+          person({
+            id: 'bach1-mixed',
+            firstName: 'Pablo',
+            subjectHours: [
+              { subjectCode: 'PHYSICS', weeklyHours: 2 },
+              { subjectCode: 'ENGLISH', weeklyHours: 1 },
+            ],
+          }),
+          person({
+            id: 'bach1-complete',
+            firstName: 'Nerea',
+            weeklyHoursTotal: 3,
+          }),
+        ]),
+      );
+    httpTesting.expectOne('/api/v1/schedules').flush(listResponse([schedule()]));
+    httpTesting.expectOne('/api/v1/schedules/schedule-1').flush(
+      schedule({
+        classes: [
+          {
+            id: 'class-1',
+            teacherId: 'teacher-1',
+            slotId: 'slot-monday-1600',
+            findingFingerprints: [],
+            assignments: [
+              {
+                id: 'assignment-complete',
+                studentId: 'bach1-complete',
+                studentDisplayName: 'Nerea Ruiz',
+              },
+              {
+                id: 'assignment-complete-2',
+                studentId: 'bach1-complete',
+                studentDisplayName: 'Nerea Ruiz',
+              },
+              {
+                id: 'assignment-complete-3',
+                studentId: 'bach1-complete',
+                studentDisplayName: 'Nerea Ruiz',
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    expect(store.studentHours().map((item) => item.person.id)).toEqual([
+      'bach2-maths',
+      'bach1-mixed',
+      'bach1-complete',
+    ]);
+    expect(
+      store.studentHours().find((item) => item.person.id === 'bach1-complete')?.remainingHours,
+    ).toBe(0);
+
+    store.selectTeacher('teacher-3');
+    expect(store.studentHours().map((item) => item.person.id)).toEqual([
+      'eso-english',
+      'bach1-mixed',
+    ]);
+
+    store.selectTeacher('teacher-2');
+    expect(store.studentHours().map((item) => item.person.id)).toEqual([
+      'bach1-mixed',
+      'bach1-complete',
+    ]);
+  });
+
   it('hides 20:00–21:00 when the selected teacher is not available that day', () => {
     store.load();
     httpTesting.expectOne('/api/v1/teachers').flush([
@@ -255,10 +340,40 @@ describe('ScheduleStore', () => {
 });
 
 function teacher(): TeacherOption {
-  return { id: 'teacher-1', displayName: 'Profesor Uno' };
+  return profesor2({ id: 'teacher-1', displayName: 'Profesor Uno' });
 }
 
-function person(): Person {
+function profesor1(overrides: Partial<TeacherOption> = {}): TeacherOption {
+  return {
+    id: 'teacher-1',
+    displayName: 'Profesor 1',
+    subjectCodes: ['MATHEMATICS', 'SOCIAL_SCIENCES_MATHEMATICS', 'PHYSICS', 'CHEMISTRY'],
+    courseCodes: ['BACH_2', 'BACH_1'],
+    ...overrides,
+  };
+}
+
+function profesor2(overrides: Partial<TeacherOption> = {}): TeacherOption {
+  return {
+    id: 'teacher-2',
+    displayName: 'Profesor 2',
+    subjectCodes: ['MATHEMATICS', 'SOCIAL_SCIENCES_MATHEMATICS', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY'],
+    courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1'],
+    ...overrides,
+  };
+}
+
+function profesor3(overrides: Partial<TeacherOption> = {}): TeacherOption {
+  return {
+    id: 'teacher-3',
+    displayName: 'Profesor 3',
+    subjectCodes: ['SPANISH_LANGUAGE', 'ENGLISH'],
+    courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1', 'BACH_2'],
+    ...overrides,
+  };
+}
+
+function person(overrides: Partial<Person> = {}): Person {
   return {
     id: 'student-1',
     firstName: 'Ana',
@@ -278,6 +393,7 @@ function person(): Person {
     status: 'ACTIVE',
     createdAt: '2026-08-27T10:00:00.000Z',
     updatedAt: '2026-08-27T10:00:00.000Z',
+    ...overrides,
   };
 }
 

@@ -14,6 +14,7 @@ import {
   type WeeklyClass,
 } from './schedule';
 import { isSixtyMinuteSlot } from './schedule-aggregate';
+import { teacherCompatibleWith } from './teacher-compatibility';
 import {
   RULE_DEFINITIONS,
   SCIENCE_SUBJECT_CODES,
@@ -1124,17 +1125,6 @@ function feasibleSharedSessions(
       ),
   ).length;
   return Math.min(left.weeklyHoursTotal, right.weeklyHoursTotal, feasibleSlots);
-}
-
-function teacherCompatibleWith(
-  teacher: ValidationTeacher,
-  student: ValidationStudent,
-): boolean {
-  const teacherSubjects = new Set(teacher.subjectCodes);
-  return (
-    teacher.courseCodes.includes(student.courseCode) &&
-    student.subjectHours.some((item) => teacherSubjects.has(item.subjectCode))
-  );
 }
 
 function hasScienceWorkload(student: ValidationStudent): boolean {
