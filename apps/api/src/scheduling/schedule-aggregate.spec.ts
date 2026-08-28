@@ -9,6 +9,7 @@ import {
   moveAssignment,
   removeAssignment,
   setSubjectTeacherAllocations,
+  withCatalogSlots,
 } from './schedule-aggregate';
 import type {
   Schedule,
@@ -59,6 +60,29 @@ describe('Schedule aggregate', () => {
       'slot-monday-1700',
     ]);
     expect(classesForTeacher(schedule, 'teacher-1')).toEqual([]);
+  });
+
+  it('adds missing catalog hours to a draft without replacing existing slots', () => {
+    const schedule = emptyDraft();
+    const lateSlot: ScheduleSlot = {
+      id: 'slot-monday-2000',
+      dayOfWeek: 'MONDAY',
+      startTime: '20:00',
+      endTime: '21:00',
+    };
+
+    const { schedule: merged, added } = withCatalogSlots(schedule, [
+      monday1600,
+      lateSlot,
+    ]);
+
+    expect(added).toEqual([lateSlot]);
+    expect(merged.slots.map((slot) => slot.id)).toEqual([
+      'slot-monday-1600',
+      'slot-monday-1700',
+      'slot-monday-2000',
+    ]);
+    expect(withCatalogSlots(merged, [monday1600, lateSlot]).added).toEqual([]);
   });
 
   it('rejects snapshots that are empty, duplicated or not one hour long', () => {

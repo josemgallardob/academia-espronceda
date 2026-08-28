@@ -348,10 +348,10 @@
       "get": {
         "operationId": "listTeacherOptions",
         "tags": ["Teachers"],
-        "summary": "List the minimal teacher options used by schedule selectors",
+        "summary": "List teacher selector options including teaching capabilities",
         "responses": {
           "200": {
-            "description": "Teacher selector options; no teacher administration data is exposed",
+            "description": "Teacher selector options with persisted courses and subjects; no teacher administration data is exposed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1373,6 +1373,27 @@
           "displayName": {
             "type": "string",
             "minLength": 1
+          },
+          "availableSlotIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
+          },
+          "subjectCodes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/SubjectCode"
+            }
+          },
+          "courseCodes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/CourseCode"
+            }
           }
         }
       },

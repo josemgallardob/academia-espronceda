@@ -95,6 +95,17 @@ describe('People and teacher options (e2e)', () => {
       profile: 'GENERAL_SCIENCES',
       isActive: true,
     });
+    await teachers.replaceCapabilities('teacher-active', {
+      subjectCodes: [
+        'MATHEMATICS',
+        'SOCIAL_SCIENCES_MATHEMATICS',
+        'PHYSICS',
+        'CHEMISTRY',
+        'BIOLOGY',
+      ],
+      courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1'],
+      availableSlotIds: [],
+    });
     await teachers.insert({
       id: 'teacher-inactive',
       displayName: 'Profesor Inactivo',
@@ -144,13 +155,26 @@ describe('People and teacher options (e2e)', () => {
         ENGLISH: 'Inglés',
       },
     });
-    expect(body.slots).toHaveLength(19);
+    expect(body.slots).toHaveLength(23);
     expect(body.slots[0]).toEqual({
       id: 'slot-monday-1600',
       dayOfWeek: 'MONDAY',
       startTime: '16:00',
       endTime: '17:00',
     });
+    expect(body.slots.map((slot) => slot.id)).toEqual(
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
+    );
+    expect(
+      body.slots.some(
+        (slot) => slot.dayOfWeek === 'FRIDAY' && slot.startTime === '20:00',
+      ),
+    ).toBe(false);
     expect(body.slots.at(-1)).toEqual({
       id: 'slot-friday-1800',
       dayOfWeek: 'FRIDAY',
@@ -159,10 +183,22 @@ describe('People and teacher options (e2e)', () => {
     });
   });
 
-  it('exposes only active minimal teacher selector options', async () => {
+  it('exposes only active teacher selector options with persisted capabilities', async () => {
     const response = await authenticatedGet('/api/v1/teachers').expect(200);
     expect(response.body).toEqual([
-      { id: 'teacher-active', displayName: 'Profesor Activo' },
+      {
+        id: 'teacher-active',
+        displayName: 'Profesor Activo',
+        availableSlotIds: [],
+        subjectCodes: [
+          'BIOLOGY',
+          'CHEMISTRY',
+          'MATHEMATICS',
+          'PHYSICS',
+          'SOCIAL_SCIENCES_MATHEMATICS',
+        ],
+        courseCodes: ['BACH_1', 'ESO_1', 'ESO_2', 'ESO_3', 'ESO_4'],
+      },
     ]);
   });
 

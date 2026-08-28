@@ -54,6 +54,23 @@ Servicios:
 
 Los procesos tambien pueden iniciarse por separado con `dev:web`, `dev:api` y `dev:solver`.
 
+Para ver el horario en la interfaz (login, tres profesores y alumnos activos):
+
+```bash
+npm run db:migrate
+npm run seed:local
+```
+
+Luego abre `http://localhost:4200/login`. En desarrollo el propio formulario muestra la cuenta
+`profesor1` y un botón **Entrar y abrir Horario**. En Horario, crea un borrador vacío para
+arrastrar alumnos, ver avisos y confirmar.
+
+`seed:local` solo funciona contra la base `file:` de desarrollo. Alinea las dos cuentas
+administrativas a `profesor1` / `profesor2` con las contraseñas de demostración, siembra el
+catálogo de profesores y deja un conjunto de personas de ejemplo. Las etiquetas visibles de
+los tres profesores se pueden definir en `.env.local`; el repositorio solo documenta
+etiquetas genéricas.
+
 ## Produccion
 
 El frontend se sirve bajo un dominio HTTPS publico; las peticiones a `/api` se enrutan a

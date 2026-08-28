@@ -1,3 +1,4 @@
+import { inArray } from 'drizzle-orm';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
@@ -7,17 +8,18 @@ import { SchedulesRepository } from '../database/repositories/schedules.reposito
 import { TeachersRepository } from '../database/repositories/teachers.repository';
 import { UsersRepository } from '../database/repositories/users.repository';
 import { WeeklySlotsRepository } from '../database/repositories/weekly-slots.repository';
+import { scheduleSlots } from '../database/schema';
 import { CURRENT_RULE_CATALOG_VERSION } from './schedule';
 import { countStudentAssignments } from './schedule-aggregate';
 import { ScheduleNotMutableError } from './schedule-errors';
 import { SchedulesService } from './schedules.service';
 
-const fingerprint = `sha256:${'4'.repeat(64)}`;
-
 describe('SchedulesService', () => {
   let temporaryDirectory: string;
   let connection: DatabaseConnection;
   let service: SchedulesService;
+  let teachers: TeachersRepository;
+  let weeklySlots: WeeklySlotsRepository;
 
   beforeEach(async () => {
     temporaryDirectory = await mkdtemp(
@@ -28,13 +30,14 @@ describe('SchedulesService', () => {
     });
     await connection.migrate(resolve(__dirname, '../../drizzle'));
     const people = new PeopleRepository(connection);
-    const teachers = new TeachersRepository(connection);
+    teachers = new TeachersRepository(connection);
+    weeklySlots = new WeeklySlotsRepository(connection);
     const users = new UsersRepository(connection);
     service = new SchedulesService(
       new SchedulesRepository(connection),
       people,
       teachers,
-      new WeeklySlotsRepository(connection),
+      weeklySlots,
       users,
     );
     await users.insert({
@@ -65,14 +68,23 @@ describe('SchedulesService', () => {
         firstName: 'Ana',
         firstSurname: 'Ruiz',
         courseCode: 'BACH_1',
-        weeklyHoursTotal: 2,
+        weeklyHoursTotal: 1,
         primaryPhone: '600000000',
         status: 'ACTIVE',
       },
-      subjects: [
-        { subjectCode: 'MATHEMATICS', weeklyHours: 1 },
-        { subjectCode: 'PHYSICS', weeklyHours: 1 },
-      ],
+      subjects: [{ subjectCode: 'MATHEMATICS', weeklyHours: 1 }],
+    });
+    const slots = await weeklySlots.listActive();
+    const slotIds = slots.map((slot) => slot.id);
+    await teachers.replaceCapabilities('teacher-1', {
+      subjectCodes: ['MATHEMATICS', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY'],
+      courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1'],
+      availableSlotIds: slotIds,
+    });
+    await teachers.replaceCapabilities('teacher-2', {
+      subjectCodes: ['SPANISH_LANGUAGE', 'ENGLISH'],
+      courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1', 'BACH_2'],
+      availableSlotIds: slotIds,
     });
   });
 
@@ -91,12 +103,57 @@ describe('SchedulesService', () => {
       ruleCatalogVersion: CURRENT_RULE_CATALOG_VERSION,
       classes: [],
     });
+    expect(draft.evaluation?.outcome).toBe('IDEAL');
     expect(draft.teachers.map((teacher) => teacher.id).sort()).toEqual([
       'teacher-1',
       'teacher-2',
     ]);
-    expect(draft.slots).toHaveLength(19);
+    expect(draft.slots).toHaveLength(23);
+    expect(draft.slots.map((slot) => slot.id)).toEqual(
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
+    );
+    expect(
+      draft.slots.some(
+        (slot) => slot.dayOfWeek === 'FRIDAY' && slot.startTime === '20:00',
+      ),
+    ).toBe(false);
     await expect(service.list('DRAFT')).resolves.toHaveLength(1);
+  });
+
+  it('backfills 20:00–21:00 onto an older draft snapshot', async () => {
+    const draft = await service.createEmptyDraft();
+    await connection.db
+      .delete(scheduleSlots)
+      .where(
+        inArray(scheduleSlots.slotId, [
+          'slot-monday-2000',
+          'slot-tuesday-2000',
+          'slot-wednesday-2000',
+          'slot-thursday-2000',
+        ]),
+      );
+
+    const loaded = await service.get(draft.id);
+
+    expect(loaded.slots).toHaveLength(23);
+    expect(loaded.slots.map((slot) => slot.id)).toEqual(
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
+    );
+    await expect(service.get(draft.id)).resolves.toMatchObject({
+      slots: expect.arrayContaining([
+        expect.objectContaining({ id: 'slot-monday-2000' }),
+      ]),
+    });
   });
 
   it('assigns, moves and confirms a draft while preserving hour counts and validation evidence', async () => {
@@ -111,44 +168,25 @@ describe('SchedulesService', () => {
       'Ana Ruiz',
     );
     expect(countStudentAssignments(assigned, 'person-1')).toBe(1);
+    expect(assigned.evaluation?.outcome).toBe('HAS_RELAXABLE_CONFLICTS');
 
     const moved = await service.moveAssignment(draft.id, {
       expectedRevision: assigned.revision,
       assignmentId: assigned.classes[0].assignments[0].id,
-      targetTeacherId: 'teacher-2',
+      targetTeacherId: 'teacher-1',
       targetSlotId: 'slot-tuesday-1600',
     });
     expect(countStudentAssignments(moved, 'person-1')).toBe(1);
     expect(moved.classes[0]).toMatchObject({
-      teacherId: 'teacher-2',
+      teacherId: 'teacher-1',
       slotId: 'slot-tuesday-1600',
     });
 
-    const evaluated = await service.attachEvaluation(
-      draft.id,
-      {
-        id: 'validation-1',
-        validationFingerprint: fingerprint,
-        scheduleId: draft.id,
-        scheduleRevision: moved.revision,
-        ruleCatalogVersion: CURRENT_RULE_CATALOG_VERSION,
-        evaluatedAt: new Date().toISOString(),
-        outcome: 'IDEAL',
-        canConfirm: true,
-        counts: {
-          blockingErrors: 0,
-          relaxableErrors: 0,
-          warnings: 0,
-          information: 0,
-        },
-        findings: [],
-      },
-      moved.revision,
-    );
+    const validated = await service.validate(draft.id, moved.revision);
     const confirmed = await service.confirm(draft.id, {
-      expectedRevision: evaluated.revision,
-      validationFingerprint: fingerprint,
-      acceptRelaxableConflicts: false,
+      expectedRevision: validated.revision,
+      validationFingerprint: validated.evaluation!.validationFingerprint,
+      acceptRelaxableConflicts: true,
       userId: 'user-1',
     });
 
@@ -158,6 +196,7 @@ describe('SchedulesService', () => {
       isCurrent: true,
       confirmedByUserId: 'user-1',
     });
+    expect(confirmed.acceptedFindingFingerprints.length).toBeGreaterThan(0);
     await expect(service.getCurrent()).resolves.toMatchObject({
       id: draft.id,
       state: 'CONFIRMED',

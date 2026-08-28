@@ -24,7 +24,8 @@
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts --host=127.0.0.1",
     "admin:create-users": "tsx src/administration/scripts/create-administrative-users.ts",
-    "admin:reset-password": "tsx src/administration/scripts/reset-administrative-password.ts"
+    "admin:reset-password": "tsx src/administration/scripts/reset-administrative-password.ts",
+    "seed:local": "tsx src/administration/scripts/seed-local-demo.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -57,6 +58,7 @@
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
+    "fast-check": "^4.9.0",
     "globals": "^17.0.0",
     "jest": "^30.0.0",
     "prettier": "^3.4.2",

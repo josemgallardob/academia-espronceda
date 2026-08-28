@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import { safeReturnUrl } from '../auth.interceptor';
 import type { ProblemDetails } from '../auth.models';
 import { AuthStore } from '../auth.store';
@@ -18,6 +19,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  readonly localDemo = environment.localDemo;
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly form = new FormGroup({
@@ -32,6 +34,21 @@ export class LoginComponent {
   });
 
   submit(): void {
+    this.authenticate('/');
+  }
+
+  useLocalDemo(): void {
+    if (!this.localDemo) {
+      return;
+    }
+    this.form.setValue({
+      identifier: this.localDemo.identifier,
+      password: this.localDemo.password,
+    });
+    this.authenticate('/horario');
+  }
+
+  private authenticate(fallbackPath: string): void {
     if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
       return;
@@ -45,7 +62,7 @@ export class LoginComponent {
       .subscribe({
         next: () => {
           const returnUrl = safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
-          void this.router.navigateByUrl(returnUrl ?? '/', { replaceUrl: true });
+          void this.router.navigateByUrl(returnUrl ?? fallbackPath, { replaceUrl: true });
         },
         error: (error: unknown) => this.showLoginError(error),
       });

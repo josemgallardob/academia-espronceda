@@ -110,7 +110,7 @@ When the agent finishes work on an orange task:
 1. Run tests; if they fail, do not commit, push, or `finish`
 2. Commit (`feat: short description`) and push on the group's `feature/…` branch while the card is still orange
 3. Run `finish <TASK-ID>` (changes orange → cyan)
-4. If this was the last approved task of that prefix, open one PR to `main`
+4. If this was the last approved task of that prefix, open one PR to `main` (title, summary, and description in English; local and cloud)
 5. Inform the human what was done
 6. The human reviews and marks cyan → green (or back to red for rework)
 
@@ -199,7 +199,7 @@ After tests pass, commit (`feat: short description`) and push on the group's `fe
 ```bash
 python canvas-tool.py "Project.canvas" finish <TASK-ID>
 ```
-If this was the last approved task of the prefix, open one PR to `main`. Inform the human the task is done. Do NOT attempt to set the card green. See [GIT.md](./GIT.md).
+If this was the last approved task of the prefix, open one PR to `main` (title, summary, and description in English). Inform the human the task is done. Do NOT attempt to set the card green. See [GIT.md](./GIT.md).
 
 ### 5. Repeat
 Once the human marks the task green, check for newly unblocked tasks:
