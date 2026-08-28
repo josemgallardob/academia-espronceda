@@ -106,7 +106,20 @@ describe('SchedulesService', () => {
       'teacher-1',
       'teacher-2',
     ]);
-    expect(draft.slots).toHaveLength(19);
+    expect(draft.slots).toHaveLength(23);
+    expect(draft.slots.map((slot) => slot.id)).toEqual(
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
+    );
+    expect(
+      draft.slots.some(
+        (slot) => slot.dayOfWeek === 'FRIDAY' && slot.startTime === '20:00',
+      ),
+    ).toBe(false);
     await expect(service.list('DRAFT')).resolves.toHaveLength(1);
   });
 

@@ -84,8 +84,45 @@ describe('seedLocalDemo', () => {
     ).toEqual(['ENGLISH', 'SPANISH_LANGUAGE']);
     expect(
       capabilities.find((teacher) => teacher.id === 'teacher-senior-sciences')
+        ?.availableSlotIds,
+    ).toEqual(
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
+    );
+    expect(
+      capabilities.find((teacher) => teacher.id === 'teacher-general-sciences')
+        ?.availableSlotIds,
+    ).toEqual(
+      expect.arrayContaining(['slot-tuesday-2000', 'slot-thursday-2000']),
+    );
+    expect(
+      capabilities
+        .find((teacher) => teacher.id === 'teacher-general-sciences')
+        ?.availableSlotIds.filter((slotId) =>
+          ['slot-monday-2000', 'slot-wednesday-2000'].includes(slotId),
+        ),
+    ).toEqual([]);
+    expect(
+      capabilities
+        .find((teacher) => teacher.id === 'teacher-languages')
+        ?.availableSlotIds.filter((slotId) => slotId.endsWith('-2000')),
+    ).toEqual([]);
+    expect(
+      capabilities.find((teacher) => teacher.id === 'teacher-senior-sciences')
         ?.availableSlotIds.length,
-    ).toBeGreaterThan(0);
+    ).toBe(23);
+    expect(
+      capabilities.find((teacher) => teacher.id === 'teacher-general-sciences')
+        ?.availableSlotIds.length,
+    ).toBe(21);
+    expect(
+      capabilities.find((teacher) => teacher.id === 'teacher-languages')
+        ?.availableSlotIds.length,
+    ).toBe(19);
 
     const ana = await people.findAggregateById('demo-person-ana');
     const nerea = await people.findAggregateById('demo-person-nerea');

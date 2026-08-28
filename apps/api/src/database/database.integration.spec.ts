@@ -62,7 +62,26 @@ describe('Drizzle/libSQL persistence', () => {
     );
     await expect(
       connection.db.select().from(weeklySlots),
-    ).resolves.toHaveLength(19);
+    ).resolves.toHaveLength(23);
+    await expect(
+      connection.db
+        .select({ id: weeklySlots.id })
+        .from(weeklySlots)
+        .where(eq(weeklySlots.startTime, '20:00')),
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        { id: 'slot-monday-2000' },
+        { id: 'slot-tuesday-2000' },
+        { id: 'slot-wednesday-2000' },
+        { id: 'slot-thursday-2000' },
+      ]),
+    );
+    await expect(
+      connection.db
+        .select({ id: weeklySlots.id })
+        .from(weeklySlots)
+        .where(eq(weeklySlots.startTime, '20:00')),
+    ).resolves.toHaveLength(4);
   });
 
   it('supports base repositories and case-insensitive login identities', async () => {
