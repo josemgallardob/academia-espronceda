@@ -17,6 +17,7 @@ import {
   removeAssignment,
   setSubjectTeacherAllocations,
   studentDisplayName,
+  withCatalogSlots,
 } from './schedule-aggregate';
 import {
   CURRENT_RULE_CATALOG_VERSION,
@@ -84,7 +85,7 @@ export class SchedulesService {
     if (!schedule) {
       throw new ScheduleNotFoundError('current');
     }
-    return schedule;
+    return this.ensureDraftHasCatalogSlots(schedule);
   }
 
   async list(state?: ScheduleState) {
@@ -281,7 +282,24 @@ export class SchedulesService {
     if (!schedule) {
       throw new ScheduleNotFoundError(scheduleId);
     }
-    return schedule;
+    return this.ensureDraftHasCatalogSlots(schedule);
+  }
+
+  private async ensureDraftHasCatalogSlots(
+    schedule: Schedule,
+  ): Promise<Schedule> {
+    if (schedule.state !== 'DRAFT') {
+      return schedule;
+    }
+    const { schedule: merged, added } = withCatalogSlots(
+      schedule,
+      await this.weeklySlots.listActive(),
+    );
+    if (added.length === 0) {
+      return schedule;
+    }
+    await this.schedules.insertMissingSlots(schedule.id, added);
+    return merged;
   }
 }
 
