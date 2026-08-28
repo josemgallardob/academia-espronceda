@@ -1,5 +1,6 @@
 import {
   addAssignment,
+  applyGeneratedSolution,
   attachEvaluation,
   classesForTeacher,
   confirmSchedule,
@@ -60,6 +61,43 @@ describe('Schedule aggregate', () => {
       'slot-monday-1700',
     ]);
     expect(classesForTeacher(schedule, 'teacher-1')).toEqual([]);
+  });
+
+  it('applies a generated solution onto an empty draft', () => {
+    const schedule = applyGeneratedSolution(emptyDraft(), {
+      classes: [
+        {
+          id: 'class-generated',
+          teacherId: 'teacher-1',
+          slotId: 'slot-monday-1600',
+          findingFingerprints: [],
+          assignments: [
+            {
+              id: 'assignment-1',
+              studentId: 'student-1',
+              studentDisplayName: 'Ana Ruiz',
+            },
+          ],
+        },
+      ],
+      subjectTeacherAllocations: [
+        {
+          studentId: 'student-1',
+          teacherId: 'teacher-1',
+          totalHours: 1,
+          subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 1 }],
+        },
+      ],
+    });
+
+    expect(schedule.classes).toEqual([
+      expect.objectContaining({
+        id: 'class-generated',
+        teacherId: 'teacher-1',
+        slotId: 'slot-monday-1600',
+      }),
+    ]);
+    expect(schedule.subjectTeacherAllocations).toHaveLength(1);
   });
 
   it('adds missing catalog hours to a draft without replacing existing slots', () => {

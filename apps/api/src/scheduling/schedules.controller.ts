@@ -48,6 +48,11 @@ export class SchedulesController {
     return toPublicSchedule(await this.schedules.createEmptyDraft());
   }
 
+  @Post('generate')
+  async generate() {
+    return toPublicSchedule(await this.schedules.generateDraft());
+  }
+
   @Get(':scheduleId')
   async get(@Param('scheduleId') scheduleId: string) {
     return toPublicSchedule(await this.schedules.get(scheduleId));
