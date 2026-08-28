@@ -1,3 +1,4 @@
+import { inArray } from 'drizzle-orm';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
@@ -7,6 +8,7 @@ import { SchedulesRepository } from '../database/repositories/schedules.reposito
 import { TeachersRepository } from '../database/repositories/teachers.repository';
 import { UsersRepository } from '../database/repositories/users.repository';
 import { WeeklySlotsRepository } from '../database/repositories/weekly-slots.repository';
+import { scheduleSlots } from '../database/schema';
 import { CURRENT_RULE_CATALOG_VERSION } from './schedule';
 import { countStudentAssignments } from './schedule-aggregate';
 import { ScheduleNotMutableError } from './schedule-errors';
@@ -121,6 +123,37 @@ describe('SchedulesService', () => {
       ),
     ).toBe(false);
     await expect(service.list('DRAFT')).resolves.toHaveLength(1);
+  });
+
+  it('backfills 20:00–21:00 onto an older draft snapshot', async () => {
+    const draft = await service.createEmptyDraft();
+    await connection.db
+      .delete(scheduleSlots)
+      .where(
+        inArray(scheduleSlots.slotId, [
+          'slot-monday-2000',
+          'slot-tuesday-2000',
+          'slot-wednesday-2000',
+          'slot-thursday-2000',
+        ]),
+      );
+
+    const loaded = await service.get(draft.id);
+
+    expect(loaded.slots).toHaveLength(23);
+    expect(loaded.slots.map((slot) => slot.id)).toEqual(
+      expect.arrayContaining([
+        'slot-monday-2000',
+        'slot-tuesday-2000',
+        'slot-wednesday-2000',
+        'slot-thursday-2000',
+      ]),
+    );
+    await expect(service.get(draft.id)).resolves.toMatchObject({
+      slots: expect.arrayContaining([
+        expect.objectContaining({ id: 'slot-monday-2000' }),
+      ]),
+    });
   });
 
   it('assigns, moves and confirms a draft while preserving hour counts and validation evidence', async () => {

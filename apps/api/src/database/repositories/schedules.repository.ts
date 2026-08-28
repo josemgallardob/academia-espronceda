@@ -209,6 +209,32 @@ export class SchedulesRepository extends BaseRepository {
     });
   }
 
+  async insertMissingSlots(
+    scheduleId: string,
+    slots: Array<{
+      id: string;
+      dayOfWeek: Schedule['slots'][number]['dayOfWeek'];
+      startTime: string;
+      endTime: string;
+    }>,
+  ): Promise<void> {
+    if (slots.length === 0) {
+      return;
+    }
+    await this.db
+      .insert(scheduleSlots)
+      .values(
+        slots.map((slot) => ({
+          scheduleId,
+          slotId: slot.id,
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        })),
+      )
+      .onConflictDoNothing();
+  }
+
   async findAggregateById(id: string): Promise<Schedule | undefined> {
     return this.loadAggregate(eq(schedules.id, id));
   }

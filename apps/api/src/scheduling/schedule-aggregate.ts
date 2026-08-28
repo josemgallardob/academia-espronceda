@@ -76,6 +76,24 @@ export function createEmptyDraft(input: {
   return schedule;
 }
 
+export function withCatalogSlots(
+  schedule: Schedule,
+  catalogSlots: ScheduleSlot[],
+): { schedule: Schedule; added: ScheduleSlot[] } {
+  const existingIds = new Set(schedule.slots.map((slot) => slot.id));
+  const added = catalogSlots.filter((slot) => !existingIds.has(slot.id));
+  if (added.length === 0) {
+    return { schedule, added };
+  }
+  return {
+    schedule: {
+      ...schedule,
+      slots: [...cloneSlots(schedule.slots), ...cloneSlots(added)],
+    },
+    added: cloneSlots(added),
+  };
+}
+
 export function createDraftFromConfirmed(
   source: Schedule,
   input: {
