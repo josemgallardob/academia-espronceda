@@ -15,6 +15,13 @@
       "when": 1787478819000,
       "tag": "0001_seed_weekly_slots",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787900000000,
+      "tag": "0002_add_late_weekly_slots",
+      "breakpoints": true
     }
   ]
 }

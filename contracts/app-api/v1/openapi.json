@@ -1373,6 +1373,13 @@
           "displayName": {
             "type": "string",
             "minLength": 1
+          },
+          "availableSlotIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "../../shared/v1/components.json#/components/schemas/EntityId"
+            }
           }
         }
       },
