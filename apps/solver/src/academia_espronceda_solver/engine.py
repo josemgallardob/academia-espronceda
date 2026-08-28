@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from time import perf_counter
 from typing import Protocol
 
+from academia_espronceda_solver.cpsat import solve_strict
 from academia_espronceda_solver.schemas import (
     SolveAttempt,
     SolveOutcomeStatus,
@@ -29,34 +30,27 @@ class ScheduleEngine(Protocol):
     ) -> SolveOutcome: ...
 
 
-class UnavailableModelEngine:
-    """Returns UNKNOWN without searching. CP-SAT modeling is a later solver task."""
-
+class StrictCpSatEngine:
     def solve(
         self,
         request: SolveScheduleRequest,
         *,
         time_limit_seconds: float,
     ) -> SolveOutcome:
-        del request, time_limit_seconds
         started = perf_counter()
-        strict_elapsed = _elapsed_ms(started)
-        relaxed_started = perf_counter()
-        relaxed_elapsed = _elapsed_ms(relaxed_started)
+        status, solution = solve_strict(request, time_limit_seconds=time_limit_seconds)
+        elapsed = _elapsed_ms(started)
         return SolveOutcome(
-            mode="RELAXED",
-            status="UNKNOWN",
-            attempts=(
-                SolveAttempt(mode="STRICT", status="UNKNOWN", elapsedMilliseconds=strict_elapsed),
-                SolveAttempt(mode="RELAXED", status="UNKNOWN", elapsedMilliseconds=relaxed_elapsed),
-            ),
-            solution=None,
-            elapsed_milliseconds=strict_elapsed + relaxed_elapsed,
+            mode="STRICT",
+            status=status,
+            attempts=(SolveAttempt(mode="STRICT", status=status, elapsedMilliseconds=elapsed),),
+            solution=solution,
+            elapsed_milliseconds=elapsed,
         )
 
 
 def get_engine() -> ScheduleEngine:
-    return UnavailableModelEngine()
+    return StrictCpSatEngine()
 
 
 def _elapsed_ms(started: float) -> int:

@@ -52,7 +52,7 @@ def test_solve_rejects_human_jwt_as_service_credential(
     assert response.json()["code"] == "INVALID_SERVICE_TOKEN"
 
 
-def test_solve_accepts_valid_problem_and_returns_unknown_outcome(
+def test_solve_accepts_valid_problem_and_returns_strict_optimal(
     client: TestClient,
     auth_headers: dict[str, str],
     load_fixture: LoadFixture,
@@ -69,11 +69,33 @@ def test_solve_accepts_valid_problem_and_returns_unknown_outcome(
     assert payload["requestId"] == request["requestId"]
     assert payload["randomSeed"] == request["options"]["randomSeed"]
     assert payload["timeLimitSeconds"] == request["options"]["timeLimitSeconds"]
-    assert payload["status"] == "UNKNOWN"
-    assert payload["mode"] == "RELAXED"
-    assert payload["solution"] is None
-    assert payload["attempts"][0]["mode"] == "STRICT"
+    assert payload["status"] == "OPTIMAL"
+    assert payload["mode"] == "STRICT"
+    assert payload["solution"] is not None
+    assert payload["attempts"] == [
+        {
+            "mode": "STRICT",
+            "status": "OPTIMAL",
+            "elapsedMilliseconds": payload["attempts"][0]["elapsedMilliseconds"],
+        }
+    ]
     assert payload["elapsedMilliseconds"] >= 0
+    assert payload["solution"]["classes"][0]["teacherId"] == "teacher-2"
+    assert payload["solution"]["classes"][0]["studentIds"] == [
+        "student-1",
+        "student-2",
+        "student-3",
+        "student-4",
+    ]
+    assert payload["solution"]["subjectTeacherAllocations"] == []
+    assert payload["solution"]["score"]["tiers"] == [
+        {"priority": 1, "penalty": 0},
+        {"priority": 2, "penalty": 0},
+        {"priority": 3, "penalty": 0},
+        {"priority": 4, "penalty": 0},
+        {"priority": 5, "penalty": 0},
+        {"priority": 6, "penalty": 0},
+    ]
 
 
 def test_solve_rejects_invalid_hours_as_bad_request(
