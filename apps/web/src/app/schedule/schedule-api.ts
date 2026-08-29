@@ -268,6 +268,18 @@ export class ScheduleStore {
       switchMap((list) => {
         const draft = list.items.find((item) => item.state === 'DRAFT');
         const current = list.items.find((item) => item.isCurrent);
+        if (draft && current && draft.id !== current.id) {
+          return this.http.get<Schedule>(`${schedulesUrl}/${draft.id}`).pipe(
+            switchMap((loadedDraft) => {
+              const useCurrent =
+                loadedDraft.classes.length === 0 &&
+                loadedDraft.sourceScheduleId !== current.id;
+              return useCurrent
+                ? this.http.get<Schedule>(`${schedulesUrl}/${current.id}`)
+                : of(loadedDraft);
+            }),
+          );
+        }
         const id = draft?.id ?? current?.id;
         return id ? this.http.get<Schedule>(`${schedulesUrl}/${id}`) : of(null);
       }),

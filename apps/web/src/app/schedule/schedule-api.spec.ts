@@ -45,6 +45,36 @@ describe('ScheduleStore', () => {
     expect(store.studentHours()[0].remainingHours).toBe(2);
   });
 
+  it('loads the current confirmed schedule instead of a leftover empty draft', () => {
+    const leftoverDraft = schedule({
+      id: 'draft-empty',
+      state: 'DRAFT',
+      isCurrent: false,
+      sourceScheduleId: null,
+      classes: [],
+    });
+    const confirmed = schedule({
+      id: 'schedule-current',
+      state: 'CONFIRMED',
+      isCurrent: true,
+    });
+    store.load();
+    httpTesting.expectOne('/api/v1/teachers').flush([teacher()]);
+    httpTesting
+      .expectOne(
+        (request) => request.url === '/api/v1/people' && request.params.get('status') === 'ACTIVE',
+      )
+      .flush(peopleResponse([person()]));
+    httpTesting.expectOne('/api/v1/schedules').flush(listResponse([confirmed, leftoverDraft]));
+    httpTesting.expectOne('/api/v1/schedules/draft-empty').flush(leftoverDraft);
+    httpTesting.expectOne('/api/v1/schedules/schedule-current').flush(confirmed);
+
+    expect(store.workspace()).toMatchObject({
+      kind: 'ready',
+      schedule: { id: 'schedule-current', state: 'CONFIRMED' },
+    });
+  });
+
   it('shows only students compatible with the selected teacher and updates immediately', () => {
     store.load();
     httpTesting.expectOne('/api/v1/teachers').flush([profesor1(), profesor2(), profesor3()]);
