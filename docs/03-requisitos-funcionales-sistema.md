@@ -80,6 +80,8 @@ La generacion debe cumplir las horas semanales por asignatura cuando las asignat
 
 Un alumno no puede compartirse entre dos profesores cuando uno solo puede cubrir todas sus asignaturas. Esta condicion es HARD: el generador no puede relajarla ni devolver un horario con ese reparto innecesario. Solo se admite mas de un profesor cuando las asignaturas del alumno lo exigen. Un borrador manual que incumpla esta regla no se puede confirmar.
 
+Las horas de un alumno deben intentarse repartir en dias distintos. Si dos o mas clases coinciden el mismo dia, esas franjas deben ser consecutivas. Un hueco el mismo dia, por ejemplo 17:00-18:00 y 19:00-20:00, no es aceptable. Esta condicion es HARD: el generador no puede relajarla ni devolverla, y un borrador manual que la incumpla no se puede confirmar.
+
 Cuando varias asignaturas de una persona correspondan al mismo profesor, el horario no necesita fijar que asignatura concreta se trabajara en cada clase. En ese caso, el generador debe respetar el total de horas con ese profesor.
 
 El resultado esperado es un horario semanal global en el que cada profesor tenga, para cada franja horaria de una hora dentro de su horario de trabajo, una clase con personas compatibles con sus restricciones. Esta condición es HARD: el generador no puede relajarla ni devolver un horario con esas franjas vacías. Si una franja del profesor admite al menos un alumno compatible y disponible, debe quedar ocupada; si no existe esa solución, la generación es infactible.
@@ -145,9 +147,10 @@ Al editar una clase, el sistema debe validar:
 5. Disponibilidad de persona.
 6. Capacidad de la clase.
 7. No solape de la misma persona en la misma franja.
-8. Duracion de una hora por clase.
-9. Horas semanales por asignatura cuando impliquen profesores distintos.
-10. No superar las horas semanales totales contratadas por la persona.
+8. Si una persona tiene dos o mas clases el mismo dia, esas franjas deben ser consecutivas.
+9. Duracion de una hora por clase.
+10. Horas semanales por asignatura cuando impliquen profesores distintos.
+11. No superar las horas semanales totales contratadas por la persona.
 
 ## Visualizacion de horarios y cuadrantes
 
@@ -195,10 +198,11 @@ Reglas de cumplimiento para la generacion automatica:
 5. Capacidad minima de una clase activa.
 6. Capacidad maxima de la clase.
 7. No solapar a la misma persona en dos clases durante la misma franja.
-8. Duracion de una hora por clase.
-9. Cumplimiento de las horas semanales por asignatura cuando impliquen profesores distintos.
-10. No superar las horas semanales totales contratadas por la persona.
-11. No repartir a un alumno entre mas profesores de los necesarios para cubrir sus asignaturas.
+8. No dejar huecos el mismo dia: si un alumno tiene dos o mas clases ese dia, deben ocupar franjas consecutivas.
+9. Duracion de una hora por clase.
+10. Cumplimiento de las horas semanales por asignatura cuando impliquen profesores distintos.
+11. No superar las horas semanales totales contratadas por la persona.
+12. No repartir a un alumno entre mas profesores de los necesarios para cubrir sus asignaturas.
 
 Preferencias:
 
@@ -206,6 +210,7 @@ Preferencias:
 2. Mantener clases de 4 alumnos como capacidad ideal.
 3. Evitar clases de 3 alumnos salvo necesidad.
 4. Evitar clases de 5 alumnos salvo necesidad mayor.
+5. Repartir las horas de cada alumno en dias distintos siempre que se pueda.
 
 Las reglas anteriores son obligatorias como objetivo del algoritmo de generacion automatica. Si no pueden cumplirse todas simultaneamente, el algoritmo devolvera la mejor solucion encontrada y señalara cada incumplimiento.
 

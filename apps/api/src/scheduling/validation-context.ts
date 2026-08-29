@@ -65,6 +65,11 @@ export const RULE_DEFINITIONS = {
     severity: 'ERROR',
     priority: null,
   },
+  STUDENT_SAME_DAY_CONTIGUOUS: {
+    enforcement: 'HARD',
+    severity: 'ERROR',
+    priority: null,
+  },
   TEACHER_SUBJECT_COMPATIBILITY: {
     enforcement: 'HARD',
     severity: 'ERROR',
@@ -129,6 +134,11 @@ export const RULE_DEFINITIONS = {
     idealCapacity: 4,
     belowIdealPenaltyPerStudent: 1,
     aboveIdealPenaltyPerStudent: 2,
+  },
+  STUDENT_DAY_SPREAD: {
+    enforcement: 'PREFERENCE',
+    severity: 'WARNING',
+    priority: 4,
   },
   RELATED_STUDENTS_TOGETHER: {
     enforcement: 'PREFERENCE',

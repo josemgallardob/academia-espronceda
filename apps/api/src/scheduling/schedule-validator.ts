@@ -66,6 +66,7 @@ export function evaluateSchedule(
   collectTeacherSingleClassPerSlot(schedule, findings);
   collectStudentUniqueInClass(schedule, findings);
   collectStudentTimeOverlap(schedule, slots, students, findings);
+  collectStudentSameDayContiguous(schedule, slots, students, findings);
   collectTeacherSubjectCompatibility(schedule, students, teachers, findings);
   collectTeacherCourseCompatibility(schedule, students, teachers, findings);
   collectTeacherAvailability(schedule, teachers, findings);
@@ -73,6 +74,7 @@ export function evaluateSchedule(
   collectWeeklyHours(schedule, students, options.purpose, findings);
   collectSubjectHoursAndSingleTeacher(schedule, students, findings);
   collectClassCapacity(schedule, findings, score);
+  collectStudentDaySpread(schedule, slots, students, findings, score);
   collectTeacherContinuity(schedule, students, teachers, findings);
   collectRelatedStudents(schedule, students, teachers, slots, findings, score);
   collectPreferredTeachers(schedule, students, teachers, findings, score);
@@ -278,6 +280,73 @@ function collectStudentTimeOverlap(
           }),
         );
       }
+    }
+  }
+}
+
+function collectStudentSameDayContiguous(
+  schedule: Schedule,
+  slots: Map<string, ScheduleSlot>,
+  students: Map<string, ValidationStudent>,
+  findings: ScheduleFinding[],
+): void {
+  for (const [studentId, classes] of studentClasses(schedule)) {
+    for (const [dayOfWeek, dayClasses] of classesByDay(classes, slots)) {
+      const ordered = uniqueDaySlots(dayClasses, slots);
+      if (ordered.length < 2 || sameDaySlotsAreContiguous(ordered)) {
+        continue;
+      }
+      findings.push(
+        finding('STUDENT_SAME_DAY_CONTIGUOUS', {
+          entityRefs: [
+            { type: 'SCHEDULE', id: schedule.id },
+            { type: 'STUDENT', id: studentId },
+            ...dayClasses.map((weeklyClass) => ({
+              type: 'CLASS' as const,
+              id: weeklyClass.id,
+            })),
+          ],
+          slotIds: ordered.map((slot) => slot.id),
+          parameters: {
+            dayOfWeek,
+            classIds: dayClasses.map((weeklyClass) => weeklyClass.id),
+          },
+          message: `${studentName(schedule, students, studentId)} tiene clases el ${DAY_LABELS[dayOfWeek]} en franjas que no son consecutivas (${ordered.map((slot) => `${slot.startTime}–${slot.endTime}`).join(' y ')}).`,
+        }),
+      );
+    }
+  }
+}
+
+function collectStudentDaySpread(
+  schedule: Schedule,
+  slots: Map<string, ScheduleSlot>,
+  students: Map<string, ValidationStudent>,
+  findings: ScheduleFinding[],
+  score: InternalScore,
+): void {
+  for (const [studentId, classes] of studentClasses(schedule)) {
+    for (const [dayOfWeek, dayClasses] of classesByDay(classes, slots)) {
+      const ordered = uniqueDaySlots(dayClasses, slots);
+      const assignedHours = ordered.length;
+      if (assignedHours < 2) {
+        continue;
+      }
+      addScore(score, 4, assignedHours - 1);
+      findings.push(
+        finding('STUDENT_DAY_SPREAD', {
+          entityRefs: [
+            { type: 'SCHEDULE', id: schedule.id },
+            { type: 'STUDENT', id: studentId },
+          ],
+          slotIds: ordered.map((slot) => slot.id),
+          parameters: {
+            dayOfWeek,
+            assignedHours,
+          },
+          message: `${studentName(schedule, students, studentId)} concentra ${assignedHours} horas el ${DAY_LABELS[dayOfWeek]}; se prefiere repartirlas en días distintos.`,
+        }),
+      );
     }
   }
 }
@@ -1164,6 +1233,46 @@ function minimumTeachersToCover(
     }
   }
   return best;
+}
+
+function classesByDay(
+  classes: WeeklyClass[],
+  slots: Map<string, ScheduleSlot>,
+): Map<ScheduleSlot['dayOfWeek'], WeeklyClass[]> {
+  const result = new Map<ScheduleSlot['dayOfWeek'], WeeklyClass[]>();
+  for (const weeklyClass of classes) {
+    const slot = slots.get(weeklyClass.slotId);
+    if (!slot) {
+      continue;
+    }
+    const current = result.get(slot.dayOfWeek) ?? [];
+    current.push(weeklyClass);
+    result.set(slot.dayOfWeek, current);
+  }
+  return result;
+}
+
+function uniqueDaySlots(
+  classes: WeeklyClass[],
+  slots: Map<string, ScheduleSlot>,
+): ScheduleSlot[] {
+  const unique = new Map<string, ScheduleSlot>();
+  for (const weeklyClass of classes) {
+    const slot = slots.get(weeklyClass.slotId);
+    if (slot) {
+      unique.set(slot.id, slot);
+    }
+  }
+  return [...unique.values()].sort((left, right) =>
+    left.startTime.localeCompare(right.startTime),
+  );
+}
+
+function sameDaySlotsAreContiguous(ordered: ScheduleSlot[]): boolean {
+  return ordered.every(
+    (slot, index) =>
+      index === 0 || ordered[index - 1].endTime === slot.startTime,
+  );
 }
 
 function intervalsOverlap(left: ScheduleSlot, right: ScheduleSlot): boolean {

@@ -236,6 +236,80 @@ def test_evaluate_flags_an_unnecessary_teacher_split() -> None:
     assert continuity.parameters["minimumRequiredTeachers"] == 1
 
 
+def test_same_day_gap_is_strictly_infeasible() -> None:
+    request = SolveScheduleRequest.model_validate(
+        _capacity_request(
+            [
+                _timed_slot("MONDAY_17_00", "MONDAY", "17:00", "18:00"),
+                _timed_slot("MONDAY_19_00", "MONDAY", "19:00", "20:00"),
+            ],
+            weekly_hours=2,
+        )
+    )
+
+    status, solution = solve_strict(request, time_limit_seconds=5)
+
+    assert status == "INFEASIBLE"
+    assert solution is None
+
+
+def test_consecutive_same_day_slots_remain_feasible() -> None:
+    request = SolveScheduleRequest.model_validate(
+        _capacity_request(
+            [
+                _timed_slot("MONDAY_16_00", "MONDAY", "16:00", "17:00"),
+                _timed_slot("MONDAY_17_00", "MONDAY", "17:00", "18:00"),
+            ],
+            weekly_hours=2,
+        )
+    )
+
+    status, solution = solve_strict(request, time_limit_seconds=5)
+
+    assert status == "OPTIMAL"
+    assert solution is not None
+    assert {weekly_class.slotId for weekly_class in solution.classes} == {
+        "MONDAY_16_00",
+        "MONDAY_17_00",
+    }
+    assert solution.score.tiers[3].penalty == 3
+    assert {finding.ruleId for finding in solution.findings} >= {"STUDENT_DAY_SPREAD"}
+
+
+def test_evaluate_scores_same_day_hour_concentration() -> None:
+    classes = [
+        WeeklyClass(
+            id="class-a",
+            teacherId="teacher-2",
+            slotId="MONDAY_16_00",
+            studentIds=["student-1", "student-2", "student-3"],
+        ),
+        WeeklyClass(
+            id="class-b",
+            teacherId="teacher-2",
+            slotId="MONDAY_17_00",
+            studentIds=["student-1", "student-2", "student-3"],
+        ),
+    ]
+    request = SolveScheduleRequest.model_validate(
+        _capacity_request(
+            [
+                _timed_slot("MONDAY_16_00", "MONDAY", "16:00", "17:00"),
+                _timed_slot("MONDAY_17_00", "MONDAY", "17:00", "18:00"),
+            ],
+            weekly_hours=2,
+        )
+    )
+
+    score, findings = evaluate_solution(request, classes, [])
+
+    assert score.tiers[3].penalty == 3
+    spread = [item for item in findings if item.ruleId == "STUDENT_DAY_SPREAD"]
+    assert len(spread) == 3
+    assert spread[0].enforcement == "PREFERENCE"
+    assert spread[0].blocksConfirmation is False
+
+
 def test_evaluate_scores_ideal_capacity_like_the_catalog() -> None:
     classes = [
         WeeklyClass(
@@ -429,5 +503,34 @@ def _student(student_id: str, subject_hours: list[tuple[str, int]]) -> dict[str,
     }
 
 
+def _capacity_request(slots: list[dict[str, str]], *, weekly_hours: int) -> dict[str, Any]:
+    slot_ids = [slot["id"] for slot in slots]
+    return {
+        "contractVersion": "1.0.0",
+        "ruleCatalogVersion": "1.0.0",
+        "requestId": "request-same-day-slots",
+        "timezone": "Europe/Madrid",
+        "slots": slots,
+        "teachers": [
+            {
+                "id": "teacher-2",
+                "profile": "GENERAL_SCIENCES",
+                "supportedCourseCodes": ["BACH_1"],
+                "supportedSubjectCodes": ["MATHEMATICS"],
+                "availableSlotIds": slot_ids,
+            }
+        ],
+        "students": [
+            _student(f"student-{index}", [("MATHEMATICS", weekly_hours)]) for index in range(1, 4)
+        ],
+        "relationships": [],
+        "options": {"timeLimitSeconds": 10, "randomSeed": 12345},
+    }
+
+
 def _slot(slot_id: str, day: str) -> dict[str, str]:
-    return {"id": slot_id, "dayOfWeek": day, "startTime": "16:00", "endTime": "17:00"}
+    return _timed_slot(slot_id, day, "16:00", "17:00")
+
+
+def _timed_slot(slot_id: str, day: str, start: str, end: str) -> dict[str, str]:
+    return {"id": slot_id, "dayOfWeek": day, "startTime": start, "endTime": end}

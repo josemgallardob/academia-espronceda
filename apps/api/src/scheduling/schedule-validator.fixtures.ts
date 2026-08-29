@@ -24,6 +24,12 @@ export const monday1700: ScheduleSlot = {
   startTime: '17:00',
   endTime: '18:00',
 };
+export const monday1900: ScheduleSlot = {
+  id: 'slot-monday-1900',
+  dayOfWeek: 'MONDAY',
+  startTime: '19:00',
+  endTime: '20:00',
+};
 export const tuesday1600: ScheduleSlot = {
   id: 'slot-tuesday-1600',
   dayOfWeek: 'TUESDAY',

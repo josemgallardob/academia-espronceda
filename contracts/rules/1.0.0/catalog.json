@@ -24,6 +24,11 @@
         "ruleIds": ["CLASS_CAPACITY_IDEAL"]
       },
       {
+        "priority": 4,
+        "name": "Spread a student's hours across different weekdays",
+        "ruleIds": ["STUDENT_DAY_SPREAD"]
+      },
+      {
         "priority": 5,
         "name": "Place related students together",
         "ruleIds": ["RELATED_STUDENTS_TOGETHER"]
@@ -134,6 +139,27 @@
       "condition": "For every student, no pair of assigned class intervals overlaps on the same weekday; adjacent intervals are not overlaps.",
       "entities": ["SCHEDULE", "CLASS", "ASSIGNMENT", "STUDENT", "TEACHER", "SLOT"],
       "evidence": ["scheduleId", "studentId", "classIds", "teacherIds", "slotIds"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "STUDENT_SAME_DAY_CONTIGUOUS",
+      "name": "Same-day classes must be consecutive",
+      "description": "A student cannot have two or more classes on the same weekday unless those classes occupy consecutive one-hour slots, so the student does not leave and return later that day.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "For every student and weekday, the assigned slots on that day form a contiguous block: after sorting by startTime, each slot's endTime equals the next slot's startTime.",
+      "entities": ["SCHEDULE", "CLASS", "ASSIGNMENT", "STUDENT", "SLOT"],
+      "evidence": ["scheduleId", "studentId", "dayOfWeek", "classIds", "slotIds"],
       "appliesTo": [
         "SOLVER_STRICT",
         "SOLVER_RELAXED",
@@ -443,6 +469,34 @@
         "parameters": {
           "belowIdealPenaltyPerStudent": 1,
           "aboveIdealPenaltyPerStudent": 2
+        }
+      }
+    },
+    {
+      "id": "STUDENT_DAY_SPREAD",
+      "name": "Spread student hours across weekdays",
+      "description": "A student's weekly hours should use as many distinct weekdays as possible; two or more hours on the same day are accepted only when they are consecutive.",
+      "classification": "PREFERENCE",
+      "enforcement": "PREFERENCE",
+      "severity": "WARNING",
+      "priority": 4,
+      "condition": "Each extra assigned hour beyond the first on the same weekday is a preference penalty.",
+      "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT", "SLOT"],
+      "evidence": ["scheduleId", "studentId", "dayOfWeek", "slotIds", "assignedHours"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "penaltyPerExtraSameDayHour": 1
+      },
+      "optimization": {
+        "metric": "EXTRA_HOURS_ON_THE_SAME_DAY",
+        "parameters": {
+          "penaltyPerExtraSameDayHour": 1
         }
       }
     },

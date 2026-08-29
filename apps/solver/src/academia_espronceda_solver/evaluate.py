@@ -17,6 +17,7 @@ from academia_espronceda_solver.rules import (
     feasible_shared_sessions,
     has_science_workload,
     minimum_teachers_to_cover,
+    slots_by_day,
     teacher_compatible_with,
 )
 from academia_espronceda_solver.schemas import (
@@ -42,6 +43,7 @@ def evaluate_solution(
     findings: list[SolverFinding] = []
 
     _collect_class_capacity(classes, penalties, rule_totals, findings)
+    _collect_day_spread(request, classes, penalties, rule_totals, findings)
     _collect_teacher_continuity(request, classes, penalties, rule_totals, findings)
     _collect_related_students(request, classes, penalties, rule_totals, findings)
     _collect_preferred_teachers(request, classes, penalties, rule_totals, findings)
@@ -157,6 +159,45 @@ def _collect_class_capacity(
                     "studentIds": student_ids,
                     "actualCapacity": actual,
                     "idealCapacity": IDEAL_CAPACITY,
+                },
+            )
+
+
+def _collect_day_spread(
+    request: SolveScheduleRequest,
+    classes: Sequence[WeeklyClass],
+    penalties: dict[int, float],
+    rule_totals: dict[str, list[float]],
+    findings: list[SolverFinding],
+) -> None:
+    slot_by_id = {slot.id: slot for slot in request.slots}
+    assigned: dict[str, list[str]] = defaultdict(list)
+    for weekly_class in classes:
+        for student_id in weekly_class.studentIds:
+            assigned[student_id].append(weekly_class.slotId)
+    for student in request.students:
+        student_slots = [
+            slot_by_id[slot_id] for slot_id in assigned.get(student.id, []) if slot_id in slot_by_id
+        ]
+        for day, day_slots in slots_by_day(student_slots).items():
+            unique_ids = unique_sorted(slot.id for slot in day_slots)
+            assigned_hours = len(unique_ids)
+            extra = assigned_hours - 1
+            if extra <= 0:
+                continue
+            _add_finding(
+                findings,
+                penalties,
+                rule_totals,
+                "STUDENT_DAY_SPREAD",
+                extra,
+                entity_refs=[
+                    EntityReference(type="STUDENT", id=student.id),
+                ],
+                slot_ids=unique_ids,
+                parameters={
+                    "dayOfWeek": day,
+                    "assignedHours": assigned_hours,
                 },
             )
 

@@ -41,6 +41,7 @@ RULE_DEFINITIONS: dict[str, RuleDefinition] = {
     "CLASS_CAPACITY_MAXIMUM": RuleDefinition("RELAXABLE", "ERROR", 1),
     "CLASS_CAPACITY_MINIMUM": RuleDefinition("RELAXABLE", "ERROR", 2),
     "CLASS_CAPACITY_IDEAL": RuleDefinition("PREFERENCE", "WARNING", 3),
+    "STUDENT_DAY_SPREAD": RuleDefinition("PREFERENCE", "WARNING", 4),
     "STUDENT_TEACHER_CONTINUITY": RuleDefinition("HARD", "ERROR", None),
     "RELATED_STUDENTS_TOGETHER": RuleDefinition("PREFERENCE", "WARNING", 5),
     "PREFERRED_TEACHER_BACH1_SCIENCES": RuleDefinition("PREFERENCE", "WARNING", 6),
@@ -150,6 +151,21 @@ def slots_overlap(left: WeeklySlot, right: WeeklySlot) -> bool:
 
 def class_id_for(teacher_id: str, slot_id: str) -> str:
     return f"class-{slot_id}-{teacher_id}"
+
+
+def slots_by_day(slots: Sequence[WeeklySlot]) -> dict[str, list[WeeklySlot]]:
+    grouped: dict[str, list[WeeklySlot]] = {}
+    for slot in slots:
+        grouped.setdefault(slot.dayOfWeek, []).append(slot)
+    for day_slots in grouped.values():
+        day_slots.sort(key=lambda item: (item.startTime, item.id))
+    return grouped
+
+
+def slot_range_is_contiguous(day_slots: Sequence[WeeklySlot], start: int, end: int) -> bool:
+    return all(
+        day_slots[index].endTime == day_slots[index + 1].startTime for index in range(start, end)
+    )
 
 
 def _minutes(value: str) -> int:

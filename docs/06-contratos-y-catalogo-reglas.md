@@ -51,6 +51,7 @@ ya respetan las prioridades superiores.
 | `TEACHER_SINGLE_CLASS_PER_SLOT` | Un profesor tiene como máximo una clase en cada franja.                                           |
 | `STUDENT_UNIQUE_IN_CLASS`       | Un alumno no aparece duplicado dentro de una clase.                                               |
 | `STUDENT_TIME_OVERLAP`          | Un alumno no tiene clases solapadas.                                                              |
+| `STUDENT_SAME_DAY_CONTIGUOUS`   | Si un alumno tiene varias clases el mismo día, deben ocupar franjas consecutivas.                 |
 | `TEACHER_SUBJECT_COMPATIBILITY` | El profesor imparte las asignaturas que justifican la asignación.                                 |
 | `TEACHER_COURSE_COMPATIBILITY`  | El profesor admite el curso del alumno.                                                           |
 | `TEACHER_AVAILABILITY`          | El profesor está disponible en la franja.                                                         |
@@ -81,12 +82,13 @@ máximo antes de evitar una clase de 1 o 2 alumnos.
 
 ### Preferencias
 
-| Prioridad | Identificador                      | Objetivo                                                                       |
-| --------: | ---------------------------------- | ------------------------------------------------------------------------------ |
-|         3 | `CLASS_CAPACITY_IDEAL`             | Mantener 4 alumnos; una clase de 5 penaliza más que una de 3.                  |
-|         5 | `RELATED_STUDENTS_TOGETHER`        | Maximizar clases compartidas con el mismo profesor, día y hora.                |
-|         6 | `PREFERRED_TEACHER_BACH1_SCIENCES` | Preferir `GENERAL_SCIENCES` para ciencias de 1.º de Bachillerato.              |
-|         6 | `PREFERRED_TEACHER_OTHER_SCIENCES` | Preferir `SENIOR_SCIENCES` para ciencias del curso `OTHER`.                    |
+| Prioridad | Identificador                      | Objetivo                                                            |
+| --------: | ---------------------------------- | ------------------------------------------------------------------- |
+|         3 | `CLASS_CAPACITY_IDEAL`             | Mantener 4 alumnos; una clase de 5 penaliza más que una de 3.       |
+|         4 | `STUDENT_DAY_SPREAD`               | Repartir las horas de un alumno en el mayor número posible de días. |
+|         5 | `RELATED_STUDENTS_TOGETHER`        | Maximizar clases compartidas con el mismo profesor, día y hora.     |
+|         6 | `PREFERRED_TEACHER_BACH1_SCIENCES` | Preferir `GENERAL_SCIENCES` para ciencias de 1.º de Bachillerato.   |
+|         6 | `PREFERRED_TEACHER_OTHER_SCIENCES` | Preferir `SENIOR_SCIENCES` para ciencias del curso `OTHER`.         |
 
 ## Puntuación
 
