@@ -32,12 +32,14 @@ export class ScheduleStore {
   private readonly studentsSignal = signal<Person[]>([]);
   private readonly selectedTeacherIdSignal = signal<string | null>(null);
   private readonly pendingSignal = signal(false);
+  private readonly generatingSignal = signal(false);
 
   readonly workspace = this.workspaceSignal.asReadonly();
   readonly teachers = this.teachersSignal.asReadonly();
   readonly students = this.studentsSignal.asReadonly();
   readonly selectedTeacherId = this.selectedTeacherIdSignal.asReadonly();
   readonly pending = this.pendingSignal.asReadonly();
+  readonly generating = this.generatingSignal.asReadonly();
 
   readonly schedule = computed(() => {
     const workspace = this.workspaceSignal();
@@ -142,13 +144,20 @@ export class ScheduleStore {
   createEmptyDraft(): Observable<Schedule> {
     this.pendingSignal.set(true);
     return this.http.post<Schedule>(`${schedulesUrl}/drafts`, {}).pipe(
-      tap((schedule) => {
-        this.workspaceSignal.set({ kind: 'ready', schedule });
-        if (!this.selectedTeacherIdSignal() && schedule.teachers[0]) {
-          this.selectedTeacherIdSignal.set(schedule.teachers[0].id);
-        }
-      }),
+      tap((schedule) => this.applySchedule(schedule)),
       finalize(() => this.pendingSignal.set(false)),
+    );
+  }
+
+  generateDraft(): Observable<Schedule> {
+    this.pendingSignal.set(true);
+    this.generatingSignal.set(true);
+    return this.http.post<Schedule>(`${schedulesUrl}/generate`, {}).pipe(
+      tap((schedule) => this.applySchedule(schedule)),
+      finalize(() => {
+        this.pendingSignal.set(false);
+        this.generatingSignal.set(false);
+      }),
     );
   }
 
@@ -221,6 +230,13 @@ export class ScheduleStore {
       tap((draft) => this.workspaceSignal.set({ kind: 'ready', schedule: draft })),
       finalize(() => this.pendingSignal.set(false)),
     );
+  }
+
+  private applySchedule(schedule: Schedule): void {
+    this.workspaceSignal.set({ kind: 'ready', schedule });
+    if (!this.selectedTeacherIdSignal() && schedule.teachers[0]) {
+      this.selectedTeacherIdSignal.set(schedule.teachers[0].id);
+    }
   }
 
   private mutate(operation: (schedule: Schedule) => Observable<Schedule>): Observable<Schedule> {

@@ -10,3 +10,10 @@ npm run dev:solver
 ```
 
 La comprobación de salud queda disponible en `GET http://localhost:8001/health`.
+
+`POST /v1/schedules/solve` acepta el contrato interno v1. Requiere el token de servicio
+(`Authorization: Bearer …`) y no accede a la base de datos. Los límites de tiempo fuera de
+política se rechazan con HTTP 422. El motor busca primero un horario estrictamente válido con
+OR-Tools CP-SAT. Si no existe o no se encuentra, hace una segunda pasada relajando solo las
+capacidades mínima y máxima, con pesos jerárquicos y conflictos explicables. `INFEASIBLE` y
+`UNKNOWN` son resultados normales con HTTP 200.

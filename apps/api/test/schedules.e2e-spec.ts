@@ -15,6 +15,12 @@ import { TeachersRepository } from '../src/database/repositories/teachers.reposi
 import { UsersRepository } from '../src/database/repositories/users.repository';
 import { WeeklySlotsRepository } from '../src/database/repositories/weekly-slots.repository';
 import { hashPassword } from '../src/security/password-hasher';
+import {
+  SCHEDULE_SOLVER,
+  type ScheduleSolver,
+  type SolveScheduleRequest,
+  type SolveScheduleResponse,
+} from '../src/scheduling/solver-contract';
 
 const FRONTEND_ORIGIN = 'http://frontend.test';
 const AUTH_COOKIE = 'academia_session';
@@ -75,9 +81,13 @@ describe('Schedule commands (e2e)', () => {
     process.env.AUTH_LOGIN_IP_LIMIT = '20';
     process.env.AUTH_LOGIN_IDENTIFIER_LIMIT = '10';
 
+    const fakeSolver = new FakeScheduleSolver();
     moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(SCHEDULE_SOLVER)
+      .useValue(fakeSolver)
+      .compile();
     app = moduleFixture.createNestApplication<NestExpressApplication>();
     configureApiApplication(
       app as NestExpressApplication,
@@ -144,6 +154,9 @@ describe('Schedule commands (e2e)', () => {
     await request(app.getHttpServer()).get('/api/v1/schedules').expect(401);
     await request(app.getHttpServer())
       .post('/api/v1/schedules/drafts')
+      .expect(401);
+    await request(app.getHttpServer())
+      .post('/api/v1/schedules/generate')
       .expect(401);
   });
 
@@ -299,6 +312,46 @@ describe('Schedule commands (e2e)', () => {
     ).toHaveLength(0);
   });
 
+  it('returns 409 when the solver cannot produce a schedule', async () => {
+    const fakeSolver = moduleFixture.get<FakeScheduleSolver>(SCHEDULE_SOLVER);
+    fakeSolver.behavior = 'infeasible';
+
+    await mutate('post', '/api/v1/schedules/generate')
+      .expect(409)
+      .expect((response) => {
+        expect(responseBody(response).code).toBe('GENERATION_INFEASIBLE');
+      });
+  });
+
+  it('generates an independently validated draft', async () => {
+    const fakeSolver = moduleFixture.get<FakeScheduleSolver>(SCHEDULE_SOLVER);
+    fakeSolver.behavior = 'success';
+    for (const firstName of ['Luis', 'Marta', 'Pablo']) {
+      await mutate('post', '/api/v1/people')
+        .send({
+          firstName,
+          firstSurname: 'García',
+          courseCode: 'BACH_1',
+          subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 1 }],
+          weeklyHoursTotal: 1,
+          primaryPhone: `60000001${firstName === 'Luis' ? '2' : firstName === 'Marta' ? '3' : '4'}`,
+          isTutored: false,
+          status: 'ACTIVE',
+        })
+        .expect(201);
+    }
+
+    const generated = await mutate('post', '/api/v1/schedules/generate').expect(
+      201,
+    );
+    const body = generated.body as ScheduleBody;
+    expect(body).toMatchObject({
+      state: 'DRAFT',
+      evaluation: { outcome: 'IDEAL', canConfirm: true },
+    });
+    expect(body.classes[0].assignments).toHaveLength(4);
+  });
+
   function authenticatedGet(path: string) {
     return request(app.getHttpServer()).get(path).set('Cookie', cookieHeader);
   }
@@ -331,4 +384,69 @@ function cookieValue(cookies: string[], name: string): string {
 
 function responseBody(response: request.Response): Record<string, unknown> {
   return response.body as Record<string, unknown>;
+}
+
+class FakeScheduleSolver implements ScheduleSolver {
+  behavior: 'success' | 'infeasible' = 'success';
+
+  solve(request: SolveScheduleRequest): Promise<SolveScheduleResponse> {
+    if (this.behavior === 'infeasible') {
+      return Promise.resolve({
+        contractVersion: request.contractVersion,
+        ruleCatalogVersion: request.ruleCatalogVersion,
+        requestId: request.requestId,
+        mode: 'RELAXED',
+        status: 'INFEASIBLE',
+        attempts: [
+          { mode: 'STRICT', status: 'INFEASIBLE', elapsedMilliseconds: 1 },
+          { mode: 'RELAXED', status: 'INFEASIBLE', elapsedMilliseconds: 1 },
+        ],
+        solution: null,
+        elapsedMilliseconds: 2,
+        randomSeed: request.options.randomSeed,
+        timeLimitSeconds: request.options.timeLimitSeconds,
+      });
+    }
+
+    const teacherId = request.teachers[0]?.id;
+    const slotId = request.slots[0]?.id;
+    if (!teacherId || !slotId) {
+      throw new Error('Fake solver expected at least one teacher and slot');
+    }
+    return Promise.resolve({
+      contractVersion: request.contractVersion,
+      ruleCatalogVersion: request.ruleCatalogVersion,
+      requestId: request.requestId,
+      mode: 'STRICT',
+      status: 'OPTIMAL',
+      attempts: [{ mode: 'STRICT', status: 'OPTIMAL', elapsedMilliseconds: 1 }],
+      solution: {
+        classes:
+          request.students.length === 0
+            ? []
+            : [
+                {
+                  id: 'class-generated',
+                  teacherId,
+                  slotId,
+                  studentIds: request.students.map((student) => student.id),
+                },
+              ],
+        subjectTeacherAllocations: [],
+        score: {
+          direction: 'MINIMIZE',
+          bestScore: 0,
+          tiers: [1, 2, 3, 4, 5, 6].map((priority) => ({
+            priority,
+            penalty: 0,
+          })),
+          ruleBreakdown: [],
+        },
+        findings: [],
+      },
+      elapsedMilliseconds: 1,
+      randomSeed: request.options.randomSeed,
+      timeLimitSeconds: request.options.timeLimitSeconds,
+    });
+  }
 }

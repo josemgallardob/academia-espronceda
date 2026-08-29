@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PeopleRepository } from '../database/repositories/people.repository';
 import { SchedulesRepository } from '../database/repositories/schedules.repository';
@@ -9,6 +9,7 @@ import type { ScheduleState } from '../database/schema/catalog';
 import { ProblemDetailsException } from '../http/problem-details.exception';
 import {
   addAssignment,
+  applyGeneratedSolution,
   attachEvaluation,
   confirmSchedule,
   createDraftFromConfirmed,
@@ -30,6 +31,22 @@ import {
   ScheduleRevisionConflictError,
 } from './schedule-errors';
 import { evaluateSchedule } from './schedule-validator';
+import {
+  hasUsableSolution,
+  SCHEDULE_SOLVER,
+  type ScheduleSolver,
+} from './solver-contract';
+import {
+  detectSolverDivergence,
+  incompleteGeneratedHours,
+} from './solver-divergence';
+import {
+  generationInfeasible,
+  solverInvalidResponse,
+  solverResultDiverged,
+} from './solver-errors';
+import { toSolveScheduleRequest } from './solver-request.mapper';
+import { toDraftClasses } from './solver-solution.mapper';
 import type {
   ValidationContext,
   ValidationPurpose,
@@ -43,7 +60,81 @@ export class SchedulesService {
     private readonly teachers: TeachersRepository,
     private readonly weeklySlots: WeeklySlotsRepository,
     private readonly users: UsersRepository,
+    @Inject(SCHEDULE_SOLVER) private readonly solver: ScheduleSolver,
   ) {}
+
+  async generateDraft(): Promise<Schedule> {
+    const catalog = await this.loadLiveCatalog();
+    const requestId = randomUUID();
+    const request = toSolveScheduleRequest({
+      requestId,
+      slots: catalog.slots,
+      teachers: catalog.context.teachers,
+      students: catalog.context.students,
+    });
+    const response = await this.solver.solve(request);
+    if (!hasUsableSolution(response)) {
+      throw generationInfeasible();
+    }
+
+    const draft = createEmptyDraft({
+      id: randomUUID(),
+      createdAt: now(),
+      ruleCatalogVersion: CURRENT_RULE_CATALOG_VERSION,
+      teachers: catalog.teachers.map((teacher) => ({
+        id: teacher.id,
+        displayName: teacher.displayName,
+        profile: teacher.profile,
+      })),
+      slots: catalog.slots,
+    });
+    let generated: Schedule;
+    try {
+      generated = applyGeneratedSolution(
+        draft,
+        toDraftClasses(
+          response.solution,
+          studentNames(catalog.context.students),
+        ),
+      );
+    } catch (error) {
+      if (error instanceof ScheduleIntegrityError) {
+        throw solverInvalidResponse(error.message);
+      }
+      throw error;
+    }
+
+    const incompleteHours = incompleteGeneratedHours(
+      generated,
+      catalog.context.students,
+    );
+    if (incompleteHours) {
+      throw solverResultDiverged(incompleteHours);
+    }
+
+    const { evaluation, internalScore } = evaluateSchedule(
+      generated,
+      catalog.context,
+      { purpose: 'DRAFT_VALIDATION' },
+    );
+    const divergence = detectSolverDivergence({
+      request,
+      response,
+      evaluation,
+      internalScore,
+    });
+    if (divergence) {
+      throw solverResultDiverged(divergence);
+    }
+
+    const next = attachEvaluation(
+      generated,
+      reuseEvaluationIdentity(generated, evaluation),
+      generated.revision,
+    );
+    await this.schedules.save(next, null);
+    return next;
+  }
 
   async createEmptyDraft(): Promise<Schedule> {
     const [teachers, slots] = await Promise.all([
@@ -240,15 +331,50 @@ export class SchedulesService {
     return next;
   }
 
+  private async loadLiveCatalog(): Promise<{
+    teachers: Awaited<ReturnType<TeachersRepository['listActive']>>;
+    slots: Awaited<ReturnType<WeeklySlotsRepository['listActive']>>;
+    context: ValidationContext;
+  }> {
+    const [teachers, slots, people] = await Promise.all([
+      this.teachers.listActive(),
+      this.weeklySlots.listActive(),
+      this.people.listAggregates(),
+    ]);
+    return {
+      teachers,
+      slots,
+      context: await this.buildValidationContext(
+        teachers.map((teacher) => ({
+          id: teacher.id,
+          displayName: teacher.displayName,
+          profile: teacher.profile,
+        })),
+        people,
+      ),
+    };
+  }
+
   private async loadValidationContext(
     schedule: Schedule,
   ): Promise<ValidationContext> {
-    const [people, teacherCapabilities] = await Promise.all([
-      this.people.listAggregates(),
-      this.teachers.listCapabilities(
-        schedule.teachers.map((teacher) => teacher.id),
-      ),
-    ]);
+    return this.buildValidationContext(
+      schedule.teachers,
+      await this.people.listAggregates(),
+    );
+  }
+
+  private async buildValidationContext(
+    teachers: Array<{
+      id: string;
+      displayName: string;
+      profile: Schedule['teachers'][number]['profile'];
+    }>,
+    people: Awaited<ReturnType<PeopleRepository['listAggregates']>>,
+  ): Promise<ValidationContext> {
+    const teacherCapabilities = await this.teachers.listCapabilities(
+      teachers.map((teacher) => teacher.id),
+    );
     const teachersById = new Map(
       teacherCapabilities.map((teacher) => [teacher.id, teacher]),
     );
@@ -263,7 +389,7 @@ export class SchedulesService {
         unavailableSlotIds: aggregate.unavailableSlotIds,
         relatedPersonIds: aggregate.relatedPersonIds,
       })),
-      teachers: schedule.teachers.map((snapshot) => {
+      teachers: teachers.map((snapshot) => {
         const live = teachersById.get(snapshot.id);
         return {
           id: snapshot.id,
@@ -320,6 +446,17 @@ function reuseEvaluationIdentity(
 
 function now(): string {
   return new Date().toISOString();
+}
+
+function studentNames(
+  students: ValidationContext['students'],
+): Map<string, { displayName: string }> {
+  return new Map(
+    students.map((student) => [
+      student.id,
+      { displayName: student.displayName },
+    ]),
+  );
 }
 
 function studentNotFound(studentId: string): ProblemDetailsException {

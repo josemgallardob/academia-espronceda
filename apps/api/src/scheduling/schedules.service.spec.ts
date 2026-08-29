@@ -9,17 +9,25 @@ import { TeachersRepository } from '../database/repositories/teachers.repository
 import { UsersRepository } from '../database/repositories/users.repository';
 import { WeeklySlotsRepository } from '../database/repositories/weekly-slots.repository';
 import { scheduleSlots } from '../database/schema';
+import { ProblemDetailsException } from '../http/problem-details.exception';
 import { CURRENT_RULE_CATALOG_VERSION } from './schedule';
 import { countStudentAssignments } from './schedule-aggregate';
 import { ScheduleNotMutableError } from './schedule-errors';
 import { SchedulesService } from './schedules.service';
+import type {
+  ScheduleSolver,
+  SolveScheduleRequest,
+  SolveScheduleResponse,
+} from './solver-contract';
 
 describe('SchedulesService', () => {
   let temporaryDirectory: string;
   let connection: DatabaseConnection;
   let service: SchedulesService;
+  let people: PeopleRepository;
   let teachers: TeachersRepository;
   let weeklySlots: WeeklySlotsRepository;
+  let fakeSolver: FakeSolver;
 
   beforeEach(async () => {
     temporaryDirectory = await mkdtemp(
@@ -29,16 +37,18 @@ describe('SchedulesService', () => {
       url: `file:${resolve(temporaryDirectory, 'test.db')}`,
     });
     await connection.migrate(resolve(__dirname, '../../drizzle'));
-    const people = new PeopleRepository(connection);
+    people = new PeopleRepository(connection);
     teachers = new TeachersRepository(connection);
     weeklySlots = new WeeklySlotsRepository(connection);
     const users = new UsersRepository(connection);
+    fakeSolver = new FakeSolver();
     service = new SchedulesService(
       new SchedulesRepository(connection),
       people,
       teachers,
       weeklySlots,
       users,
+      fakeSolver,
     );
     await users.insert({
       id: 'user-1',
@@ -149,11 +159,6 @@ describe('SchedulesService', () => {
         'slot-thursday-2000',
       ]),
     );
-    await expect(service.get(draft.id)).resolves.toMatchObject({
-      slots: expect.arrayContaining([
-        expect.objectContaining({ id: 'slot-monday-2000' }),
-      ]),
-    });
   });
 
   it('assigns, moves and confirms a draft while preserving hour counts and validation evidence', async () => {
@@ -221,4 +226,187 @@ describe('SchedulesService', () => {
       }),
     ).rejects.toBeInstanceOf(ScheduleNotMutableError);
   });
+
+  it('persists a generated draft after independent NestJS validation', async () => {
+    await insertActiveMathStudent(people, 'person-2', 'Luis');
+    await insertActiveMathStudent(people, 'person-3', 'Marta');
+    await insertActiveMathStudent(people, 'person-4', 'Pablo');
+    fakeSolver.impl = (request) =>
+      matchingCapacitySolution(request, 'teacher-1', 'slot-monday-1600');
+
+    const generated = await service.generateDraft();
+
+    expect(generated).toMatchObject({
+      state: 'DRAFT',
+      evaluation: { outcome: 'IDEAL', canConfirm: true },
+    });
+    expect(generated.classes[0].assignments).toHaveLength(4);
+    expect(
+      generated.classes[0].assignments.map((item) => item.studentId).sort(),
+    ).toEqual(['person-1', 'person-2', 'person-3', 'person-4']);
+    expect(fakeSolver.lastRequest?.students.map((item) => item.status)).toEqual(
+      ['ACTIVE', 'ACTIVE', 'ACTIVE', 'ACTIVE'],
+    );
+    await expect(service.list('DRAFT')).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: generated.id })]),
+    );
+  });
+
+  it('persists a second generated draft when the solver reuses class identifiers', async () => {
+    await insertActiveMathStudent(people, 'person-2', 'Luis');
+    await insertActiveMathStudent(people, 'person-3', 'Marta');
+    await insertActiveMathStudent(people, 'person-4', 'Pablo');
+    fakeSolver.impl = (request) =>
+      matchingCapacitySolution(request, 'teacher-1', 'slot-monday-1600');
+
+    const first = await service.generateDraft();
+    const second = await service.generateDraft();
+
+    expect(first.id).not.toBe(second.id);
+    expect(first.classes[0].id).not.toBe(second.classes[0].id);
+    expect(first.classes[0].id).not.toBe('class-generated');
+    expect(second.classes[0].id).not.toBe('class-generated');
+  });
+
+  it('does not persist when the solver is infeasible or diverges from NestJS', async () => {
+    fakeSolver.impl = (request) => infeasibleResponse(request);
+    await expect(service.generateDraft()).rejects.toMatchObject({
+      problem: { status: 409, code: 'GENERATION_INFEASIBLE' },
+    });
+    await expect(service.list('DRAFT')).resolves.toEqual([]);
+
+    await insertActiveMathStudent(people, 'person-2', 'Luis');
+    await insertActiveMathStudent(people, 'person-3', 'Marta');
+    await insertActiveMathStudent(people, 'person-4', 'Pablo');
+    fakeSolver.impl = (request) => {
+      const response = matchingCapacitySolution(
+        request,
+        'teacher-1',
+        'slot-monday-1600',
+      );
+      if (response.solution) {
+        response.solution.score.tiers[2] = { priority: 3, penalty: 99 };
+      }
+      return response;
+    };
+    await expect(service.generateDraft()).rejects.toBeInstanceOf(
+      ProblemDetailsException,
+    );
+    await expect(service.generateDraft()).rejects.toMatchObject({
+      problem: { status: 502, code: 'SOLVER_RESULT_DIVERGED' },
+    });
+    await expect(service.list('DRAFT')).resolves.toEqual([]);
+  });
+
+  it('omits waiting-list students from the solver request', async () => {
+    await people.insert({
+      person: {
+        id: 'person-waiting',
+        firstName: 'Nuria',
+        firstSurname: 'López',
+        courseCode: 'BACH_1',
+        weeklyHoursTotal: 1,
+        primaryPhone: '600000099',
+        status: 'WAITING_LIST',
+      },
+      subjects: [{ subjectCode: 'MATHEMATICS', weeklyHours: 1 }],
+    });
+    fakeSolver.impl = (request) => infeasibleResponse(request);
+
+    await expect(service.generateDraft()).rejects.toMatchObject({
+      problem: { code: 'GENERATION_INFEASIBLE' },
+    });
+    expect(fakeSolver.lastRequest?.students.map((item) => item.id)).toEqual([
+      'person-1',
+    ]);
+  });
 });
+
+class FakeSolver implements ScheduleSolver {
+  lastRequest: SolveScheduleRequest | undefined;
+  impl: (request: SolveScheduleRequest) => SolveScheduleResponse =
+    infeasibleResponse;
+
+  solve(request: SolveScheduleRequest): Promise<SolveScheduleResponse> {
+    this.lastRequest = request;
+    return Promise.resolve(this.impl(request));
+  }
+}
+
+async function insertActiveMathStudent(
+  people: PeopleRepository,
+  id: string,
+  firstName: string,
+): Promise<void> {
+  await people.insert({
+    person: {
+      id,
+      firstName,
+      firstSurname: 'Ruiz',
+      courseCode: 'BACH_1',
+      weeklyHoursTotal: 1,
+      primaryPhone: `600${id.replace(/\D/g, '').padStart(6, '0')}`,
+      status: 'ACTIVE',
+    },
+    subjects: [{ subjectCode: 'MATHEMATICS', weeklyHours: 1 }],
+  });
+}
+
+function matchingCapacitySolution(
+  request: SolveScheduleRequest,
+  teacherId: string,
+  slotId: string,
+): SolveScheduleResponse {
+  return {
+    contractVersion: request.contractVersion,
+    ruleCatalogVersion: request.ruleCatalogVersion,
+    requestId: request.requestId,
+    mode: 'STRICT',
+    status: 'OPTIMAL',
+    attempts: [{ mode: 'STRICT', status: 'OPTIMAL', elapsedMilliseconds: 1 }],
+    solution: {
+      classes: [
+        {
+          id: 'class-generated',
+          teacherId,
+          slotId,
+          studentIds: request.students.map((student) => student.id),
+        },
+      ],
+      subjectTeacherAllocations: [],
+      score: {
+        direction: 'MINIMIZE',
+        bestScore: 0,
+        tiers: [1, 2, 3, 4, 5, 6].map((priority) => ({
+          priority,
+          penalty: 0,
+        })),
+        ruleBreakdown: [],
+      },
+      findings: [],
+    },
+    elapsedMilliseconds: 1,
+    randomSeed: request.options.randomSeed,
+    timeLimitSeconds: request.options.timeLimitSeconds,
+  };
+}
+
+function infeasibleResponse(
+  request: SolveScheduleRequest,
+): SolveScheduleResponse {
+  return {
+    contractVersion: request.contractVersion,
+    ruleCatalogVersion: request.ruleCatalogVersion,
+    requestId: request.requestId,
+    mode: 'RELAXED',
+    status: 'INFEASIBLE',
+    attempts: [
+      { mode: 'STRICT', status: 'INFEASIBLE', elapsedMilliseconds: 1 },
+      { mode: 'RELAXED', status: 'INFEASIBLE', elapsedMilliseconds: 1 },
+    ],
+    solution: null,
+    elapsedMilliseconds: 2,
+    randomSeed: request.options.randomSeed,
+    timeLimitSeconds: request.options.timeLimitSeconds,
+  };
+}

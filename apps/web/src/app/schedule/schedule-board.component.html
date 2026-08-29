@@ -10,6 +10,9 @@
     </div>
     @if (store.schedule(); as schedule) {
       <div class="heading-actions">
+        <button type="button" (click)="generateDraft()" [disabled]="store.pending()">
+          Generar horario
+        </button>
         @if (schedule.state === 'CONFIRMED') {
           <button type="button" (click)="startRevision()" [disabled]="store.pending()">
             Editar revisión
@@ -41,200 +44,225 @@
     </div>
   }
 
-  @switch (store.workspace().kind) {
-    @case ('loading') {
-      <p class="status-copy" role="status">Cargando el horario semanal…</p>
-    }
-    @case ('error') {
-      <div class="empty-panel">
-        <p>{{ errorMessage() }}</p>
-        <button type="button" class="primary-action" (click)="retry()">Reintentar</button>
-      </div>
-    }
-    @case ('empty') {
-      <div class="empty-panel">
-        <p>No hay un horario vigente ni un borrador. Crea un cuadrante vacío para empezar.</p>
-        <button
-          type="button"
-          class="primary-action"
-          (click)="createDraft()"
-          [disabled]="store.pending()"
-        >
-          Crear borrador vacío
-        </button>
-      </div>
-    }
-    @case ('ready') {
-      <section class="filters" aria-label="Filtro de cuadrante">
-        <label>
-          Profesor
-          <select
-            [value]="store.selectedTeacherId() ?? ''"
-            (change)="selectTeacher($event)"
-            [disabled]="store.teachers().length === 0"
-          >
-            @for (teacher of store.teachers(); track teacher.id) {
-              <option [value]="teacher.id">{{ teacher.displayName }}</option>
-            }
-          </select>
-        </label>
-        @if (store.schedule(); as schedule) {
-          <p class="schedule-state">
-            {{ schedule.state === 'DRAFT' ? 'Borrador' : 'Confirmado' }}
+  @if (store.generating()) {
+    <div class="empty-panel generating-panel" role="status" aria-live="polite" aria-busy="true">
+      <p>Generando el horario semanal…</p>
+      <p class="muted">
+        El generador busca una solución global para todos los profesores. Puede tardar unos
+        segundos.
+      </p>
+    </div>
+  } @else {
+    @switch (store.workspace().kind) {
+      @case ('loading') {
+        <p class="status-copy" role="status">Cargando el horario semanal…</p>
+      }
+      @case ('error') {
+        <div class="empty-panel">
+          <p>{{ errorMessage() }}</p>
+          <button type="button" class="primary-action" (click)="retry()">Reintentar</button>
+        </div>
+      }
+      @case ('empty') {
+        <div class="empty-panel">
+          <p>
+            No hay un horario vigente ni un borrador. Genera uno automáticamente o crea un cuadrante
+            vacío para completarlo a mano.
           </p>
-        }
-      </section>
-
-      <div class="tabs" role="tablist" aria-label="Vista del horario">
-        <button
-          type="button"
-          role="tab"
-          [class.selected]="tab() === 'quadrant'"
-          [attr.aria-selected]="tab() === 'quadrant'"
-          (click)="tab.set('quadrant')"
-        >
-          Cuadrante
-        </button>
-        <button
-          type="button"
-          role="tab"
-          [class.selected]="tab() === 'warnings'"
-          [attr.aria-selected]="tab() === 'warnings'"
-          (click)="tab.set('warnings')"
-        >
-          Avisos
-          <span class="tab-count">{{ findings().length }}</span>
-        </button>
-      </div>
-
-      @if (tab() === 'quadrant') {
-        <div class="board">
-          <aside class="roster" aria-label="Alumnos activos">
-            <h2>Alumnos activos</h2>
-            @if (store.studentHours().length === 0) {
-              <p class="muted">
-                @if (store.students().length === 0) {
-                  No hay alumnos activos.
-                } @else {
-                  No hay alumnos compatibles con este profesor.
-                }
-              </p>
-            }
-            <ul>
-              @for (item of store.studentHours(); track item.person.id) {
-                <li
-                  [attr.draggable]="isEditable()"
-                  (dragstart)="onDragStart(item.person.id, $event)"
-                  (dragend)="onDragEnd()"
-                  [class.dragging]="draggingStudentId() === item.person.id"
-                >
-                  <span> {{ item.person.firstName }} {{ item.person.firstSurname }} </span>
-                  <span class="hours-badge" [attr.data-tone]="remainingTone(item)">
-                    {{ remainingBadge(item) }}
-                    <span class="visually-hidden">
-                      horas restantes: {{ item.remainingHours }}
-                    </span>
-                  </span>
-                </li>
-              }
-            </ul>
-          </aside>
-
-          <div class="week-panel">
-            @if (!store.selectedTeacher()) {
-              <p class="muted">Selecciona un profesor para ver su cuadrante.</p>
-            } @else if (store.weekHourRows().length === 0) {
-              <p class="muted">No hay franjas para este profesor.</p>
-            } @else {
-              <div class="week-grid" role="grid" aria-label="Cuadrante semanal del profesor">
-                <div class="week-grid-head" role="row">
-                  <div class="hour-heading" role="columnheader">Hora</div>
-                  @for (day of weekDays; track day) {
-                    <div role="columnheader">{{ dayLabels[day] }}</div>
-                  }
-                </div>
-                @for (row of store.weekHourRows(); track row.startTime) {
-                  <div class="week-grid-row" role="row">
-                    <div class="hour-label" role="rowheader">
-                      {{ row.startTime }} – {{ row.endTime }}
-                    </div>
-                    @for (slot of row.cells; track slot?.id ?? $index) {
-                      @if (slot) {
-                        <article
-                          class="slot-card"
-                          [class.conflict]="classHasConflict(slot)"
-                          [attr.aria-label]="dayLabels[slot.dayOfWeek] + ', ' + slotLabel(slot)"
-                          (dragover)="onDragOver($event)"
-                          (drop)="onDrop(slot, $event)"
-                        >
-                          <header>
-                            <h3 class="visually-hidden">{{ slotLabel(slot) }}</h3>
-                            @if (store.classForSlot(slot.id); as weeklyClass) {
-                              <span>{{ weeklyClass.assignments.length }} / 5</span>
-                            } @else {
-                              <span>Libre</span>
-                            }
-                          </header>
-                          <ul>
-                            @if (store.classForSlot(slot.id); as weeklyClass) {
-                              @for (assignment of weeklyClass.assignments; track assignment.id) {
-                                <li>
-                                  <span>{{ assignment.studentDisplayName }}</span>
-                                  @if (isEditable()) {
-                                    <button
-                                      type="button"
-                                      class="remove"
-                                      (click)="removeStudent(assignment)"
-                                      [attr.aria-label]="'Retirar a ' + assignment.studentDisplayName"
-                                    >
-                                      ×
-                                    </button>
-                                  }
-                                </li>
-                              }
-                            } @else {
-                              <li class="placeholder">Suelta un alumno aquí</li>
-                            }
-                          </ul>
-                        </article>
-                      } @else {
-                        <div class="slot-empty" aria-hidden="true"></div>
-                      }
-                    }
-                  </div>
-                }
-              </div>
-            }
+          <div class="empty-actions">
+            <button
+              type="button"
+              class="primary-action"
+              (click)="generateDraft()"
+              [disabled]="store.pending()"
+            >
+              Generar horario
+            </button>
+            <button type="button" (click)="createDraft()" [disabled]="store.pending()">
+              Crear borrador vacío
+            </button>
           </div>
         </div>
-      } @else {
-        <section class="warnings" aria-labelledby="warnings-title">
-          <h2 id="warnings-title">Avisos del horario semanal global</h2>
-          @if (findings().length === 0) {
-            <p class="muted">No hay conflictos ni recomendaciones pendientes.</p>
-          } @else {
-            <ul>
-              @for (finding of findings(); track finding.fingerprint) {
-                <li [attr.data-severity]="finding.severity">
-                  <strong>{{
-                    finding.enforcement === 'HARD'
-                      ? 'Bloqueante'
-                      : finding.enforcement === 'RELAXABLE'
-                        ? 'Incidencia'
-                        : 'Recomendación'
-                  }}</strong>
-                  <p>{{ finding.message }}</p>
-                </li>
+      }
+      @case ('ready') {
+        <section class="filters" aria-label="Filtro de cuadrante">
+          <label>
+            Profesor
+            <select
+              [value]="store.selectedTeacherId() ?? ''"
+              (change)="selectTeacher($event)"
+              [disabled]="store.teachers().length === 0"
+            >
+              @for (teacher of store.teachers(); track teacher.id) {
+                <option [value]="teacher.id">{{ teacher.displayName }}</option>
               }
-            </ul>
+            </select>
+          </label>
+          @if (store.schedule(); as schedule) {
+            <p class="schedule-state">
+              {{ schedule.state === 'DRAFT' ? 'Borrador' : 'Confirmado' }}
+              @if (scheduleQualityLabel(schedule); as quality) {
+                <span class="schedule-quality" [attr.data-tone]="quality.tone">{{
+                  quality.label
+                }}</span>
+              }
+            </p>
           }
         </section>
+
+        <div class="tabs" role="tablist" aria-label="Vista del horario">
+          <button
+            type="button"
+            role="tab"
+            [class.selected]="tab() === 'quadrant'"
+            [attr.aria-selected]="tab() === 'quadrant'"
+            (click)="tab.set('quadrant')"
+          >
+            Cuadrante
+          </button>
+          <button
+            type="button"
+            role="tab"
+            [class.selected]="tab() === 'warnings'"
+            [attr.aria-selected]="tab() === 'warnings'"
+            (click)="tab.set('warnings')"
+          >
+            Avisos
+            <span class="tab-count">{{ findings().length }}</span>
+          </button>
+        </div>
+
+        @if (tab() === 'quadrant') {
+          <div class="board">
+            <aside class="roster" aria-label="Alumnos activos">
+              <h2>Alumnos activos</h2>
+              @if (store.studentHours().length === 0) {
+                <p class="muted">
+                  @if (store.students().length === 0) {
+                    No hay alumnos activos.
+                  } @else {
+                    No hay alumnos compatibles con este profesor.
+                  }
+                </p>
+              }
+              <ul>
+                @for (item of store.studentHours(); track item.person.id) {
+                  <li
+                    [attr.draggable]="isEditable()"
+                    (dragstart)="onDragStart(item.person.id, $event)"
+                    (dragend)="onDragEnd()"
+                    [class.dragging]="draggingStudentId() === item.person.id"
+                  >
+                    <span> {{ item.person.firstName }} {{ item.person.firstSurname }} </span>
+                    <span class="hours-badge" [attr.data-tone]="remainingTone(item)">
+                      {{ remainingBadge(item) }}
+                      <span class="visually-hidden">
+                        horas restantes: {{ item.remainingHours }}
+                      </span>
+                    </span>
+                  </li>
+                }
+              </ul>
+            </aside>
+
+            <div class="week-panel">
+              @if (!store.selectedTeacher()) {
+                <p class="muted">Selecciona un profesor para ver su cuadrante.</p>
+              } @else if (store.weekHourRows().length === 0) {
+                <p class="muted">No hay franjas para este profesor.</p>
+              } @else {
+                <div class="week-grid" role="grid" aria-label="Cuadrante semanal del profesor">
+                  <div class="week-grid-head" role="row">
+                    <div class="hour-heading" role="columnheader">Hora</div>
+                    @for (day of weekDays; track day) {
+                      <div role="columnheader">{{ dayLabels[day] }}</div>
+                    }
+                  </div>
+                  @for (row of store.weekHourRows(); track row.startTime) {
+                    <div class="week-grid-row" role="row">
+                      <div class="hour-label" role="rowheader">
+                        {{ row.startTime }} – {{ row.endTime }}
+                      </div>
+                      @for (slot of row.cells; track slot?.id ?? $index) {
+                        @if (slot) {
+                          <article
+                            class="slot-card"
+                            [class.conflict]="classHasConflict(slot)"
+                            [attr.aria-label]="dayLabels[slot.dayOfWeek] + ', ' + slotLabel(slot)"
+                            (dragover)="onDragOver($event)"
+                            (drop)="onDrop(slot, $event)"
+                          >
+                            <header>
+                              <h3 class="visually-hidden">{{ slotLabel(slot) }}</h3>
+                              @if (store.classForSlot(slot.id); as weeklyClass) {
+                                <span>{{ weeklyClass.assignments.length }} / 5</span>
+                              } @else {
+                                <span>Libre</span>
+                              }
+                            </header>
+                            <ul>
+                              @if (store.classForSlot(slot.id); as weeklyClass) {
+                                @for (assignment of weeklyClass.assignments; track assignment.id) {
+                                  <li>
+                                    <span>{{ assignment.studentDisplayName }}</span>
+                                    @if (isEditable()) {
+                                      <button
+                                        type="button"
+                                        class="remove"
+                                        (click)="removeStudent(assignment)"
+                                        [attr.aria-label]="
+                                          'Retirar a ' + assignment.studentDisplayName
+                                        "
+                                      >
+                                        ×
+                                      </button>
+                                    }
+                                  </li>
+                                }
+                              } @else {
+                                <li class="placeholder">Suelta un alumno aquí</li>
+                              }
+                            </ul>
+                          </article>
+                        } @else {
+                          <div class="slot-empty" aria-hidden="true"></div>
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <section class="warnings" aria-labelledby="warnings-title">
+            <h2 id="warnings-title">Avisos del horario semanal global</h2>
+            @if (findings().length === 0) {
+              <p class="muted">No hay conflictos ni recomendaciones pendientes.</p>
+            } @else {
+              <ul>
+                @for (finding of findings(); track finding.fingerprint) {
+                  <li [attr.data-severity]="finding.severity">
+                    <strong>{{
+                      finding.enforcement === 'HARD'
+                        ? 'Bloqueante'
+                        : finding.enforcement === 'RELAXABLE'
+                          ? 'Incidencia'
+                          : 'Recomendación'
+                    }}</strong>
+                    <p>{{ finding.message }}</p>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
       }
     }
   }
 </main>
 
-@if (confirmOpen()) {
+@if (confirmOpen() && !store.generating()) {
   <div class="dialog-backdrop">
     <dialog open class="confirmation-dialog" aria-modal="true">
       <p class="dialog-eyebrow">Confirmación</p>

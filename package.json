@@ -41,6 +41,7 @@
     "admin:create-users": "npm run admin:create-users --workspace @academia-espronceda/api",
     "admin:reset-password": "npm run admin:reset-password --workspace @academia-espronceda/api",
     "seed:local": "npm run seed:local --workspace @academia-espronceda/api",
+    "seed:volume": "npm run seed:volume --workspace @academia-espronceda/api",
     "validate:contracts": "node scripts/validate-contracts.mjs",
     "check": "npm run format:check && npm run validate:contracts && npm run lint && npm run test && npm run build"
   },

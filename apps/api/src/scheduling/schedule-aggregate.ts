@@ -11,6 +11,7 @@ import {
   type ScheduleSlot,
   type ScheduleTeacher,
   type SetAllocationsCommand,
+  type SubjectTeacherAllocation,
   type WeeklyClass,
 } from './schedule';
 import {
@@ -74,6 +75,38 @@ export function createEmptyDraft(input: {
   };
   assertScheduleIntegrity(schedule);
   return schedule;
+}
+
+export function applyGeneratedSolution(
+  draft: Schedule,
+  input: {
+    classes: WeeklyClass[];
+    subjectTeacherAllocations: SubjectTeacherAllocation[];
+  },
+): Schedule {
+  if (draft.state !== 'DRAFT' || draft.classes.length > 0) {
+    throw new ScheduleIntegrityError(
+      'Generated classes can only be applied to an empty draft',
+    );
+  }
+  const next: Schedule = {
+    ...cloneSchedule(draft),
+    classes: input.classes.map((weeklyClass) => ({
+      ...weeklyClass,
+      assignments: weeklyClass.assignments.map((assignment) => ({
+        ...assignment,
+      })),
+      findingFingerprints: [],
+    })),
+    subjectTeacherAllocations: input.subjectTeacherAllocations.map(
+      (allocation) => ({
+        ...allocation,
+        subjectHours: allocation.subjectHours.map((item) => ({ ...item })),
+      }),
+    ),
+  };
+  assertScheduleIntegrity(next);
+  return next;
 }
 
 export function withCatalogSlots(

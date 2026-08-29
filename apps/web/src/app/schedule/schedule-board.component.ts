@@ -5,6 +5,7 @@ import { ScheduleStore, slotLabel } from './schedule-api';
 import {
   DAY_LABELS,
   WEEK_DAYS,
+  type Schedule,
   type ScheduleAssignment,
   type StudentHours,
   type WeeklySlot,
@@ -57,6 +58,22 @@ export class ScheduleBoardComponent implements OnInit {
         this.notice.set({
           tone: 'error',
           message: problemMessage(error, 'No se ha podido crear el borrador.'),
+        }),
+    });
+  }
+
+  generateDraft(): void {
+    this.notice.set(null);
+    this.confirmOpen.set(false);
+    this.store.generateDraft().subscribe({
+      next: (schedule) => {
+        this.notice.set(generationNotice(schedule));
+        this.tab.set(hasFindings(schedule) ? 'warnings' : 'quadrant');
+      },
+      error: (error: unknown) =>
+        this.notice.set({
+          tone: 'error',
+          message: problemMessage(error, 'No se ha podido generar el horario.'),
         }),
     });
   }
@@ -207,6 +224,21 @@ export class ScheduleBoardComponent implements OnInit {
     return 'Confirmar horario';
   }
 
+  scheduleQualityLabel(
+    schedule: Schedule,
+  ): { tone: 'valid' | 'approximate'; label: string } | null {
+    if (schedule.state !== 'DRAFT' || schedule.classes.length === 0 || !schedule.evaluation) {
+      return null;
+    }
+    if (
+      schedule.evaluation.outcome === 'HAS_RELAXABLE_CONFLICTS' ||
+      schedule.evaluation.outcome === 'BLOCKED'
+    ) {
+      return { tone: 'approximate', label: 'Aproximado' };
+    }
+    return { tone: 'valid', label: 'Válido' };
+  }
+
   confirmMessage(): string {
     const evaluation = this.store.schedule()?.evaluation;
     if (!evaluation) {
@@ -234,4 +266,30 @@ export class ScheduleBoardComponent implements OnInit {
         }),
     });
   }
+}
+
+function generationNotice(schedule: Schedule): Notice {
+  const outcome = schedule.evaluation?.outcome;
+  if (outcome === 'HAS_RELAXABLE_CONFLICTS' || outcome === 'BLOCKED') {
+    return {
+      tone: 'warning',
+      message:
+        'El horario generado es aproximado: no cumple todas las reglas. Revisa los avisos, edítalo si hace falta y confírmalo bajo tu responsabilidad.',
+    };
+  }
+  if (outcome === 'VALID_WITH_RECOMMENDATIONS') {
+    return {
+      tone: 'success',
+      message:
+        'Se ha generado un horario válido con recomendaciones. Revisa los avisos antes de confirmar.',
+    };
+  }
+  return {
+    tone: 'success',
+    message: 'Se ha generado un horario válido. Puedes revisarlo, editarlo y confirmarlo.',
+  };
+}
+
+function hasFindings(schedule: Schedule): boolean {
+  return (schedule.evaluation?.findings.length ?? 0) > 0;
 }
