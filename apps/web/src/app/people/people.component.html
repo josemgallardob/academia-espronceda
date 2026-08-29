@@ -62,8 +62,79 @@
       </div>
     }
 
+    <div class="list-filters">
+      <label class="search-field">
+        <span class="filter-label">Buscar</span>
+        <input
+          type="search"
+          name="people-search"
+          autocomplete="off"
+          placeholder="Nombre o apellidos"
+          [value]="nameQuery()"
+          (input)="handleNameQuery($event)"
+        />
+      </label>
+
+      <details class="filter-menu">
+        <summary>{{ filterTriggerLabel('Curso', selectedCourses().size) }}</summary>
+        <div class="filter-options" role="group" aria-label="Filtrar por curso">
+          @for (course of courseOptions; track course[0]) {
+            <label>
+              <input
+                type="checkbox"
+                [checked]="selectedCourses().has(course[0])"
+                (change)="toggleCourse(course[0], $event)"
+              />
+              <span>{{ course[1] }}</span>
+            </label>
+          }
+        </div>
+      </details>
+
+      <details class="filter-menu">
+        <summary>{{ filterTriggerLabel('Asignatura', selectedSubjects().size) }}</summary>
+        <div class="filter-options" role="group" aria-label="Filtrar por asignatura">
+          @for (subject of subjectOptions; track subject[0]) {
+            <label>
+              <input
+                type="checkbox"
+                [checked]="selectedSubjects().has(subject[0])"
+                (change)="toggleSubject(subject[0], $event)"
+              />
+              <span>{{ subject[1] }}</span>
+            </label>
+          }
+        </div>
+      </details>
+
+      <details class="filter-menu">
+        <summary>{{ filterTriggerLabel('Horas', selectedHours().size) }}</summary>
+        <div class="filter-options" role="group" aria-label="Filtrar por horas totales">
+          @for (hours of hourOptions; track hours) {
+            <label>
+              <input
+                type="checkbox"
+                [checked]="selectedHours().has(hours)"
+                (change)="toggleHours(hours, $event)"
+              />
+              <span>{{ hours }} h</span>
+            </label>
+          }
+        </div>
+      </details>
+
+      @if (hasActiveFilters()) {
+        <button type="button" class="clear-filters" (click)="clearFilters()">Quitar filtros</button>
+      }
+    </div>
+
     <div class="list-toolbar">
-      <p aria-live="polite">{{ selectionLabel() }}</p>
+      <p aria-live="polite">
+        @if (hasActiveFilters() && currentState().kind === 'ready') {
+          Mostrando {{ currentItems().length }} de {{ unfilteredItems().length }}.
+        }
+        {{ selectionLabel() }}
+      </p>
       <div class="toolbar-actions">
         @if (activeTab() === 'WAITING_LIST') {
           <button
@@ -116,7 +187,11 @@
           @if (currentItems().length === 0) {
             <div class="message-state empty-state">
               <span class="state-icon" aria-hidden="true">0</span>
-              @if (activeTab() === 'ACTIVE') {
+              @if (hasActiveFilters() && unfilteredItems().length > 0) {
+                <h3>Ninguna persona coincide</h3>
+                <p>Prueba otro nombre o quita algún filtro de curso, asignatura u horas.</p>
+                <button type="button" (click)="clearFilters()">Quitar filtros</button>
+              } @else if (activeTab() === 'ACTIVE') {
                 <h3>Todavía no hay alumnos activos</h3>
                 <p>Las personas que actives desde la lista de espera aparecerán aquí.</p>
               } @else {
