@@ -481,11 +481,14 @@ describe('evaluateSchedule', () => {
     );
   });
 
-  it('penalizes extra teachers above the minimum needed to cover subjects', () => {
+  it('blocks a student split across more teachers than needed', () => {
     const ana = student({
       id: 'ana',
       weeklyHoursTotal: 2,
-      subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 2 }],
+      subjectHours: [
+        { subjectCode: 'MATHEMATICS', weeklyHours: 1 },
+        { subjectCode: 'PHYSICS', weeklyHours: 1 },
+      ],
     });
     let schedule = emptySchedule([generalSciences, seniorSciences]);
     schedule = assign(schedule, {
@@ -500,19 +503,35 @@ describe('evaluateSchedule', () => {
       slotId: 'slot-monday-1700',
       suffix: '2',
     });
+    schedule = withAllocations(schedule, [
+      {
+        studentId: ana.id,
+        teacherId: generalSciences.id,
+        totalHours: 1,
+        subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 1 }],
+      },
+      {
+        studentId: ana.id,
+        teacherId: seniorSciences.id,
+        totalHours: 1,
+        subjectHours: [{ subjectCode: 'PHYSICS', weeklyHours: 1 }],
+      },
+    ]);
 
     const result = evaluateSchedule(
       schedule,
       context({ students: [ana], teachers: [generalSciences, seniorSciences] }),
-      { purpose: 'DRAFT_VALIDATION' },
+      { purpose: 'CONFIRMATION' },
     );
 
-    expect(
-      findingsOf(result, 'STUDENT_TEACHER_CONTINUITY')[0].parameters,
-    ).toMatchObject({
-      minimumRequiredTeachers: 1,
+    expect(findingsOf(result, 'STUDENT_TEACHER_CONTINUITY')[0]).toMatchObject({
+      enforcement: 'HARD',
+      blocksConfirmation: true,
+      parameters: { minimumRequiredTeachers: 1 },
     });
-    expect(result.internalScore.byPriority[4]).toBe(1);
+    expect(result.evaluation.outcome).toBe('BLOCKED');
+    expect(result.evaluation.canConfirm).toBe(false);
+    expect(result.internalScore.byPriority[4]).toBe(0);
   });
 
   it('detects related students who could share more feasible classes', () => {

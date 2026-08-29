@@ -80,6 +80,11 @@ export const RULE_DEFINITIONS = {
     severity: 'ERROR',
     priority: null,
   },
+  TEACHER_WORKING_SLOT_OCCUPIED: {
+    enforcement: 'HARD',
+    severity: 'ERROR',
+    priority: null,
+  },
   STUDENT_AVAILABILITY: {
     enforcement: 'HARD',
     severity: 'ERROR',
@@ -96,6 +101,11 @@ export const RULE_DEFINITIONS = {
     priority: null,
   },
   SUBJECT_SINGLE_TEACHER: {
+    enforcement: 'HARD',
+    severity: 'ERROR',
+    priority: null,
+  },
+  STUDENT_TEACHER_CONTINUITY: {
     enforcement: 'HARD',
     severity: 'ERROR',
     priority: null,
@@ -119,11 +129,6 @@ export const RULE_DEFINITIONS = {
     idealCapacity: 4,
     belowIdealPenaltyPerStudent: 1,
     aboveIdealPenaltyPerStudent: 2,
-  },
-  STUDENT_TEACHER_CONTINUITY: {
-    enforcement: 'PREFERENCE',
-    severity: 'WARNING',
-    priority: 4,
   },
   RELATED_STUDENTS_TOGETHER: {
     enforcement: 'PREFERENCE',

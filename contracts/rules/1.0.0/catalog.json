@@ -24,11 +24,6 @@
         "ruleIds": ["CLASS_CAPACITY_IDEAL"]
       },
       {
-        "priority": 4,
-        "name": "Keep each student's compatible workload with one teacher",
-        "ruleIds": ["STUDENT_TEACHER_CONTINUITY"]
-      },
-      {
         "priority": 5,
         "name": "Place related students together",
         "ruleIds": ["RELATED_STUDENTS_TOGETHER"]
@@ -221,6 +216,21 @@
         "CONFIRMATION",
         "GENERATED_SCHEDULE_VALIDATION"
       ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "TEACHER_WORKING_SLOT_OCCUPIED",
+      "name": "Teacher working slots stay occupied",
+      "description": "When generating a schedule, every teacher working slot that can receive at least one compatible available student must contain a class with students. This invariant is hard in both strict and relaxed search and cannot be confirmed away.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "For every teacherId and availableSlotId pair that has at least one feasible student assignment, the generated schedule contains a class with one or more studentIds.",
+      "entities": ["SCHEDULE", "CLASS", "TEACHER", "SLOT", "STUDENT"],
+      "evidence": ["scheduleId", "teacherId", "slotId", "classId", "studentIds"],
+      "appliesTo": ["SOLVER_STRICT", "SOLVER_RELAXED", "GENERATED_SCHEDULE_VALIDATION"],
       "parameters": {},
       "optimization": null
     },
@@ -439,11 +449,11 @@
     {
       "id": "STUDENT_TEACHER_CONTINUITY",
       "name": "Student teacher continuity",
-      "description": "A student's compatible workload should use the fewest teachers needed to cover all contracted subjects.",
-      "classification": "PREFERENCE",
-      "enforcement": "PREFERENCE",
-      "severity": "WARNING",
-      "priority": 4,
+      "description": "A student may be assigned to multiple teachers only when no smaller compatible teacher set can cover all contracted subjects. This invariant is hard in both strict and relaxed search and cannot be confirmed away.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
       "condition": "The number of teachers assigned to a student does not exceed the minimum needed to cover that student's subject set.",
       "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT", "TEACHER", "SUBJECT"],
       "evidence": [
@@ -461,12 +471,7 @@
         "GENERATED_SCHEDULE_VALIDATION"
       ],
       "parameters": {},
-      "optimization": {
-        "metric": "ADDITIONAL_TEACHERS_ABOVE_MINIMUM",
-        "parameters": {
-          "penaltyPerAdditionalTeacher": 1
-        }
-      }
+      "optimization": null
     },
     {
       "id": "RELATED_STUDENTS_TOGETHER",

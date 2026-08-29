@@ -5,7 +5,10 @@ import {
   languages,
   student,
 } from './schedule-validator.fixtures';
-import { toSolveScheduleRequest } from './solver-request.mapper';
+import {
+  seedFromRequestId,
+  toSolveScheduleRequest,
+} from './solver-request.mapper';
 import type { ValidationTeacher } from './validation-context';
 
 describe('toSolveScheduleRequest', () => {
@@ -85,5 +88,11 @@ describe('toSolveScheduleRequest', () => {
         code: 'GENERATION_INFEASIBLE',
       });
     }
+  });
+
+  it('derives an OR-Tools-safe seed from a request id', () => {
+    const seed = seedFromRequestId('dad701e0-a329-459a-817b-8d5bce4ca83f');
+    expect(seed).toBeGreaterThanOrEqual(0);
+    expect(seed).toBeLessThanOrEqual(0x7fffffff);
   });
 });

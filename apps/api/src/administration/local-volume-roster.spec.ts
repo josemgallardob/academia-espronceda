@@ -21,18 +21,40 @@ describe('buildVolumeRoster', () => {
   });
 
   it('spreads students across ESO and Bachillerato with mixed weekly hours', () => {
-    expect(summary.byCourse.ESO_1).toBe(14);
-    expect(summary.byCourse.ESO_2).toBe(14);
-    expect(summary.byCourse.ESO_3).toBe(13);
-    expect(summary.byCourse.ESO_4).toBe(13);
-    expect(summary.byCourse.BACH_1).toBe(15);
-    expect(summary.byCourse.BACH_2).toBe(11);
-    expect(summary.byHours[1]).toBeGreaterThan(0);
-    expect(summary.byHours[2]).toBeGreaterThan(0);
-    expect(summary.byHours[3]).toBeGreaterThan(summary.byHours[2]);
-    expect(summary.byHours[3] - summary.byHours[2]).toBeLessThanOrEqual(6);
-    expect(summary.byHours[4]).toBeGreaterThan(0);
-    expect(summary.byHours[5]).toBeGreaterThan(0);
+    expect(summary.byCourse.ESO_1).toBe(11);
+    expect(summary.byCourse.ESO_2).toBe(12);
+    expect(summary.byCourse.ESO_3).toBe(11);
+    expect(summary.byCourse.ESO_4).toBe(11);
+    expect(summary.byCourse.BACH_1).toBe(17);
+    expect(summary.byCourse.BACH_2).toBe(18);
+    expect(summary.byHours[1]).toBe(3);
+    expect(summary.byHours[2]).toBe(14);
+    expect(summary.byHours[3]).toBe(46);
+    expect(summary.byHours[4]).toBe(14);
+    expect(summary.byHours[5]).toBe(3);
+  });
+
+  it('gives each teacher enough hours to fill slots at three to four students', () => {
+    const hoursOf = (predicate: (entry: (typeof roster)[number]) => boolean) =>
+      roster
+        .filter(predicate)
+        .reduce((total, entry) => total + entry.person.weeklyHoursTotal, 0);
+    const isBach = (courseCode: string) =>
+      courseCode === 'BACH_1' || courseCode === 'BACH_2';
+
+    expect(
+      hoursOf(
+        (entry) =>
+          isScienceTrack(entry.subjects) && !isBach(entry.person.courseCode),
+      ),
+    ).toBe(85);
+    expect(
+      hoursOf(
+        (entry) =>
+          isScienceTrack(entry.subjects) && isBach(entry.person.courseCode),
+      ),
+    ).toBe(85);
+    expect(hoursOf((entry) => !isScienceTrack(entry.subjects))).toBe(70);
   });
 
   it('keeps contracted hours consistent and BACH_2 away from biology', () => {

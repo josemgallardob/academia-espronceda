@@ -56,9 +56,9 @@ def evaluate_solution(
         )
         for rule_id, amounts in sorted(
             rule_totals.items(),
-            key=lambda item: (RULE_DEFINITIONS[item[0]].priority, item[0]),
+            key=lambda item: (RULE_DEFINITIONS[item[0]].priority or 0, item[0]),
         )
-        if amounts
+        if amounts and RULE_DEFINITIONS[rule_id].priority is not None
     ]
     score = ScheduleScore(
         direction="MINIMIZE",
@@ -329,8 +329,9 @@ def _add_finding(
             parameters=normalized,
         )
     )
-    penalties[priority] += amount
-    rule_totals[rule_id].append(amount)
+    if priority is not None:
+        penalties[priority] += amount
+        rule_totals[rule_id].append(amount)
 
 
 def _teachers_for_student(classes: Sequence[WeeklyClass], student_id: str) -> list[str]:

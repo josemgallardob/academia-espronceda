@@ -361,10 +361,10 @@ describe('ScheduleBoardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Confirmar horario con incidencias');
   });
 
-  it('highlights conflicted classes and lists global findings in Avisos', () => {
+  it('lists capacity incidencias in Avisos without painting the slot red', () => {
     const fixture = TestBed.createComponent(ScheduleBoardComponent);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.slot-card.conflict')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.slot-card.conflict')).toBeNull();
     const warningsTab = [...fixture.nativeElement.querySelectorAll('[role="tab"]')].find((item) =>
       (item as HTMLButtonElement).textContent?.includes('Avisos'),
     ) as HTMLButtonElement;
@@ -373,6 +373,106 @@ describe('ScheduleBoardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Avisos del horario semanal global');
     expect(fixture.nativeElement.textContent).toContain('La clase tiene pocos alumnos.');
     expect(fixture.nativeElement.textContent).toContain('Incidencia');
+  });
+
+  it('does not paint a slot red when it has three or five students', () => {
+    const draft = scheduleWithStudentCount(3, 'CLASS_CAPACITY_IDEAL');
+    workspace.set({ kind: 'ready', schedule: draft });
+    schedule.set(draft);
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.slot-card.conflict')).toBeNull();
+
+    const five = scheduleWithStudentCount(5, 'CLASS_CAPACITY_IDEAL');
+    workspace.set({ kind: 'ready', schedule: five });
+    schedule.set(five);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.slot-card.conflict')).toBeNull();
+  });
+
+  it('highlights a slot when it has a non-capacity conflict', () => {
+    const draft = scheduleFixture();
+    draft.evaluation = {
+      ...draft.evaluation!,
+      outcome: 'BLOCKED',
+      findings: [
+        {
+          fingerprint: `sha256:${'f'.repeat(64)}`,
+          ruleId: 'STUDENT_TIME_OVERLAP',
+          enforcement: 'HARD',
+          severity: 'ERROR',
+          blocksConfirmation: true,
+          entityRefs: [{ type: 'CLASS', id: 'class-1' }],
+          slotIds: ['slot-monday-1600'],
+          parameters: {},
+          message: 'Ana Ruiz tiene dos clases a la misma hora.',
+        },
+      ],
+    };
+    draft.classes[0].findingFingerprints = [`sha256:${'f'.repeat(64)}`];
+    workspace.set({ kind: 'ready', schedule: draft });
+    schedule.set(draft);
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.slot-card.conflict')).not.toBeNull();
+  });
+
+  it('does not show a capacity counter on occupied slots', () => {
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('1 / 5');
+    expect(fixture.nativeElement.textContent).not.toContain('/ 5');
+  });
+
+  it('hides ideal capacity and preferred-teacher recommendations from avisos', () => {
+    const draft = scheduleFixture();
+    draft.evaluation = {
+      ...draft.evaluation!,
+      outcome: 'VALID_WITH_RECOMMENDATIONS',
+      canConfirm: true,
+      counts: { blockingErrors: 0, relaxableErrors: 0, warnings: 2, information: 0 },
+      findings: [
+        {
+          fingerprint: `sha256:${'d'.repeat(64)}`,
+          ruleId: 'CLASS_CAPACITY_IDEAL',
+          enforcement: 'PREFERENCE',
+          severity: 'WARNING',
+          blocksConfirmation: false,
+          entityRefs: [{ type: 'CLASS', id: 'class-1' }],
+          slotIds: ['slot-monday-1600'],
+          parameters: {},
+          message: 'La clase no alcanza la capacidad ideal de 4 alumnos.',
+        },
+        {
+          fingerprint: `sha256:${'e'.repeat(64)}`,
+          ruleId: 'PREFERRED_TEACHER_BACH1_SCIENCES',
+          enforcement: 'PREFERENCE',
+          severity: 'WARNING',
+          blocksConfirmation: false,
+          entityRefs: [
+            { type: 'STUDENT', id: 'student-1' },
+            { type: 'TEACHER', id: 'teacher-1' },
+          ],
+          slotIds: ['slot-monday-1600'],
+          parameters: {},
+          message: 'Ana Ruiz podría ir mejor con otro profesor.',
+        },
+      ],
+    };
+    draft.classes[0].findingFingerprints = [`sha256:${'d'.repeat(64)}`, `sha256:${'e'.repeat(64)}`];
+    workspace.set({ kind: 'ready', schedule: draft });
+    schedule.set(draft);
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.slot-card.conflict')).toBeNull();
+    const warningsTab = [...fixture.nativeElement.querySelectorAll('[role="tab"]')].find((item) =>
+      (item as HTMLButtonElement).textContent?.includes('Avisos'),
+    ) as HTMLButtonElement;
+    warningsTab.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('No hay conflictos ni recomendaciones pendientes.');
+    expect(fixture.nativeElement.textContent).not.toContain('capacidad ideal');
+    expect(fixture.nativeElement.textContent).not.toContain('podría ir mejor');
   });
 
   it('blocks confirmation when the evaluation is BLOCKED', () => {
@@ -431,6 +531,37 @@ function findButton(root: HTMLElement, label: string): HTMLButtonElement {
     throw new Error(`Expected a button labelled ${label}`);
   }
   return button;
+}
+
+function scheduleWithStudentCount(count: number, ruleId: string): Schedule {
+  const draft = scheduleFixture();
+  const fingerprint = `sha256:${'9'.repeat(64)}`;
+  draft.classes[0].assignments = Array.from({ length: count }, (_, index) => ({
+    id: `assignment-${index + 1}`,
+    studentId: `student-${index + 1}`,
+    studentDisplayName: `Alumno ${index + 1}`,
+  }));
+  draft.classes[0].findingFingerprints = [fingerprint];
+  draft.evaluation = {
+    ...draft.evaluation!,
+    outcome: 'VALID_WITH_RECOMMENDATIONS',
+    canConfirm: true,
+    counts: { blockingErrors: 0, relaxableErrors: 0, warnings: 1, information: 0 },
+    findings: [
+      {
+        fingerprint,
+        ruleId,
+        enforcement: 'PREFERENCE',
+        severity: 'WARNING',
+        blocksConfirmation: false,
+        entityRefs: [{ type: 'CLASS', id: 'class-1' }],
+        slotIds: ['slot-monday-1600'],
+        parameters: { actualCapacity: count },
+        message: `La clase tiene ${count} alumnos.`,
+      },
+    ],
+  };
+  return draft;
 }
 
 function validGeneratedSchedule(): Schedule {

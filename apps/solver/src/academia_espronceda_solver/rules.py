@@ -24,7 +24,7 @@ SCORE_PRIORITIES = (1, 2, 3, 4, 5, 6)
 class RuleDefinition:
     enforcement: RuleEnforcement
     severity: FindingSeverity
-    priority: int
+    priority: int | None
 
 
 SCIENCE_SUBJECT_CODES: frozenset[SubjectCode] = frozenset(
@@ -41,7 +41,7 @@ RULE_DEFINITIONS: dict[str, RuleDefinition] = {
     "CLASS_CAPACITY_MAXIMUM": RuleDefinition("RELAXABLE", "ERROR", 1),
     "CLASS_CAPACITY_MINIMUM": RuleDefinition("RELAXABLE", "ERROR", 2),
     "CLASS_CAPACITY_IDEAL": RuleDefinition("PREFERENCE", "WARNING", 3),
-    "STUDENT_TEACHER_CONTINUITY": RuleDefinition("PREFERENCE", "WARNING", 4),
+    "STUDENT_TEACHER_CONTINUITY": RuleDefinition("HARD", "ERROR", None),
     "RELATED_STUDENTS_TOGETHER": RuleDefinition("PREFERENCE", "WARNING", 5),
     "PREFERRED_TEACHER_BACH1_SCIENCES": RuleDefinition("PREFERENCE", "WARNING", 6),
     "PREFERRED_TEACHER_OTHER_SCIENCES": RuleDefinition("PREFERENCE", "WARNING", 6),

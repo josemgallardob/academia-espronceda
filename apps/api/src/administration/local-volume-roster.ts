@@ -17,13 +17,17 @@ interface CourseQuota {
 }
 
 const COURSE_QUOTAS: CourseQuota[] = [
-  { courseCode: 'ESO_1', sciences: 9, letters: 5 },
-  { courseCode: 'ESO_2', sciences: 9, letters: 5 },
-  { courseCode: 'ESO_3', sciences: 9, letters: 4 },
-  { courseCode: 'ESO_4', sciences: 8, letters: 5 },
-  { courseCode: 'BACH_1', sciences: 10, letters: 5 },
-  { courseCode: 'BACH_2', sciences: 7, letters: 4 },
+  { courseCode: 'ESO_1', sciences: 6, letters: 5 },
+  { courseCode: 'ESO_2', sciences: 7, letters: 5 },
+  { courseCode: 'ESO_3', sciences: 7, letters: 4 },
+  { courseCode: 'ESO_4', sciences: 6, letters: 5 },
+  { courseCode: 'BACH_1', sciences: 12, letters: 5 },
+  { courseCode: 'BACH_2', sciences: 14, letters: 4 },
 ];
+
+const ESO_SCIENCE_COUNT = COURSE_QUOTAS.filter((quota) =>
+  quota.courseCode.startsWith('ESO'),
+).reduce((total, quota) => total + quota.sciences, 0);
 
 const FIRST_NAMES = [
   'Aitana',
@@ -128,9 +132,6 @@ const TUTORS = [
   'Isabel Gil',
 ] as const;
 
-const SCIENCE_HOURS = [3, 2, 3, 2, 3, 2, 1, 4, 5, 3, 2, 3, 2] as const;
-const LETTER_HOURS = [3, 2, 3, 2, 3, 1, 4] as const;
-
 export function buildVolumeRoster(): InsertPersonInput[] {
   const roster: InsertPersonInput[] = [];
   let scienceIndex = 0;
@@ -143,7 +144,7 @@ export function buildVolumeRoster(): InsertPersonInput[] {
           serial: roster.length,
           track: 'SCIENCES',
           courseCode: quota.courseCode,
-          hours: SCIENCE_HOURS[scienceIndex % SCIENCE_HOURS.length]!,
+          hours: scienceWeeklyHours(scienceIndex),
           variant: scienceIndex,
         }),
       );
@@ -155,7 +156,7 @@ export function buildVolumeRoster(): InsertPersonInput[] {
           serial: roster.length,
           track: 'LETTERS',
           courseCode: quota.courseCode,
-          hours: LETTER_HOURS[letterIndex % LETTER_HOURS.length]!,
+          hours: letterWeeklyHours(letterIndex),
           variant: letterIndex,
         }),
       );
@@ -251,6 +252,30 @@ function buildStudent(input: {
     subjects,
     unavailableSlotIds: unavailableSlots(input.serial),
   };
+}
+
+function scienceWeeklyHours(scienceIndex: number): number {
+  const indexInBand =
+    scienceIndex < ESO_SCIENCE_COUNT
+      ? scienceIndex
+      : scienceIndex - ESO_SCIENCE_COUNT;
+  if (indexInBand === 1) {
+    return 1;
+  }
+  if (indexInBand === 2) {
+    return 5;
+  }
+  return indexInBand % 4 === 0 ? 4 : 3;
+}
+
+function letterWeeklyHours(letterIndex: number): number {
+  if (letterIndex === 0) {
+    return 1;
+  }
+  if (letterIndex === 4) {
+    return 5;
+  }
+  return letterIndex % 2 === 0 ? 3 : 2;
 }
 
 function scienceSubjects(

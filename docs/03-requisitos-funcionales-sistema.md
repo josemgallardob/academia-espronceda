@@ -78,9 +78,11 @@ Cada generacion debe tener en cuenta:
 
 La generacion debe cumplir las horas semanales por asignatura cuando las asignaturas de una persona correspondan a profesores distintos. Si una persona necesita 2 horas de Fisica y 1 hora de Ingles, el horario generado debe asignar esas horas a los profesores compatibles correspondientes.
 
+Un alumno no puede compartirse entre dos profesores cuando uno solo puede cubrir todas sus asignaturas. Esta condicion es HARD: el generador no puede relajarla ni devolver un horario con ese reparto innecesario. Solo se admite mas de un profesor cuando las asignaturas del alumno lo exigen. Un borrador manual que incumpla esta regla no se puede confirmar.
+
 Cuando varias asignaturas de una persona correspondan al mismo profesor, el horario no necesita fijar que asignatura concreta se trabajara en cada clase. En ese caso, el generador debe respetar el total de horas con ese profesor.
 
-El resultado esperado es un horario semanal global en el que cada profesor tenga, para cada franja horaria de una hora dentro de su horario de trabajo, una clase con personas compatibles con sus restricciones.
+El resultado esperado es un horario semanal global en el que cada profesor tenga, para cada franja horaria de una hora dentro de su horario de trabajo, una clase con personas compatibles con sus restricciones. Esta condición es HARD: el generador no puede relajarla ni devolver un horario con esas franjas vacías. Si una franja del profesor admite al menos un alumno compatible y disponible, debe quedar ocupada; si no existe esa solución, la generación es infactible.
 
 El objetivo de optimizacion sera completar las clases con 4 alumnos siempre que sea posible. Las clases con 3 alumnos se aceptaran como excepcion. Las clases con 5 alumnos solo se aceptaran si no queda mas remedio para cuadrar el horario.
 
@@ -196,6 +198,7 @@ Reglas de cumplimiento para la generacion automatica:
 8. Duracion de una hora por clase.
 9. Cumplimiento de las horas semanales por asignatura cuando impliquen profesores distintos.
 10. No superar las horas semanales totales contratadas por la persona.
+11. No repartir a un alumno entre mas profesores de los necesarios para cubrir sus asignaturas.
 
 Preferencias:
 

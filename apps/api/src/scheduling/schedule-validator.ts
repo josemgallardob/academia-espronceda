@@ -73,7 +73,7 @@ export function evaluateSchedule(
   collectWeeklyHours(schedule, students, options.purpose, findings);
   collectSubjectHoursAndSingleTeacher(schedule, students, findings);
   collectClassCapacity(schedule, findings, score);
-  collectTeacherContinuity(schedule, students, teachers, findings, score);
+  collectTeacherContinuity(schedule, students, teachers, findings);
   collectRelatedStudents(schedule, students, teachers, slots, findings, score);
   collectPreferredTeachers(schedule, students, teachers, findings, score);
 
@@ -693,7 +693,6 @@ function collectTeacherContinuity(
   students: Map<string, ValidationStudent>,
   teachers: Map<string, ValidationTeacher>,
   findings: ScheduleFinding[],
-  score: InternalScore,
 ): void {
   for (const student of students.values()) {
     const assignedTeacherIds = teachersForStudent(schedule, student.id);
@@ -708,7 +707,6 @@ function collectTeacherContinuity(
     if (extra <= 0) {
       continue;
     }
-    addScore(score, 4, extra);
     findings.push(
       finding('STUDENT_TEACHER_CONTINUITY', {
         entityRefs: [

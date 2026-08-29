@@ -44,23 +44,30 @@ ya respetan las prioridades superiores.
 
 ### Reglas hard
 
-| Identificador                   | Invariante                                                                      |
-| ------------------------------- | ------------------------------------------------------------------------------- |
-| `ACTIVE_STUDENTS_ONLY`          | Solo los alumnos activos reciben asignaciones.                                  |
-| `CLASS_SLOT_VALID`              | Toda clase usa una franja semanal predefinida de 60 minutos.                    |
-| `TEACHER_SINGLE_CLASS_PER_SLOT` | Un profesor tiene como máximo una clase en cada franja.                         |
-| `STUDENT_UNIQUE_IN_CLASS`       | Un alumno no aparece duplicado dentro de una clase.                             |
-| `STUDENT_TIME_OVERLAP`          | Un alumno no tiene clases solapadas.                                            |
-| `TEACHER_SUBJECT_COMPATIBILITY` | El profesor imparte las asignaturas que justifican la asignación.               |
-| `TEACHER_COURSE_COMPATIBILITY`  | El profesor admite el curso del alumno.                                         |
-| `TEACHER_AVAILABILITY`          | El profesor está disponible en la franja.                                       |
-| `STUDENT_AVAILABILITY`          | El alumno no ha marcado la franja como no disponible.                           |
-| `STUDENT_WEEKLY_HOURS_EXACT`    | El horario final contiene exactamente las horas totales contratadas.            |
-| `STUDENT_SUBJECT_HOURS_EXACT`   | Si intervienen varios profesores, el reparto conserva las horas por asignatura. |
-| `SUBJECT_SINGLE_TEACHER`        | Todas las horas de una asignatura de un alumno pertenecen a un único profesor.  |
+| Identificador                   | Invariante                                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `ACTIVE_STUDENTS_ONLY`          | Solo los alumnos activos reciben asignaciones.                                                    |
+| `CLASS_SLOT_VALID`              | Toda clase usa una franja semanal predefinida de 60 minutos.                                      |
+| `TEACHER_SINGLE_CLASS_PER_SLOT` | Un profesor tiene como máximo una clase en cada franja.                                           |
+| `STUDENT_UNIQUE_IN_CLASS`       | Un alumno no aparece duplicado dentro de una clase.                                               |
+| `STUDENT_TIME_OVERLAP`          | Un alumno no tiene clases solapadas.                                                              |
+| `TEACHER_SUBJECT_COMPATIBILITY` | El profesor imparte las asignaturas que justifican la asignación.                                 |
+| `TEACHER_COURSE_COMPATIBILITY`  | El profesor admite el curso del alumno.                                                           |
+| `TEACHER_AVAILABILITY`          | El profesor está disponible en la franja.                                                         |
+| `TEACHER_WORKING_SLOT_OCCUPIED` | Al generar, cada franja de trabajo del profesor que admite algún alumno compatible queda ocupada. |
+| `STUDENT_AVAILABILITY`          | El alumno no ha marcado la franja como no disponible.                                             |
+| `STUDENT_WEEKLY_HOURS_EXACT`    | El horario final contiene exactamente las horas totales contratadas.                              |
+| `STUDENT_SUBJECT_HOURS_EXACT`   | Si intervienen varios profesores, el reparto conserva las horas por asignatura.                   |
+| `SUBJECT_SINGLE_TEACHER`        | Todas las horas de una asignatura de un alumno pertenecen a un único profesor.                    |
+| `STUDENT_TEACHER_CONTINUITY`    | Un alumno no se reparte entre más profesores de los necesarios para cubrir sus asignaturas.       |
 
 Un borrador puede tener temporalmente horas pendientes mientras se construye, pero nunca horas
 excedidas. La confirmación y cualquier solución del solver exigen igualdad exacta.
+`TEACHER_WORKING_SLOT_OCCUPIED` solo se exige al generar: un borrador manual puede dejar franjas
+vacías mientras se edita, pero el generador no puede devolver esas franjas vacías si admiten algún
+alumno compatible. `STUDENT_TEACHER_CONTINUITY` sí se exige también en borradores y al confirmar:
+un alumno no puede quedar repartido entre más profesores de los que hacen falta para sus
+asignaturas.
 
 ### Reglas relajables
 
@@ -77,7 +84,6 @@ máximo antes de evitar una clase de 1 o 2 alumnos.
 | Prioridad | Identificador                      | Objetivo                                                                       |
 | --------: | ---------------------------------- | ------------------------------------------------------------------------------ |
 |         3 | `CLASS_CAPACITY_IDEAL`             | Mantener 4 alumnos; una clase de 5 penaliza más que una de 3.                  |
-|         4 | `STUDENT_TEACHER_CONTINUITY`       | Usar el mínimo número de profesores necesario para las asignaturas del alumno. |
 |         5 | `RELATED_STUDENTS_TOGETHER`        | Maximizar clases compartidas con el mismo profesor, día y hora.                |
 |         6 | `PREFERRED_TEACHER_BACH1_SCIENCES` | Preferir `GENERAL_SCIENCES` para ciencias de 1.º de Bachillerato.              |
 |         6 | `PREFERRED_TEACHER_OTHER_SCIENCES` | Preferir `SENIOR_SCIENCES` para ciencias del curso `OTHER`.                    |

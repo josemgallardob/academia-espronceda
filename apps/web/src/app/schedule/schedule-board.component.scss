@@ -336,6 +336,9 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0.25rem 0;
+  color: #172235;
+  font-size: 0.7rem;
+  line-height: 1.35;
 }
 
 .placeholder {
@@ -348,7 +351,10 @@ button {
   padding: 0 0.45rem;
   border: 0;
   background: transparent;
-  color: #8b2d24;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 .warnings {

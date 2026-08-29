@@ -169,7 +169,7 @@ function validateRuleCatalog(catalogSchema, catalog) {
   const ids = catalog.rules.map((rule) => rule.id);
   assert(new Set(ids).size === ids.length, 'Rule catalog contains duplicate identifiers');
 
-  const expectedCounts = { HARD: 12, RELAXABLE: 2, PREFERENCE: 5 };
+  const expectedCounts = { HARD: 14, RELAXABLE: 2, PREFERENCE: 4 };
   for (const [enforcement, count] of Object.entries(expectedCounts)) {
     assert(
       catalog.rules.filter((rule) => rule.enforcement === enforcement).length === count,
