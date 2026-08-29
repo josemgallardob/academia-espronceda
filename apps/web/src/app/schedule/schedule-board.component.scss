@@ -344,8 +344,13 @@ button {
 .student-link {
   color: #344c6c;
   font-weight: 750;
-  text-decoration: underline;
+  text-decoration: none;
   text-underline-offset: 0.16em;
+}
+
+.student-link:hover,
+.student-link:focus-visible {
+  text-decoration: underline;
 }
 
 .placeholder {
