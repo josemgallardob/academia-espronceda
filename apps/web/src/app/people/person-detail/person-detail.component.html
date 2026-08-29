@@ -1,7 +1,7 @@
 <main class="detail-page">
-  <a class="back-link" routerLink="/personas" [queryParams]="{ status: sourceStatus }"
-    >← Volver al listado</a
-  >
+  <a class="back-link" [routerLink]="backLink()" [queryParams]="backQueryParams()">{{
+    backLabel()
+  }}</a>
 
   @if (loading()) {
     <section class="state-card" aria-live="polite">
@@ -29,7 +29,7 @@
       <a
         class="edit-action"
         [routerLink]="['/personas', currentPerson.id, 'editar']"
-        [queryParams]="{ fromStatus: currentPerson.status }"
+        [queryParams]="originQueryParams(currentPerson.status)"
         >Editar persona</a
       >
     </header>
@@ -173,7 +173,7 @@
               <li>
                 <a
                   [routerLink]="['/personas', related.id]"
-                  [queryParams]="{ fromStatus: currentPerson.status }"
+                  [queryParams]="originQueryParams(currentPerson.status)"
                   >{{ fullName(related) }}</a
                 ><span
                   >{{ courseLabel(related.courseCode) }} · {{ statusLabel(related.status) }}</span

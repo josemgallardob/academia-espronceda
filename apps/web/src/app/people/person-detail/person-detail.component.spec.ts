@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { ScheduleStore } from '../../schedule/schedule-api';
 import type { Schedule, TeacherOption } from '../../schedule/schedule.models';
@@ -57,6 +57,28 @@ describe('PersonDetailComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Ana Ruiz');
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Horario confirmado');
   });
+
+  it('returns to the people list when opened from that list', async () => {
+    const { fixture } = await createFixture();
+    const back = (fixture.nativeElement as HTMLElement).querySelector(
+      '.back-link',
+    ) as HTMLAnchorElement | null;
+
+    expect(back?.textContent?.trim()).toBe('← Volver al listado');
+    expect(back?.getAttribute('href')).toBe('/personas?status=ACTIVE');
+  });
+
+  it('returns to the schedule board when opened from a quadrant slot', async () => {
+    const { fixture } = await createFixture({
+      queryParams: { fromStatus: 'ACTIVE', from: 'horario' },
+    });
+    const back = (fixture.nativeElement as HTMLElement).querySelector(
+      '.back-link',
+    ) as HTMLAnchorElement | null;
+
+    expect(back?.textContent?.trim()).toBe('← Volver al cuadrante');
+    expect(back?.getAttribute('href')).toBe('/horario');
+  });
 });
 
 async function createFixture(
@@ -64,6 +86,7 @@ async function createFixture(
     person?: Person;
     schedule?: Schedule | null;
     teachers?: TeacherOption[];
+    queryParams?: Record<string, string>;
   } = {},
 ) {
   const currentPerson = overrides.person ?? person();
@@ -81,6 +104,15 @@ async function createFixture(
     imports: [PersonDetailComponent],
     providers: [
       provideRouter([]),
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          snapshot: {
+            paramMap: convertToParamMap({ personId: currentPerson.id }),
+            queryParamMap: convertToParamMap(overrides.queryParams ?? {}),
+          },
+        },
+      },
       { provide: PeopleStore, useValue: store },
       { provide: ScheduleStore, useValue: scheduleStore },
     ],

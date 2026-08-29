@@ -205,7 +205,7 @@
                                     <a
                                       class="student-link"
                                       [routerLink]="['/personas', assignment.studentId]"
-                                      [queryParams]="{ fromStatus: 'ACTIVE' }"
+                                      [queryParams]="{ fromStatus: 'ACTIVE', from: 'horario' }"
                                       >{{ assignment.studentDisplayName }}</a
                                     >
                                     @if (isEditable()) {

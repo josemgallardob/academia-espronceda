@@ -44,6 +44,7 @@ export class PersonDetailComponent implements OnInit {
     this.route.snapshot.queryParamMap.get('fromStatus') === 'WAITING_LIST'
       ? 'WAITING_LIST'
       : 'ACTIVE';
+  readonly fromSchedule = this.route.snapshot.queryParamMap.get('from') === 'horario';
   readonly saved = this.route.snapshot.queryParamMap.get('saved');
   readonly loading = signal(true);
   readonly error = signal('');
@@ -116,6 +117,22 @@ export class PersonDetailComponent implements OnInit {
 
   value(value: string | null): string {
     return value?.trim() || 'No indicado';
+  }
+
+  backLink(): string {
+    return this.fromSchedule ? '/horario' : '/personas';
+  }
+
+  backLabel(): string {
+    return this.fromSchedule ? '← Volver al cuadrante' : '← Volver al listado';
+  }
+
+  backQueryParams(): Record<string, string> | undefined {
+    return this.fromSchedule ? undefined : { status: this.sourceStatus };
+  }
+
+  originQueryParams(status: PersonStatus = this.sourceStatus): Record<string, string> {
+    return this.fromSchedule ? { fromStatus: status, from: 'horario' } : { fromStatus: status };
   }
 
   private load(): void {

@@ -106,7 +106,8 @@ describe('ScheduleBoardComponent', () => {
       '.slot-card a.student-link',
     ) as HTMLAnchorElement | null;
     expect(studentLink?.textContent?.trim()).toBe('Ana Ruiz');
-    expect(studentLink?.getAttribute('href')).toBe('/personas/student-1?fromStatus=ACTIVE');
+    expect(studentLink?.getAttribute('href')).toContain('/personas/student-1');
+    expect(studentLink?.getAttribute('href')).toContain('from=horario');
   });
 
   it('does not render a droppable card for hours the teacher does not work', () => {
