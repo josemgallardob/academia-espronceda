@@ -202,7 +202,12 @@
                               @if (store.classForSlot(slot.id); as weeklyClass) {
                                 @for (assignment of weeklyClass.assignments; track assignment.id) {
                                   <li>
-                                    <span>{{ assignment.studentDisplayName }}</span>
+                                    <a
+                                      class="student-link"
+                                      [routerLink]="['/personas', assignment.studentId]"
+                                      [queryParams]="{ fromStatus: 'ACTIVE' }"
+                                      >{{ assignment.studentDisplayName }}</a
+                                    >
                                     @if (isEditable()) {
                                       <button
                                         type="button"

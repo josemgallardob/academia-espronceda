@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ScheduleStore } from './schedule-api';
 import { ScheduleBoardComponent } from './schedule-board.component';
@@ -79,7 +80,7 @@ describe('ScheduleBoardComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ScheduleBoardComponent],
-      providers: [{ provide: ScheduleStore, useValue: store }],
+      providers: [provideRouter([]), { provide: ScheduleStore, useValue: store }],
     }).compileComponents();
   });
 
@@ -101,6 +102,11 @@ describe('ScheduleBoardComponent', () => {
     expect(text).not.toContain('Siguiente');
     expect(fixture.nativeElement.querySelector('[aria-label="Día anterior"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('[aria-label="Día siguiente"]')).toBeNull();
+    const studentLink = fixture.nativeElement.querySelector(
+      '.slot-card a.student-link',
+    ) as HTMLAnchorElement | null;
+    expect(studentLink?.textContent?.trim()).toBe('Ana Ruiz');
+    expect(studentLink?.getAttribute('href')).toBe('/personas/student-1?fromStatus=ACTIVE');
   });
 
   it('does not render a droppable card for hours the teacher does not work', () => {
@@ -470,7 +476,9 @@ describe('ScheduleBoardComponent', () => {
     ) as HTMLButtonElement;
     warningsTab.click();
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('No hay conflictos ni recomendaciones pendientes.');
+    expect(fixture.nativeElement.textContent).toContain(
+      'No hay conflictos ni recomendaciones pendientes.',
+    );
     expect(fixture.nativeElement.textContent).not.toContain('capacidad ideal');
     expect(fixture.nativeElement.textContent).not.toContain('podría ir mejor');
   });

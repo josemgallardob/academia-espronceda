@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { problemMessage } from '../people/people-api';
 import { ScheduleStore, slotLabel } from './schedule-api';
@@ -34,6 +35,7 @@ interface Notice {
 
 @Component({
   selector: 'app-schedule-board',
+  imports: [RouterLink],
   templateUrl: './schedule-board.component.html',
   styleUrl: './schedule-board.component.scss',
 })
