@@ -5,8 +5,9 @@ import type {
 } from '../database/repositories/people.repository';
 
 export const VOLUME_ROSTER_SIZE = 80;
-export const VOLUME_SCIENCE_COUNT = 52;
-export const VOLUME_LETTERS_COUNT = 28;
+export const VOLUME_SCIENCE_COUNT = 47;
+export const VOLUME_LETTERS_COUNT = 25;
+export const VOLUME_MIXED_COUNT = 8;
 
 export type VolumeTrack = 'SCIENCES' | 'LETTERS';
 
@@ -164,7 +165,8 @@ export function buildVolumeRoster(): InsertPersonInput[] {
     }
   }
 
-  applySiblingPairs(roster);
+  applyMixedProfiles(roster);
+  applyRelatedPairs(roster);
   return roster;
 }
 
@@ -172,6 +174,7 @@ export function summarizeVolumeRoster(roster: InsertPersonInput[]): {
   total: number;
   sciences: number;
   letters: number;
+  mixed: number;
   byCourse: Record<CourseCode, number>;
   byHours: Record<number, number>;
 } {
@@ -187,6 +190,7 @@ export function summarizeVolumeRoster(roster: InsertPersonInput[]): {
   const byHours: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   let sciences = 0;
   let letters = 0;
+  let mixed = 0;
 
   for (const entry of roster) {
     byCourse[entry.person.courseCode] += 1;
@@ -194,16 +198,39 @@ export function summarizeVolumeRoster(roster: InsertPersonInput[]): {
       (byHours[entry.person.weeklyHoursTotal] ?? 0) + 1;
     if (isScienceTrack(entry.subjects)) {
       sciences += 1;
-    } else {
+    } else if (isLetterTrack(entry.subjects)) {
       letters += 1;
+    } else {
+      mixed += 1;
     }
   }
 
-  return { total: roster.length, sciences, letters, byCourse, byHours };
+  return {
+    total: roster.length,
+    sciences,
+    letters,
+    mixed,
+    byCourse,
+    byHours,
+  };
 }
 
 export function isScienceTrack(subjects: PersonSubjectInput[]): boolean {
-  return subjects.every((item) => !isLetterSubject(item.subjectCode));
+  return (
+    subjects.length > 0 &&
+    subjects.every((item) => !isLetterSubject(item.subjectCode))
+  );
+}
+
+export function isLetterTrack(subjects: PersonSubjectInput[]): boolean {
+  return (
+    subjects.length > 0 &&
+    subjects.every((item) => isLetterSubject(item.subjectCode))
+  );
+}
+
+export function isMixedTrack(subjects: PersonSubjectInput[]): boolean {
+  return !isScienceTrack(subjects) && !isLetterTrack(subjects);
 }
 
 function buildStudent(input: {
@@ -398,25 +425,71 @@ function hoursOf(
   return [{ subjectCode, weeklyHours }];
 }
 
-function unavailableSlots(serial: number): string[] | undefined {
-  if (serial % 7 !== 3) {
-    return undefined;
+function applyMixedProfiles(roster: InsertPersonInput[]): void {
+  const profiles: Record<number, PersonSubjectInput[]> = {
+    0: [...hoursOf('MATHEMATICS', 2), ...hoursOf('ENGLISH', 2)],
+    13: [...hoursOf('PHYSICS', 2), ...hoursOf('ENGLISH', 2)],
+    31: [...hoursOf('SPANISH_LANGUAGE', 1), ...hoursOf('MATHEMATICS', 1)],
+    36: [...hoursOf('MATHEMATICS', 2), ...hoursOf('SPANISH_LANGUAGE', 1)],
+    48: [...hoursOf('PHYSICS', 2), ...hoursOf('ENGLISH', 1)],
+    58: [...hoursOf('ENGLISH', 2), ...hoursOf('MATHEMATICS', 1)],
+    65: [...hoursOf('CHEMISTRY', 2), ...hoursOf('SPANISH_LANGUAGE', 1)],
+    77: [...hoursOf('ENGLISH', 1), ...hoursOf('PHYSICS', 1)],
+  };
+
+  for (const [serial, subjects] of Object.entries(profiles)) {
+    const entry = roster[Number(serial)];
+    if (!entry) {
+      continue;
+    }
+    entry.subjects = subjects;
+    entry.person.comments = 'Perfil mixto ciencias y letras.';
   }
-  const options = [
+}
+
+function unavailableSlots(serial: number): string[] | undefined {
+  const pool = [
     'slot-friday-1600',
     'slot-monday-1600',
     'slot-wednesday-2000',
     'slot-thursday-1900',
+    'slot-tuesday-2000',
+    'slot-monday-2000',
+    'slot-friday-1800',
+    'slot-wednesday-1600',
   ];
-  return [options[serial % options.length]!];
+  const slots: string[] = [];
+  if (serial % 7 === 3) {
+    slots.push(pool[serial % pool.length]!);
+  } else if (serial % 11 === 4) {
+    slots.push(pool[(serial + 2) % pool.length]!);
+  }
+  if (serial === 8 || serial === 44 || serial === 62) {
+    slots.push(
+      pool[(serial + 1) % pool.length]!,
+      pool[(serial + 4) % pool.length]!,
+    );
+  }
+  return slots.length > 0 ? [...new Set(slots)] : undefined;
 }
 
-function applySiblingPairs(roster: InsertPersonInput[]): void {
-  const pairs: Array<[number, number]> = [
+function applyRelatedPairs(roster: InsertPersonInput[]): void {
+  applySiblingPairs(roster, [
     [0, 9],
     [14, 23],
     [28, 37],
-  ];
+  ]);
+  applyFriendPairs(roster, [
+    [18, 21],
+    [31, 36],
+    [48, 58],
+  ]);
+}
+
+function applySiblingPairs(
+  roster: InsertPersonInput[],
+  pairs: Array<[number, number]>,
+): void {
   for (const [left, right] of pairs) {
     const first = roster[left];
     const second = roster[right];
@@ -428,8 +501,28 @@ function applySiblingPairs(roster: InsertPersonInput[]): void {
     second.person.tutorFullName = first.person.tutorFullName ?? TUTORS[0];
     first.person.isTutored = true;
     first.person.tutorFullName = second.person.tutorFullName;
-    second.relatedPersonIds = [first.person.id];
+    linkRelated(second, first.person.id);
   }
+}
+
+function applyFriendPairs(
+  roster: InsertPersonInput[],
+  pairs: Array<[number, number]>,
+): void {
+  for (const [left, right] of pairs) {
+    const first = roster[left];
+    const second = roster[right];
+    if (!first || !second) {
+      continue;
+    }
+    linkRelated(second, first.person.id);
+  }
+}
+
+function linkRelated(entry: InsertPersonInput, relatedPersonId: string): void {
+  const current = new Set(entry.relatedPersonIds ?? []);
+  current.add(relatedPersonId);
+  entry.relatedPersonIds = [...current];
 }
 
 function volumeStudentId(serial: number): string {
