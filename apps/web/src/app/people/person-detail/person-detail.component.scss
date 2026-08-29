@@ -145,6 +145,56 @@ dd a,
   color: #40516a;
   font-size: 0.78rem;
 }
+.assigned-slots {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.assigned-slots li {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 0.35fr) minmax(0, 1fr) auto;
+  gap: 0.55rem 1rem;
+  align-items: center;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.42rem;
+  background: #f1f4f7;
+}
+.assigned-slots .when {
+  display: grid;
+  gap: 0.15rem;
+  color: #172235;
+  font-size: 0.8rem;
+}
+.assigned-slots .when strong {
+  font-weight: 750;
+}
+.assigned-slots .when span {
+  color: #596678;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+.assigned-slots .subjects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  color: #40516a;
+  font-size: 0.78rem;
+}
+.assigned-slots .subjects span {
+  padding: 0.2rem 0.5rem;
+  border-radius: 99rem;
+  background: #fffdf8;
+}
+.assigned-slots .teacher {
+  margin: 0;
+  color: #344c6c;
+  font-size: 0.75rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
 .availability-list {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -260,6 +310,10 @@ dd a,
   }
   .availability-list {
     grid-template-columns: 1fr;
+  }
+  .assigned-slots li {
+    grid-template-columns: 1fr;
+    align-items: start;
   }
 }
 @media (max-width: 30rem) {

@@ -102,6 +102,36 @@
         </ul>
       </section>
 
+      @if (showConfirmedSchedule()) {
+        <section class="wide-section" aria-labelledby="confirmed-schedule-title">
+          <h2 id="confirmed-schedule-title">Horario confirmado</h2>
+          @if (assignedSlots().length === 0) {
+            <p class="empty-value">Este alumno no tiene clases en el horario confirmado.</p>
+          } @else {
+            <ul class="assigned-slots">
+              @for (item of assignedSlots(); track item.slotId + item.teacherId) {
+                <li>
+                  <div class="when">
+                    <strong>{{ dayLabel(item.dayOfWeek) }}</strong>
+                    <span>{{ item.startTime }}–{{ item.endTime }}</span>
+                  </div>
+                  <p class="subjects">
+                    @if (item.subjectCodes.length === 0) {
+                      Asignaturas no indicadas
+                    } @else {
+                      @for (code of item.subjectCodes; track code) {
+                        <span>{{ subjectLabel(code) }}</span>
+                      }
+                    }
+                  </p>
+                  <p class="teacher">{{ item.teacherDisplayName }}</p>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      }
+
       <section class="wide-section">
         <h2>Indisponibilidad semanal</h2>
         @if (unavailableByDay().length === 0) {

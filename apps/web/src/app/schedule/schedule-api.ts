@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { problemMessage } from '../people/people-api';
 import type { Person, PersonListResponse } from '../people/people.models';
@@ -230,6 +230,21 @@ export class ScheduleStore {
       tap((draft) => this.workspaceSignal.set({ kind: 'ready', schedule: draft })),
       finalize(() => this.pendingSignal.set(false)),
     );
+  }
+
+  getCurrentConfirmedSchedule(): Observable<Schedule | null> {
+    return this.http.get<Schedule>(`${schedulesUrl}/current`).pipe(
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          return of(null);
+        }
+        throw error;
+      }),
+    );
+  }
+
+  listTeachers(): Observable<TeacherOption[]> {
+    return this.http.get<TeacherOption[]>(teachersUrl);
   }
 
   private applySchedule(schedule: Schedule): void {

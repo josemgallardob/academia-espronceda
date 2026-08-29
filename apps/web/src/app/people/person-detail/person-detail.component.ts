@@ -1,7 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
+import { ScheduleStore } from '../../schedule/schedule-api';
+import type { Schedule, TeacherOption } from '../../schedule/schedule.models';
+import {
+  studentConfirmedSlots,
+  type StudentConfirmedSlot,
+} from '../../schedule/student-confirmed-slots';
 import { PeopleStore, problemMessage } from '../people-api';
 import type {
   CourseCode,
@@ -30,6 +36,7 @@ const dayLabels: Record<DayOfWeek, string> = {
 })
 export class PersonDetailComponent implements OnInit {
   private readonly store = inject(PeopleStore);
+  private readonly scheduleStore = inject(ScheduleStore);
   private readonly route = inject(ActivatedRoute);
 
   readonly personId = this.route.snapshot.paramMap.get('personId')!;
@@ -44,6 +51,19 @@ export class PersonDetailComponent implements OnInit {
   readonly person = signal<Person | null>(null);
   readonly configuration = signal<SchedulingConfiguration | null>(null);
   readonly allPeople = signal<Person[]>([]);
+  readonly confirmedSchedule = signal<Schedule | null>(null);
+  readonly teachers = signal<TeacherOption[]>([]);
+  readonly assignedSlots = computed((): StudentConfirmedSlot[] => {
+    const person = this.person();
+    const schedule = this.confirmedSchedule();
+    if (!person || person.status !== 'ACTIVE' || schedule?.state !== 'CONFIRMED') {
+      return [];
+    }
+    return studentConfirmedSlots(schedule, person, this.teachers());
+  });
+  readonly showConfirmedSchedule = computed(
+    () => this.person()?.status === 'ACTIVE' && this.confirmedSchedule()?.state === 'CONFIRMED',
+  );
   readonly relatedPeople = computed(() => {
     const person = this.person();
     if (!person) return [];
@@ -102,15 +122,21 @@ export class PersonDetailComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
     this.notFound.set(false);
+    this.confirmedSchedule.set(null);
+    this.teachers.set([]);
     forkJoin({
       person: this.store.getPerson(this.personId),
       configuration: this.store.getSchedulingConfiguration(),
       people: this.store.listPeople(),
+      schedule: this.scheduleStore.getCurrentConfirmedSchedule().pipe(catchError(() => of(null))),
+      teachers: this.scheduleStore.listTeachers().pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ person, configuration, people }) => {
+      next: ({ person, configuration, people, schedule, teachers }) => {
         this.person.set(person);
         this.configuration.set(configuration);
         this.allPeople.set(people.items);
+        this.confirmedSchedule.set(schedule);
+        this.teachers.set(teachers);
         this.loading.set(false);
       },
       error: (error: unknown) => {

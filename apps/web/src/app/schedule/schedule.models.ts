@@ -1,4 +1,10 @@
-import type { CourseCode, DayOfWeek, Person, SubjectCode } from '../people/people.models';
+import type {
+  CourseCode,
+  DayOfWeek,
+  Person,
+  SubjectCode,
+  SubjectHours,
+} from '../people/people.models';
 
 export type ScheduleState = 'DRAFT' | 'CONFIRMED';
 export type EvaluationOutcome =
@@ -39,6 +45,13 @@ export interface WeeklyClass {
   slotId: string;
   assignments: ScheduleAssignment[];
   findingFingerprints: string[];
+}
+
+export interface SubjectTeacherAllocation {
+  studentId: string;
+  teacherId: string;
+  subjectHours: SubjectHours[];
+  totalHours: number;
 }
 
 export interface EntityReference {
@@ -88,7 +101,7 @@ export interface Schedule {
   teachers: TeacherOption[];
   slots: WeeklySlot[];
   classes: WeeklyClass[];
-  subjectTeacherAllocations: unknown[];
+  subjectTeacherAllocations: SubjectTeacherAllocation[];
   evaluation: ScheduleEvaluation | null;
   acceptedFindingFingerprints: string[];
 }

@@ -362,6 +362,37 @@ describe('ScheduleStore', () => {
     });
   });
 
+  it('loads the current confirmed schedule', () => {
+    let result: Schedule | null | undefined;
+    store.getCurrentConfirmedSchedule().subscribe((schedule) => {
+      result = schedule;
+    });
+    const request = httpTesting.expectOne('/api/v1/schedules/current');
+    expect(request.request.method).toBe('GET');
+    request.flush(schedule({ state: 'CONFIRMED', isCurrent: true }));
+    expect(result).toMatchObject({ id: 'schedule-1', state: 'CONFIRMED', isCurrent: true });
+  });
+
+  it('returns null when there is no current confirmed schedule', () => {
+    let result: Schedule | null | undefined = schedule();
+    store.getCurrentConfirmedSchedule().subscribe((current) => {
+      result = current;
+    });
+    httpTesting
+      .expectOne('/api/v1/schedules/current')
+      .flush({ title: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+    expect(result).toBeNull();
+  });
+
+  it('lists teachers independently of the workspace', () => {
+    let result: TeacherOption[] = [];
+    store.listTeachers().subscribe((teachers) => {
+      result = teachers;
+    });
+    httpTesting.expectOne('/api/v1/teachers').flush([teacher()]);
+    expect(result).toEqual([teacher()]);
+  });
+
   function flushWorkspace(): void {
     httpTesting.expectOne('/api/v1/teachers').flush([teacher()]);
     httpTesting
