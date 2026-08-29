@@ -25,7 +25,8 @@
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts --host=127.0.0.1",
     "admin:create-users": "tsx src/administration/scripts/create-administrative-users.ts",
     "admin:reset-password": "tsx src/administration/scripts/reset-administrative-password.ts",
-    "seed:local": "tsx src/administration/scripts/seed-local-demo.ts"
+    "seed:local": "tsx src/administration/scripts/seed-local-demo.ts",
+    "seed:volume": "tsx src/administration/scripts/seed-volume-roster.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

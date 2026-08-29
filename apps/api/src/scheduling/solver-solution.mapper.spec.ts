@@ -40,29 +40,30 @@ describe('toDraftClasses', () => {
         ['student-1', { displayName: 'Ana Ruiz' }],
         ['student-2', { displayName: 'Luis Pérez' }],
       ]),
-      () => `assignment-${(nextId += 1)}`,
+      () => `id-${(nextId += 1)}`,
     );
 
     expect(mapped.classes).toEqual([
       {
-        id: 'class-1',
+        id: 'id-1',
         teacherId: 'teacher-1',
         slotId: 'slot-monday-1600',
         findingFingerprints: [],
         assignments: [
           {
-            id: 'assignment-1',
+            id: 'id-2',
             studentId: 'student-1',
             studentDisplayName: 'Ana Ruiz',
           },
           {
-            id: 'assignment-2',
+            id: 'id-3',
             studentId: 'student-2',
             studentDisplayName: 'Luis Pérez',
           },
         ],
       },
     ]);
+    expect(mapped.classes[0].id).not.toBe(solution.classes[0].id);
     expect(mapped.subjectTeacherAllocations).toEqual(
       solution.subjectTeacherAllocations,
     );

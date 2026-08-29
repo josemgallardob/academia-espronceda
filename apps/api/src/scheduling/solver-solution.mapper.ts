@@ -13,7 +13,7 @@ export function toDraftClasses(
 } {
   return {
     classes: solution.classes.map((weeklyClass) => ({
-      id: weeklyClass.id,
+      id: identity(),
       teacherId: weeklyClass.teacherId,
       slotId: weeklyClass.slotId,
       assignments: weeklyClass.studentIds.map((studentId) => {

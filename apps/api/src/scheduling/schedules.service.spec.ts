@@ -252,6 +252,22 @@ describe('SchedulesService', () => {
     );
   });
 
+  it('persists a second generated draft when the solver reuses class identifiers', async () => {
+    await insertActiveMathStudent(people, 'person-2', 'Luis');
+    await insertActiveMathStudent(people, 'person-3', 'Marta');
+    await insertActiveMathStudent(people, 'person-4', 'Pablo');
+    fakeSolver.impl = (request) =>
+      matchingCapacitySolution(request, 'teacher-1', 'slot-monday-1600');
+
+    const first = await service.generateDraft();
+    const second = await service.generateDraft();
+
+    expect(first.id).not.toBe(second.id);
+    expect(first.classes[0].id).not.toBe(second.classes[0].id);
+    expect(first.classes[0].id).not.toBe('class-generated');
+    expect(second.classes[0].id).not.toBe('class-generated');
+  });
+
   it('does not persist when the solver is infeasible or diverges from NestJS', async () => {
     fakeSolver.impl = (request) => infeasibleResponse(request);
     await expect(service.generateDraft()).rejects.toMatchObject({
