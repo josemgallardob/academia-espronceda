@@ -26,6 +26,7 @@
     "admin:create-users": "tsx src/administration/scripts/create-administrative-users.ts",
     "admin:reset-password": "tsx src/administration/scripts/reset-administrative-password.ts",
     "seed:local": "tsx src/administration/scripts/seed-local-demo.ts",
+    "seed:teachers": "tsx src/administration/scripts/seed-teacher-catalog.ts",
     "seed:volume": "tsx src/administration/scripts/seed-volume-roster.ts"
   },
   "dependencies": {

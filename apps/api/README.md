@@ -62,6 +62,14 @@ Para un flujo local completo (cuentas `profesor1`/`profesor2`, tres profesores y
 npm run seed:local
 ```
 
+Para cargar solo el catálogo de los tres profesores (también en producción, después de `db:migrate`):
+
+```bash
+npm run seed:teachers
+```
+
+Es idempotente: actualiza nombres, asignaturas, cursos y franjas, y deja inactivos los profesores que no pertenezcan al catálogo. Las etiquetas visibles se leen de `TEACHER_1_DISPLAY_NAME`, `TEACHER_2_DISPLAY_NAME` y `TEACHER_3_DISPLAY_NAME`.
+
 Solo se ejecuta contra una base `file:` fuera de production. Las credenciales de demostración
 están documentadas en `.env.development.example` y en la pantalla de login de desarrollo.
 
