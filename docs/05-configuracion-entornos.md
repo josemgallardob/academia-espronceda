@@ -92,8 +92,10 @@ desplegar sus tres salidas:
 npm ci
 npm run setup:solver
 npm run check
-npm run build
 ```
+
+La misma secuencia de comprobaciones (formato, contratos, lint, tests y build) es la que
+ejecuta GitHub Actions en cada push a `main`. Ver `.github/workflows/ci.yml`.
 
 Salidas y procesos:
 

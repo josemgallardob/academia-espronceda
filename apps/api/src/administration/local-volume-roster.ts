@@ -241,13 +241,13 @@ function buildStudent(input: {
   variant: number;
 }): InsertPersonInput {
   const id = volumeStudentId(input.serial);
-  const firstName = FIRST_NAMES[input.serial % FIRST_NAMES.length]!;
+  const firstName = FIRST_NAMES[input.serial % FIRST_NAMES.length];
   const firstSurname =
     SURNAMES[
       (input.serial + Math.floor(input.serial / FIRST_NAMES.length) * 17) %
         SURNAMES.length
-    ]!;
-  const secondSurname = SURNAMES[(input.serial * 7 + 3) % SURNAMES.length]!;
+    ];
+  const secondSurname = SURNAMES[(input.serial * 7 + 3) % SURNAMES.length];
   const subjects =
     input.track === 'SCIENCES'
       ? scienceSubjects(input.courseCode, input.hours, input.variant)
@@ -311,7 +311,7 @@ function scienceSubjects(
   variant: number,
 ): PersonSubjectInput[] {
   const patterns = sciencePatterns(courseCode, hours);
-  return patterns[variant % patterns.length]!;
+  return patterns[variant % patterns.length];
 }
 
 function letterSubjects(hours: number, variant: number): PersonSubjectInput[] {
@@ -339,7 +339,7 @@ function letterSubjects(hours: number, variant: number): PersonSubjectInput[] {
       hoursOf('ENGLISH', 5),
     ],
   }[hours]!;
-  return patterns[variant % patterns.length]!;
+  return patterns[variant % patterns.length];
 }
 
 function sciencePatterns(
@@ -460,14 +460,14 @@ function unavailableSlots(serial: number): string[] | undefined {
   ];
   const slots: string[] = [];
   if (serial % 7 === 3) {
-    slots.push(pool[serial % pool.length]!);
+    slots.push(pool[serial % pool.length]);
   } else if (serial % 11 === 4) {
-    slots.push(pool[(serial + 2) % pool.length]!);
+    slots.push(pool[(serial + 2) % pool.length]);
   }
   if (serial === 8 || serial === 44 || serial === 62) {
     slots.push(
-      pool[(serial + 1) % pool.length]!,
-      pool[(serial + 4) % pool.length]!,
+      pool[(serial + 1) % pool.length],
+      pool[(serial + 4) % pool.length],
     );
   }
   return slots.length > 0 ? [...new Set(slots)] : undefined;

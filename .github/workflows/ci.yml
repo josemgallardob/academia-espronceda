@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      include_extended:
+        description: Run the reserved Playwright E2E expansion job
+        type: boolean
+        default: false
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  required:
+    name: Format, contracts, lint, test, and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Enable the repository npm version
+        run: |
+          corepack enable
+          corepack prepare npm@11.13.0 --activate
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: apps/solver/pyproject.toml
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Install the Python solver
+        run: npm run setup:solver
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Validate versioned API contracts
+        run: npm run validate:contracts
+
+      - name: Lint TypeScript and Python
+        run: npm run lint
+
+      - name: Run unit, property, and API integration tests
+        run: npm test
+
+      - name: Build Angular, NestJS, and the solver
+        run: npm run build
+
+  e2e:
+    name: End-to-end journeys (reserved expansion)
+    if: github.event_name == 'workflow_dispatch' && inputs.include_extended
+    needs: required
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Reserve Playwright Chromium journeys
+        run: |
+          echo "Critical Chromium journeys will run here once DE-02 lands on main."
+          echo "Full Firefox/WebKit and visual regression stay on a later scheduled workflow."
