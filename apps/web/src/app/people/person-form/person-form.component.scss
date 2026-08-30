@@ -277,34 +277,11 @@ input[type='radio'] {
   right: 0;
   left: 0;
   overflow: hidden;
+  padding: 0.35rem 0;
   border: 1px solid #cfc8bc;
   border-radius: 0.45rem;
   background: #fff;
   box-shadow: 0 0.8rem 2rem rgb(30 36 45 / 15%);
-}
-.relation-results button {
-  display: grid;
-  width: 100%;
-  gap: 0.15rem;
-  padding: 0.65rem 0.75rem;
-  border: 0;
-  border-bottom: 1px solid #ece7de;
-  background: #fff;
-  color: #172235;
-  text-align: left;
-  cursor: pointer;
-}
-.relation-results button:hover {
-  background: #faf4e6;
-}
-.relation-results span {
-  color: #74706a;
-  font-size: 0.7rem;
-}
-.relation-results p {
-  padding: 0 0.75rem;
-  color: #77736c;
-  font-size: 0.75rem;
 }
 .relation-chips {
   display: flex;
@@ -362,6 +339,37 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+.relation-results button {
+  display: grid;
+  width: 100%;
+  min-height: 0;
+  gap: 0.15rem;
+  padding: 0.65rem 0.85rem;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid #ece7de;
+  background: #fff;
+  color: #172235;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+.relation-results button:last-child {
+  border-bottom: 0;
+}
+.relation-results button:hover {
+  background: #faf4e6;
+}
+.relation-results span {
+  color: #74706a;
+  font-size: 0.7rem;
+}
+.relation-results p {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  color: #77736c;
+  font-size: 0.75rem;
 }
 .primary-action {
   border-color: #172a46;

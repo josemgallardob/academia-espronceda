@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { ScheduleStore } from '../../schedule/schedule-api';
 import type { Schedule, TeacherOption } from '../../schedule/schedule.models';
 import { PeopleStore } from '../people-api';
@@ -68,6 +68,34 @@ describe('PersonDetailComponent', () => {
     expect(back?.getAttribute('href')).toBe('/personas?status=ACTIVE');
   });
 
+  it('reloads the detail when opening a related person from the same route', async () => {
+    const related = person({
+      id: 'person-2',
+      firstName: 'Luis',
+      firstSurname: 'García',
+    });
+    const current = person({ relatedPersonIds: [related.id] });
+    const paramMap = new BehaviorSubject(convertToParamMap({ personId: current.id }));
+    const { fixture, store } = await createFixture({
+      person: current,
+      people: [current, related],
+      paramMap,
+    });
+
+    const relatedLink = [...fixture.nativeElement.querySelectorAll('a')].find((anchor) =>
+      (anchor as HTMLAnchorElement).textContent?.includes('Luis García'),
+    ) as HTMLAnchorElement | null;
+    expect(relatedLink?.getAttribute('href')).toBe('/personas/person-2?fromStatus=ACTIVE');
+
+    paramMap.next(convertToParamMap({ personId: related.id }));
+    fixture.detectChanges();
+
+    expect(store.getPerson).toHaveBeenCalledWith('person-2');
+    expect((fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent).toContain(
+      'Luis García',
+    );
+  });
+
   it('returns to the schedule board when opened from a quadrant slot', async () => {
     const { fixture } = await createFixture({
       queryParams: { fromStatus: 'ACTIVE', from: 'horario' },
@@ -84,16 +112,24 @@ describe('PersonDetailComponent', () => {
 async function createFixture(
   overrides: {
     person?: Person;
+    people?: Person[];
     schedule?: Schedule | null;
     teachers?: TeacherOption[];
     queryParams?: Record<string, string>;
+    paramMap?: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   } = {},
 ) {
   const currentPerson = overrides.person ?? person();
+  const people = overrides.people ?? [currentPerson];
+  const paramMap =
+    overrides.paramMap ?? new BehaviorSubject(convertToParamMap({ personId: currentPerson.id }));
+  const queryParamMap = convertToParamMap(overrides.queryParams ?? {});
   const store = {
-    getPerson: vi.fn(() => of(currentPerson)),
+    getPerson: vi.fn((personId: string) =>
+      of(people.find((item) => item.id === personId) ?? currentPerson),
+    ),
     getSchedulingConfiguration: vi.fn(() => of(configuration())),
-    listPeople: vi.fn(() => of({ items: [currentPerson], total: 1 })),
+    listPeople: vi.fn(() => of({ items: people, total: people.length })),
   };
   const scheduleStore = {
     getCurrentConfirmedSchedule: vi.fn(() => of(overrides.schedule ?? null)),
@@ -108,9 +144,11 @@ async function createFixture(
         provide: ActivatedRoute,
         useValue: {
           snapshot: {
-            paramMap: convertToParamMap({ personId: currentPerson.id }),
-            queryParamMap: convertToParamMap(overrides.queryParams ?? {}),
+            paramMap: paramMap.value,
+            queryParamMap,
           },
+          paramMap,
+          queryParamMap: of(queryParamMap),
         },
       },
       { provide: PeopleStore, useValue: store },

@@ -147,6 +147,22 @@ describe('ScheduleBoardComponent', () => {
     expect(roster.textContent).not.toContain('Ana Ruiz');
   });
 
+  it('keeps the selected teacher in the filter after the board remounts', () => {
+    teachers.set([
+      { id: 'teacher-1', displayName: 'Profesor Uno' },
+      { id: 'teacher-2', displayName: 'Profesor Dos' },
+    ]);
+    selectedTeacherId.set('teacher-2');
+    store.selectedTeacher = signal(teachers()[1] ?? null);
+    const fixture = TestBed.createComponent(ScheduleBoardComponent);
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+    const selected = [...select.options].find((option) => option.selected);
+
+    expect(select.value).toBe('teacher-2');
+    expect(selected?.textContent?.trim()).toBe('Profesor Dos');
+  });
+
   it('changes the teacher filter without reloading the weekly schedule', () => {
     const fixture = TestBed.createComponent(ScheduleBoardComponent);
     fixture.detectChanges();

@@ -94,7 +94,9 @@
               [disabled]="store.teachers().length === 0"
             >
               @for (teacher of store.teachers(); track teacher.id) {
-                <option [value]="teacher.id">{{ teacher.displayName }}</option>
+                <option [value]="teacher.id" [selected]="teacher.id === store.selectedTeacherId()">
+                  {{ teacher.displayName }}
+                </option>
               }
             </select>
           </label>

@@ -1,7 +1,8 @@
+import { ViewportScroller } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, distinctUntilChanged, filter, forkJoin, map, of } from 'rxjs';
 import { ScheduleStore } from '../../schedule/schedule-api';
 import type { Schedule, TeacherOption } from '../../schedule/schedule.models';
 import {
@@ -38,14 +39,12 @@ export class PersonDetailComponent implements OnInit {
   private readonly store = inject(PeopleStore);
   private readonly scheduleStore = inject(ScheduleStore);
   private readonly route = inject(ActivatedRoute);
+  private readonly viewport = inject(ViewportScroller);
+  private personId = '';
 
-  readonly personId = this.route.snapshot.paramMap.get('personId')!;
-  readonly sourceStatus: PersonStatus =
-    this.route.snapshot.queryParamMap.get('fromStatus') === 'WAITING_LIST'
-      ? 'WAITING_LIST'
-      : 'ACTIVE';
-  readonly fromSchedule = this.route.snapshot.queryParamMap.get('from') === 'horario';
-  readonly saved = this.route.snapshot.queryParamMap.get('saved');
+  sourceStatus: PersonStatus = 'ACTIVE';
+  fromSchedule = false;
+  saved: string | null = null;
   readonly loading = signal(true);
   readonly error = signal('');
   readonly notFound = signal(false);
@@ -84,7 +83,17 @@ export class PersonDetailComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.load();
+    this.route.paramMap
+      .pipe(
+        map((params) => params.get('personId')),
+        filter((personId): personId is string => Boolean(personId)),
+        distinctUntilChanged(),
+      )
+      .subscribe((personId) => {
+        this.personId = personId;
+        this.syncQueryContext();
+        this.load();
+      });
   }
 
   retry(): void {
@@ -135,6 +144,13 @@ export class PersonDetailComponent implements OnInit {
     return this.fromSchedule ? { fromStatus: status, from: 'horario' } : { fromStatus: status };
   }
 
+  private syncQueryContext(): void {
+    const query = this.route.snapshot.queryParamMap;
+    this.sourceStatus = query.get('fromStatus') === 'WAITING_LIST' ? 'WAITING_LIST' : 'ACTIVE';
+    this.fromSchedule = query.get('from') === 'horario';
+    this.saved = query.get('saved');
+  }
+
   private load(): void {
     this.loading.set(true);
     this.error.set('');
@@ -155,6 +171,7 @@ export class PersonDetailComponent implements OnInit {
         this.confirmedSchedule.set(schedule);
         this.teachers.set(teachers);
         this.loading.set(false);
+        this.viewport.scrollToPosition([0, 0]);
       },
       error: (error: unknown) => {
         this.notFound.set(error instanceof HttpErrorResponse && error.status === 404);
