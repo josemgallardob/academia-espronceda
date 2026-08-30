@@ -1,17 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { DatabaseConnection } from '../database/database.connection';
 import { PeopleRepository } from '../database/repositories/people.repository';
-import { TeachersRepository } from '../database/repositories/teachers.repository';
 import { UsersRepository } from '../database/repositories/users.repository';
-import { WeeklySlotsRepository } from '../database/repositories/weekly-slots.repository';
-import type {
-  CourseCode,
-  DayOfWeek,
-  SubjectCode,
-  TeacherProfile,
-} from '../database/schema/catalog';
 import { hashPassword } from '../security/password-hasher';
 import { AdministrativeUserError } from './administrative-users.service';
+import { seedTeacherCatalog } from './teacher-catalog';
 
 export const LOCAL_DEMO_ACCOUNTS = [
   {
@@ -30,89 +23,6 @@ export interface LocalDemoSeedReport {
   users: { username: string; email: string }[];
   teacherIds: string[];
   personIds: string[];
-}
-
-interface TeacherSeed {
-  id: string;
-  profile: TeacherProfile;
-  subjectCodes: SubjectCode[];
-  courseCodes: CourseCode[];
-  windows: { dayOfWeek: DayOfWeek; startTime: string; endTime: string }[];
-}
-
-const DEFAULT_TEACHER_DISPLAY_NAMES: Record<TeacherProfile, string> = {
-  SENIOR_SCIENCES: 'Profesor 1',
-  GENERAL_SCIENCES: 'Profesor 2',
-  LANGUAGES: 'Profesor 3',
-};
-
-const DEMO_TEACHERS: TeacherSeed[] = [
-  {
-    id: 'teacher-senior-sciences',
-    profile: 'SENIOR_SCIENCES',
-    subjectCodes: [
-      'MATHEMATICS',
-      'SOCIAL_SCIENCES_MATHEMATICS',
-      'PHYSICS',
-      'CHEMISTRY',
-    ],
-    courseCodes: ['BACH_2', 'BACH_1'],
-    windows: [
-      { dayOfWeek: 'MONDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'TUESDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'WEDNESDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'THURSDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'FRIDAY', startTime: '16:00', endTime: '19:00' },
-    ],
-  },
-  {
-    id: 'teacher-general-sciences',
-    profile: 'GENERAL_SCIENCES',
-    subjectCodes: [
-      'MATHEMATICS',
-      'SOCIAL_SCIENCES_MATHEMATICS',
-      'PHYSICS',
-      'CHEMISTRY',
-      'BIOLOGY',
-    ],
-    courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1'],
-    windows: [
-      { dayOfWeek: 'MONDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'TUESDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'WEDNESDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'THURSDAY', startTime: '16:00', endTime: '21:00' },
-      { dayOfWeek: 'FRIDAY', startTime: '16:00', endTime: '19:00' },
-    ],
-  },
-  {
-    id: 'teacher-languages',
-    profile: 'LANGUAGES',
-    subjectCodes: ['SPANISH_LANGUAGE', 'ENGLISH'],
-    courseCodes: ['ESO_1', 'ESO_2', 'ESO_3', 'ESO_4', 'BACH_1', 'BACH_2'],
-    windows: [
-      { dayOfWeek: 'MONDAY', startTime: '16:00', endTime: '20:00' },
-      { dayOfWeek: 'TUESDAY', startTime: '16:00', endTime: '20:00' },
-      { dayOfWeek: 'WEDNESDAY', startTime: '16:00', endTime: '20:00' },
-      { dayOfWeek: 'THURSDAY', startTime: '16:00', endTime: '20:00' },
-      { dayOfWeek: 'FRIDAY', startTime: '16:00', endTime: '19:00' },
-    ],
-  },
-];
-
-export function resolveTeacherDisplayNames(
-  source: NodeJS.ProcessEnv = process.env,
-): Record<TeacherProfile, string> {
-  return {
-    SENIOR_SCIENCES:
-      source.TEACHER_1_DISPLAY_NAME?.trim() ||
-      DEFAULT_TEACHER_DISPLAY_NAMES.SENIOR_SCIENCES,
-    GENERAL_SCIENCES:
-      source.TEACHER_2_DISPLAY_NAME?.trim() ||
-      DEFAULT_TEACHER_DISPLAY_NAMES.GENERAL_SCIENCES,
-    LANGUAGES:
-      source.TEACHER_3_DISPLAY_NAME?.trim() ||
-      DEFAULT_TEACHER_DISPLAY_NAMES.LANGUAGES,
-  };
 }
 
 export function assertLocalDemoAllowed(input: {
@@ -136,22 +46,9 @@ export async function seedLocalDemo(
   source: NodeJS.ProcessEnv = process.env,
 ): Promise<LocalDemoSeedReport> {
   const users = new UsersRepository(connection);
-  const teachers = new TeachersRepository(connection);
   const people = new PeopleRepository(connection);
-  const weeklySlots = new WeeklySlotsRepository(connection);
-  const slots = await weeklySlots.listActive();
-  if (slots.length === 0) {
-    throw new AdministrativeUserError(
-      'No hay franjas semanales. Ejecuta primero npm run db:migrate.',
-    );
-  }
-
   const alignedUsers = await alignAdministrativeAccounts(users);
-  const teacherIds = await seedTeachers(
-    teachers,
-    slots,
-    resolveTeacherDisplayNames(source),
-  );
+  const teacherIds = await seedTeacherCatalog(connection, source);
   const personIds = await seedPeople(people);
 
   return {
@@ -222,49 +119,6 @@ async function alignAdministrativeAccounts(
     username: account.username,
     email: account.email,
   }));
-}
-
-async function seedTeachers(
-  teachers: TeachersRepository,
-  slots: Awaited<ReturnType<WeeklySlotsRepository['listActive']>>,
-  displayNames: Record<TeacherProfile, string>,
-): Promise<string[]> {
-  const ids: string[] = [];
-  for (const teacher of DEMO_TEACHERS) {
-    const displayName = displayNames[teacher.profile];
-    const current = await teachers.findById(teacher.id);
-    if (!current) {
-      await teachers.insert({
-        id: teacher.id,
-        displayName,
-        profile: teacher.profile,
-      });
-    } else {
-      if (current.displayName !== displayName) {
-        await teachers.syncDisplayName(teacher.id, displayName);
-      }
-      if (!current.isActive) {
-        await teachers.setActive(teacher.id, true);
-      }
-    }
-    await teachers.replaceCapabilities(teacher.id, {
-      subjectCodes: teacher.subjectCodes,
-      courseCodes: teacher.courseCodes,
-      availableSlotIds: slots
-        .filter((slot) =>
-          teacher.windows.some(
-            (window) =>
-              slot.dayOfWeek === window.dayOfWeek &&
-              slot.startTime >= window.startTime &&
-              slot.endTime <= window.endTime,
-          ),
-        )
-        .map((slot) => slot.id),
-    });
-    ids.push(teacher.id);
-  }
-  await teachers.deactivateExcept(ids);
-  return ids;
 }
 
 async function seedPeople(people: PeopleRepository): Promise<string[]> {

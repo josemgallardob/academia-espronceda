@@ -71,6 +71,9 @@ catálogo de profesores y deja un conjunto de personas de ejemplo. Las etiquetas
 los tres profesores se pueden definir en `.env.local`; el repositorio solo documenta
 etiquetas genéricas.
 
+En producción, tras migrar y crear las cuentas administrativas, carga solo el catálogo de
+profesores con `npm run seed:teachers`. No crea alumnos ni toca usuarios.
+
 ## Produccion
 
 El frontend se sirve bajo un dominio HTTPS publico; las peticiones a `/api` se enrutan a
