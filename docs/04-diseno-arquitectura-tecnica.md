@@ -521,14 +521,16 @@ El proyecto sera desarrollado inicialmente por una sola persona y utilizara `mai
 
 Los cambios ordinarios podran realizarse directamente sobre `main` mediante commits pequeños y frecuentes. Se podran utilizar ramas de corta duracion para funcionalidades grandes, experimentos o refactorizaciones de mayor riesgo, pero su uso sera opcional.
 
-En cada push a `main` se ejecutara:
+En cada push a `main` se ejecuta `.github/workflows/ci.yml`, sin exigir pull request:
 
-1. Formato, lint y comprobacion de tipos.
+1. Formato, lint y comprobacion de tipos (lint mas builds).
 2. Tests unitarios y property-based de TypeScript y Python.
-3. Tests de integracion de NestJS, Turso/libSQL local y FastAPI.
-4. Tests de contrato entre NestJS y Python.
+3. Tests de integracion HTTP de NestJS sobre libSQL local. FastAPI se cubre con su suite pytest.
+4. Validacion de contratos versionados.
 5. Build de Angular, NestJS y motor Python.
-6. Recorridos end-to-end criticos en Chromium.
+
+Los recorridos end-to-end criticos en Chromium quedan como job reservado del mismo workflow,
+lanzable a mano con `include_extended` cuando esa suite exista en `main`.
 
 Antes de un despliegue, al crear una version o de forma programada se ejecutara:
 

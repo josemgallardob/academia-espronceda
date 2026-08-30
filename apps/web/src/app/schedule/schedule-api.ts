@@ -272,8 +272,7 @@ export class ScheduleStore {
           return this.http.get<Schedule>(`${schedulesUrl}/${draft.id}`).pipe(
             switchMap((loadedDraft) => {
               const useCurrent =
-                loadedDraft.classes.length === 0 &&
-                loadedDraft.sourceScheduleId !== current.id;
+                loadedDraft.classes.length === 0 && loadedDraft.sourceScheduleId !== current.id;
               return useCurrent
                 ? this.http.get<Schedule>(`${schedulesUrl}/${current.id}`)
                 : of(loadedDraft);
