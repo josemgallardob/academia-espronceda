@@ -43,6 +43,10 @@ export class DatabaseConnection implements OnModuleDestroy {
       createClient(clientConfiguration),
     );
     await connection.client.execute('PRAGMA foreign_keys = ON');
+    if (databaseUrl.startsWith('file:')) {
+      await connection.client.execute('PRAGMA journal_mode = WAL');
+      await connection.client.execute('PRAGMA busy_timeout = 5000');
+    }
     return connection;
   }
 

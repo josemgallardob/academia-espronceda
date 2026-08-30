@@ -96,12 +96,15 @@ npm run format          # aplica el formato
 npm run format:check    # comprueba el formato sin modificar
 npm run lint            # analiza TypeScript, plantillas y Python
 npm run test            # ejecuta las pruebas de los tres servicios
+npm run test:e2e        # recorridos críticos en Chromium
 npm run build           # construye o valida los tres servicios
 npm run check           # ejecuta todas las comprobaciones anteriores
 ```
 
 Cada comando dispone además de variantes por servicio, por ejemplo `test:web`, `test:api` y
-`test:solver`.
+`test:solver`. La primera vez hay que instalar el navegador con
+`npx playwright install chromium`. `npm run test:e2e:browsers` reserva Firefox y WebKit
+para versionado o despliegue; no hay regresion visual en este paso.
 
 ## Convenciones de idioma
 

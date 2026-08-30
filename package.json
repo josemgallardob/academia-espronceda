@@ -12,7 +12,7 @@
     "apps/web"
   ],
   "scripts": {
-    "setup": "npm install && npm run setup:solver",
+    "setup": "npm install && npm run setup:solver && npx playwright install chromium",
     "setup:solver": "python3 -m venv .venv && .venv/bin/python -m pip install --upgrade pip && .venv/bin/python -m pip install -e \"apps/solver[dev]\"",
     "dev": "node scripts/dev.mjs",
     "dev:web": "node scripts/dev-service.mjs web",
@@ -28,12 +28,14 @@
     "lint:web": "npm run lint --workspace @academia-espronceda/web",
     "lint:api": "npm run lint --workspace @academia-espronceda/api",
     "lint:solver": ".venv/bin/python -m ruff check apps/solver",
-    "format": "prettier --write .prettierrc.json package.json README.md contracts docs/05-configuracion-entornos.md docs/06-contratos-y-catalogo-reglas.md scripts apps/api apps/web && .venv/bin/python -m ruff format apps/solver",
-    "format:check": "prettier --check .prettierrc.json package.json README.md contracts docs/05-configuracion-entornos.md docs/06-contratos-y-catalogo-reglas.md scripts apps/api apps/web && .venv/bin/python -m ruff format --check apps/solver",
+    "format": "prettier --write .prettierrc.json package.json README.md contracts docs/05-configuracion-entornos.md docs/06-contratos-y-catalogo-reglas.md scripts e2e apps/api apps/web && .venv/bin/python -m ruff format apps/solver",
+    "format:check": "prettier --check .prettierrc.json package.json README.md contracts docs/05-configuracion-entornos.md docs/06-contratos-y-catalogo-reglas.md scripts e2e apps/api apps/web && .venv/bin/python -m ruff format --check apps/solver",
     "test": "npm run test:web && npm run test:api && npm run test:solver",
     "test:web": "npm run test --workspace @academia-espronceda/web -- --watch=false",
     "test:api": "npm run test --workspace @academia-espronceda/api -- --runInBand && npm run test:e2e --workspace @academia-espronceda/api -- --runInBand",
     "test:solver": ".venv/bin/python -m pytest apps/solver",
+    "test:e2e": "npx playwright test --config e2e/playwright.config.ts",
+    "test:e2e:browsers": "E2E_BROWSERS=all npx playwright test --config e2e/playwright.config.ts",
     "db:generate": "npm run db:generate --workspace @academia-espronceda/api",
     "db:migrate": "npm run db:migrate --workspace @academia-espronceda/api",
     "db:check": "npm run db:check --workspace @academia-espronceda/api",
@@ -43,10 +45,13 @@
     "seed:local": "npm run seed:local --workspace @academia-espronceda/api",
     "seed:teachers": "npm run seed:teachers --workspace @academia-espronceda/api",
     "seed:volume": "npm run seed:volume --workspace @academia-espronceda/api",
+    "seed:e2e": "node scripts/run-e2e-admin.mjs seed",
+    "reset:e2e": "node scripts/run-e2e-admin.mjs reset",
     "validate:contracts": "node scripts/validate-contracts.mjs",
-    "check": "npm run format:check && npm run validate:contracts && npm run lint && npm run test && npm run build"
+    "check": "npm run format:check && npm run validate:contracts && npm run lint && npm run test && npm run test:e2e && npm run build"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "prettier": "^3.8.1"

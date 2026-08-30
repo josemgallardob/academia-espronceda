@@ -27,7 +27,9 @@
     "admin:reset-password": "tsx src/administration/scripts/reset-administrative-password.ts",
     "seed:local": "tsx src/administration/scripts/seed-local-demo.ts",
     "seed:teachers": "tsx src/administration/scripts/seed-teacher-catalog.ts",
-    "seed:volume": "tsx src/administration/scripts/seed-volume-roster.ts"
+    "seed:volume": "tsx src/administration/scripts/seed-volume-roster.ts",
+    "seed:e2e": "node --import tsx src/administration/scripts/seed-e2e.ts",
+    "reset:e2e": "node --import tsx src/administration/scripts/reset-e2e-operational-data.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

@@ -41,19 +41,29 @@ export function assertLocalDemoAllowed(input: {
   }
 }
 
+export async function seedLocalAccountsAndTeachers(
+  connection: DatabaseConnection,
+  source: NodeJS.ProcessEnv = process.env,
+): Promise<Pick<LocalDemoSeedReport, 'users' | 'teacherIds'>> {
+  const users = new UsersRepository(connection);
+  const alignedUsers = await alignAdministrativeAccounts(users);
+  const teacherIds = await seedTeacherCatalog(connection, source);
+  return {
+    users: alignedUsers,
+    teacherIds,
+  };
+}
+
 export async function seedLocalDemo(
   connection: DatabaseConnection,
   source: NodeJS.ProcessEnv = process.env,
 ): Promise<LocalDemoSeedReport> {
-  const users = new UsersRepository(connection);
   const people = new PeopleRepository(connection);
-  const alignedUsers = await alignAdministrativeAccounts(users);
-  const teacherIds = await seedTeacherCatalog(connection, source);
+  const baseline = await seedLocalAccountsAndTeachers(connection, source);
   const personIds = await seedPeople(people);
 
   return {
-    users: alignedUsers,
-    teacherIds,
+    ...baseline,
     personIds,
   };
 }
