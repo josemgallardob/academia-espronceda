@@ -76,7 +76,7 @@ async function main(): Promise<void> {
       `Roster de volumen listo: ${created} creados, ${updated} actualizados, ${extras.length} anteriores eliminados.\n`,
     );
     process.stdout.write(
-      `  Total ${summary.total}: ${summary.sciences} ciencias, ${summary.letters} letras.\n`,
+      `  Total ${summary.total}: ${summary.sciences} ciencias, ${summary.letters} letras, ${summary.mixed} mixtos.\n`,
     );
     process.stdout.write(
       `  Cursos: ESO1 ${summary.byCourse.ESO_1}, ESO2 ${summary.byCourse.ESO_2}, ESO3 ${summary.byCourse.ESO_3}, ESO4 ${summary.byCourse.ESO_4}, BACH1 ${summary.byCourse.BACH_1}, BACH2 ${summary.byCourse.BACH_2}.\n`,

@@ -4,10 +4,12 @@ import { evaluateSchedule } from './schedule-validator';
 import {
   assign,
   context,
+  defaultSlots,
   emptySchedule,
   generalSciences,
   languages,
   monday1600,
+  monday1900,
   seniorSciences,
   student,
   withAllocations,
@@ -249,6 +251,84 @@ describe('evaluateSchedule', () => {
     });
 
     expect(findingsOf(result, 'STUDENT_TIME_OVERLAP')).toHaveLength(0);
+    expect(findingsOf(result, 'STUDENT_SAME_DAY_CONTIGUOUS')).toHaveLength(0);
+  });
+
+  it('blocks same-day classes that leave a gap between slots', () => {
+    const ana = student({
+      id: 'ana',
+      weeklyHoursTotal: 2,
+      subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 2 }],
+    });
+    const teacher = {
+      ...generalSciences,
+      availableSlotIds: [...generalSciences.availableSlotIds, monday1900.id],
+    };
+    let schedule = emptySchedule(
+      [teacher, languages],
+      [...defaultSlots, monday1900],
+    );
+    schedule = assign(schedule, {
+      student: ana,
+      teacherId: teacher.id,
+      slotId: 'slot-monday-1700',
+      suffix: '1',
+    });
+    schedule = assign(schedule, {
+      student: ana,
+      teacherId: teacher.id,
+      slotId: 'slot-monday-1900',
+      suffix: '2',
+    });
+
+    const result = evaluateSchedule(
+      schedule,
+      context({ students: [ana], teachers: [teacher, languages] }),
+      {
+        purpose: 'CONFIRMATION',
+      },
+    );
+
+    expect(findingsOf(result, 'STUDENT_SAME_DAY_CONTIGUOUS')[0]).toMatchObject({
+      ruleId: 'STUDENT_SAME_DAY_CONTIGUOUS',
+      blocksConfirmation: true,
+    });
+    expect(
+      findingsOf(result, 'STUDENT_SAME_DAY_CONTIGUOUS')[0].message,
+    ).toContain('no son consecutivas');
+    expect(result.evaluation.canConfirm).toBe(false);
+  });
+
+  it('prefers spreading hours across days when two classes share a weekday', () => {
+    const ana = student({
+      id: 'ana',
+      weeklyHoursTotal: 2,
+      subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 2 }],
+    });
+    let schedule = emptySchedule();
+    schedule = assign(schedule, {
+      student: ana,
+      teacherId: generalSciences.id,
+      slotId: 'slot-monday-1600',
+      suffix: '1',
+    });
+    schedule = assign(schedule, {
+      student: ana,
+      teacherId: generalSciences.id,
+      slotId: 'slot-monday-1700',
+      suffix: '2',
+    });
+
+    const result = evaluateSchedule(schedule, context({ students: [ana] }), {
+      purpose: 'CONFIRMATION',
+    });
+
+    expect(findingsOf(result, 'STUDENT_DAY_SPREAD')[0]).toMatchObject({
+      ruleId: 'STUDENT_DAY_SPREAD',
+      enforcement: 'PREFERENCE',
+      blocksConfirmation: false,
+    });
+    expect(result.internalScore.byPriority[4]).toBe(1);
   });
 
   it('detects subject and course incompatibility', () => {
@@ -481,11 +561,14 @@ describe('evaluateSchedule', () => {
     );
   });
 
-  it('penalizes extra teachers above the minimum needed to cover subjects', () => {
+  it('blocks a student split across more teachers than needed', () => {
     const ana = student({
       id: 'ana',
       weeklyHoursTotal: 2,
-      subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 2 }],
+      subjectHours: [
+        { subjectCode: 'MATHEMATICS', weeklyHours: 1 },
+        { subjectCode: 'PHYSICS', weeklyHours: 1 },
+      ],
     });
     let schedule = emptySchedule([generalSciences, seniorSciences]);
     schedule = assign(schedule, {
@@ -500,19 +583,34 @@ describe('evaluateSchedule', () => {
       slotId: 'slot-monday-1700',
       suffix: '2',
     });
+    schedule = withAllocations(schedule, [
+      {
+        studentId: ana.id,
+        teacherId: generalSciences.id,
+        totalHours: 1,
+        subjectHours: [{ subjectCode: 'MATHEMATICS', weeklyHours: 1 }],
+      },
+      {
+        studentId: ana.id,
+        teacherId: seniorSciences.id,
+        totalHours: 1,
+        subjectHours: [{ subjectCode: 'PHYSICS', weeklyHours: 1 }],
+      },
+    ]);
 
     const result = evaluateSchedule(
       schedule,
       context({ students: [ana], teachers: [generalSciences, seniorSciences] }),
-      { purpose: 'DRAFT_VALIDATION' },
+      { purpose: 'CONFIRMATION' },
     );
 
-    expect(
-      findingsOf(result, 'STUDENT_TEACHER_CONTINUITY')[0].parameters,
-    ).toMatchObject({
-      minimumRequiredTeachers: 1,
+    expect(findingsOf(result, 'STUDENT_TEACHER_CONTINUITY')[0]).toMatchObject({
+      enforcement: 'HARD',
+      blocksConfirmation: true,
+      parameters: { minimumRequiredTeachers: 1 },
     });
-    expect(result.internalScore.byPriority[4]).toBe(1);
+    expect(result.evaluation.outcome).toBe('BLOCKED');
+    expect(result.evaluation.canConfirm).toBe(false);
   });
 
   it('detects related students who could share more feasible classes', () => {

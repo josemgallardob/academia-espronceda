@@ -50,6 +50,23 @@ def test_single_teacher_fixture_keeps_capacity_preference_findings(load_fixture)
     assert {finding.ruleId for finding in solution.findings} == {"CLASS_CAPACITY_IDEAL"}
 
 
+def test_compatible_science_workload_stays_with_one_teacher() -> None:
+    request = SolveScheduleRequest.model_validate(_two_science_teachers_request())
+
+    status, solution = solve_strict(request, time_limit_seconds=5)
+
+    assert status == "OPTIMAL"
+    assert solution is not None
+    teachers_by_student: dict[str, set[str]] = {f"student-{index}": set() for index in range(1, 7)}
+    for weekly_class in solution.classes:
+        for student_id in weekly_class.studentIds:
+            teachers_by_student[student_id].add(weekly_class.teacherId)
+    assert all(len(teachers) == 1 for teachers in teachers_by_student.values())
+    assert {finding.ruleId for finding in solution.findings}.isdisjoint(
+        {"STUDENT_TEACHER_CONTINUITY"}
+    )
+
+
 def test_multi_teacher_subjects_are_allocated_exactly() -> None:
     request = SolveScheduleRequest.model_validate(_multi_teacher_request())
 
@@ -126,6 +143,46 @@ def test_overlapping_slots_are_infeasible_when_hours_require_both(load_fixture) 
     assert solution is None
 
 
+def test_feasible_teacher_slots_are_all_occupied_when_hours_suffice() -> None:
+    request = SolveScheduleRequest.model_validate(
+        _one_teacher_request(
+            slot_ids=["MONDAY_16_00", "TUESDAY_16_00"],
+            student_count=6,
+        )
+    )
+
+    status, solution = solve_strict(request, time_limit_seconds=5)
+
+    assert status == "OPTIMAL"
+    assert solution is not None
+    assert {weekly_class.slotId for weekly_class in solution.classes} == {
+        "MONDAY_16_00",
+        "TUESDAY_16_00",
+    }
+    for weekly_class in solution.classes:
+        assert len(weekly_class.studentIds) == 3
+
+
+def test_incompatible_teacher_slots_may_stay_empty() -> None:
+    payload = _one_teacher_request(slot_ids=["MONDAY_16_00"])
+    payload["teachers"].append(
+        {
+            "id": "teacher-3",
+            "profile": "LANGUAGES",
+            "supportedCourseCodes": ["BACH_1"],
+            "supportedSubjectCodes": ["ENGLISH"],
+            "availableSlotIds": ["MONDAY_16_00"],
+        }
+    )
+    request = SolveScheduleRequest.model_validate(payload)
+
+    status, solution = solve_strict(request, time_limit_seconds=5)
+
+    assert status == "OPTIMAL"
+    assert solution is not None
+    assert {weekly_class.teacherId for weekly_class in solution.classes} == {"teacher-2"}
+
+
 def test_empty_students_yield_an_empty_optimal_schedule(load_fixture) -> None:
     payload = deepcopy(load_fixture("strict-ideal.request.json"))
     payload["students"] = []
@@ -150,6 +207,107 @@ def test_engine_exposes_a_single_strict_attempt(load_fixture) -> None:
     assert len(outcome.attempts) == 1
     assert outcome.attempts[0].mode == "STRICT"
     assert outcome.solution is not None
+
+
+def test_evaluate_flags_an_unnecessary_teacher_split() -> None:
+    classes = [
+        WeeklyClass(
+            id="class-a",
+            teacherId="teacher-1",
+            slotId="MONDAY_16_00",
+            studentIds=["student-1"],
+        ),
+        WeeklyClass(
+            id="class-b",
+            teacherId="teacher-2",
+            slotId="TUESDAY_16_00",
+            studentIds=["student-1"],
+        ),
+    ]
+    request = SolveScheduleRequest.model_validate(_two_science_teachers_request())
+    request = request.model_copy(update={"students": request.students[:1]})
+
+    score, findings = evaluate_solution(request, classes, [])
+
+    assert score.tiers[3].penalty == 0
+    continuity = next(item for item in findings if item.ruleId == "STUDENT_TEACHER_CONTINUITY")
+    assert continuity.enforcement == "HARD"
+    assert continuity.blocksConfirmation is True
+    assert continuity.parameters["minimumRequiredTeachers"] == 1
+
+
+def test_same_day_gap_is_strictly_infeasible() -> None:
+    request = SolveScheduleRequest.model_validate(
+        _capacity_request(
+            [
+                _timed_slot("MONDAY_17_00", "MONDAY", "17:00", "18:00"),
+                _timed_slot("MONDAY_19_00", "MONDAY", "19:00", "20:00"),
+            ],
+            weekly_hours=2,
+        )
+    )
+
+    status, solution = solve_strict(request, time_limit_seconds=5)
+
+    assert status == "INFEASIBLE"
+    assert solution is None
+
+
+def test_consecutive_same_day_slots_remain_feasible() -> None:
+    request = SolveScheduleRequest.model_validate(
+        _capacity_request(
+            [
+                _timed_slot("MONDAY_16_00", "MONDAY", "16:00", "17:00"),
+                _timed_slot("MONDAY_17_00", "MONDAY", "17:00", "18:00"),
+            ],
+            weekly_hours=2,
+        )
+    )
+
+    status, solution = solve_strict(request, time_limit_seconds=5)
+
+    assert status == "OPTIMAL"
+    assert solution is not None
+    assert {weekly_class.slotId for weekly_class in solution.classes} == {
+        "MONDAY_16_00",
+        "MONDAY_17_00",
+    }
+    assert solution.score.tiers[3].penalty == 3
+    assert {finding.ruleId for finding in solution.findings} >= {"STUDENT_DAY_SPREAD"}
+
+
+def test_evaluate_scores_same_day_hour_concentration() -> None:
+    classes = [
+        WeeklyClass(
+            id="class-a",
+            teacherId="teacher-2",
+            slotId="MONDAY_16_00",
+            studentIds=["student-1", "student-2", "student-3"],
+        ),
+        WeeklyClass(
+            id="class-b",
+            teacherId="teacher-2",
+            slotId="MONDAY_17_00",
+            studentIds=["student-1", "student-2", "student-3"],
+        ),
+    ]
+    request = SolveScheduleRequest.model_validate(
+        _capacity_request(
+            [
+                _timed_slot("MONDAY_16_00", "MONDAY", "16:00", "17:00"),
+                _timed_slot("MONDAY_17_00", "MONDAY", "17:00", "18:00"),
+            ],
+            weekly_hours=2,
+        )
+    )
+
+    score, findings = evaluate_solution(request, classes, [])
+
+    assert score.tiers[3].penalty == 3
+    spread = [item for item in findings if item.ruleId == "STUDENT_DAY_SPREAD"]
+    assert len(spread) == 3
+    assert spread[0].enforcement == "PREFERENCE"
+    assert spread[0].blocksConfirmation is False
 
 
 def test_evaluate_scores_ideal_capacity_like_the_catalog() -> None:
@@ -202,14 +360,14 @@ def _multi_teacher_request() -> dict[str, Any]:
                 "profile": "GENERAL_SCIENCES",
                 "supportedCourseCodes": ["BACH_1"],
                 "supportedSubjectCodes": ["PHYSICS", "MATHEMATICS"],
-                "availableSlotIds": ["MONDAY_16_00", "TUESDAY_16_00", "WEDNESDAY_16_00"],
+                "availableSlotIds": ["MONDAY_16_00", "TUESDAY_16_00"],
             },
             {
                 "id": "teacher-3",
                 "profile": "LANGUAGES",
                 "supportedCourseCodes": ["BACH_1"],
                 "supportedSubjectCodes": ["ENGLISH"],
-                "availableSlotIds": ["MONDAY_16_00", "TUESDAY_16_00", "WEDNESDAY_16_00"],
+                "availableSlotIds": ["WEDNESDAY_16_00"],
             },
         ],
         "students": [
@@ -265,6 +423,72 @@ def _single_class_request() -> dict[str, Any]:
     return payload
 
 
+def _two_science_teachers_request() -> dict[str, Any]:
+    slot_ids = ["MONDAY_16_00", "TUESDAY_16_00"]
+    return {
+        "contractVersion": "1.0.0",
+        "ruleCatalogVersion": "1.0.0",
+        "requestId": "request-single-teacher-continuity",
+        "timezone": "Europe/Madrid",
+        "slots": [
+            _slot(slot_id, "MONDAY" if "MONDAY" in slot_id else "TUESDAY") for slot_id in slot_ids
+        ],
+        "teachers": [
+            {
+                "id": "teacher-1",
+                "profile": "SENIOR_SCIENCES",
+                "supportedCourseCodes": ["BACH_1"],
+                "supportedSubjectCodes": ["MATHEMATICS", "PHYSICS"],
+                "availableSlotIds": slot_ids,
+            },
+            {
+                "id": "teacher-2",
+                "profile": "GENERAL_SCIENCES",
+                "supportedCourseCodes": ["BACH_1"],
+                "supportedSubjectCodes": ["MATHEMATICS", "PHYSICS"],
+                "availableSlotIds": slot_ids,
+            },
+        ],
+        "students": [
+            _student(f"student-{index}", [("MATHEMATICS", 1), ("PHYSICS", 1)])
+            for index in range(1, 7)
+        ],
+        "relationships": [],
+        "options": {"timeLimitSeconds": 10, "randomSeed": 12345},
+    }
+
+
+def _one_teacher_request(*, slot_ids: list[str], student_count: int = 4) -> dict[str, Any]:
+    day_by_slot = {
+        "MONDAY_16_00": "MONDAY",
+        "TUESDAY_16_00": "TUESDAY",
+        "WEDNESDAY_16_00": "WEDNESDAY",
+        "THURSDAY_16_00": "THURSDAY",
+    }
+    return {
+        "contractVersion": "1.0.0",
+        "ruleCatalogVersion": "1.0.0",
+        "requestId": "request-occupied-slots",
+        "timezone": "Europe/Madrid",
+        "slots": [_slot(slot_id, day_by_slot[slot_id]) for slot_id in slot_ids],
+        "teachers": [
+            {
+                "id": "teacher-2",
+                "profile": "GENERAL_SCIENCES",
+                "supportedCourseCodes": ["BACH_1"],
+                "supportedSubjectCodes": ["MATHEMATICS"],
+                "availableSlotIds": slot_ids,
+            }
+        ],
+        "students": [
+            _student(f"student-{index}", [("MATHEMATICS", 1)])
+            for index in range(1, student_count + 1)
+        ],
+        "relationships": [],
+        "options": {"timeLimitSeconds": 10, "randomSeed": 12345},
+    }
+
+
 def _student(student_id: str, subject_hours: list[tuple[str, int]]) -> dict[str, Any]:
     return {
         "id": student_id,
@@ -279,5 +503,34 @@ def _student(student_id: str, subject_hours: list[tuple[str, int]]) -> dict[str,
     }
 
 
+def _capacity_request(slots: list[dict[str, str]], *, weekly_hours: int) -> dict[str, Any]:
+    slot_ids = [slot["id"] for slot in slots]
+    return {
+        "contractVersion": "1.0.0",
+        "ruleCatalogVersion": "1.0.0",
+        "requestId": "request-same-day-slots",
+        "timezone": "Europe/Madrid",
+        "slots": slots,
+        "teachers": [
+            {
+                "id": "teacher-2",
+                "profile": "GENERAL_SCIENCES",
+                "supportedCourseCodes": ["BACH_1"],
+                "supportedSubjectCodes": ["MATHEMATICS"],
+                "availableSlotIds": slot_ids,
+            }
+        ],
+        "students": [
+            _student(f"student-{index}", [("MATHEMATICS", weekly_hours)]) for index in range(1, 4)
+        ],
+        "relationships": [],
+        "options": {"timeLimitSeconds": 10, "randomSeed": 12345},
+    }
+
+
 def _slot(slot_id: str, day: str) -> dict[str, str]:
-    return {"id": slot_id, "dayOfWeek": day, "startTime": "16:00", "endTime": "17:00"}
+    return _timed_slot(slot_id, day, "16:00", "17:00")
+
+
+def _timed_slot(slot_id: str, day: str, start: str, end: str) -> dict[str, str]:
+    return {"id": slot_id, "dayOfWeek": day, "startTime": start, "endTime": end}

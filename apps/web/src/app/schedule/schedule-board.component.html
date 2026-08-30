@@ -94,7 +94,9 @@
               [disabled]="store.teachers().length === 0"
             >
               @for (teacher of store.teachers(); track teacher.id) {
-                <option [value]="teacher.id">{{ teacher.displayName }}</option>
+                <option [value]="teacher.id" [selected]="teacher.id === store.selectedTeacherId()">
+                  {{ teacher.displayName }}
+                </option>
               }
             </select>
           </label>
@@ -192,19 +194,22 @@
                             (dragover)="onDragOver($event)"
                             (drop)="onDrop(slot, $event)"
                           >
-                            <header>
-                              <h3 class="visually-hidden">{{ slotLabel(slot) }}</h3>
-                              @if (store.classForSlot(slot.id); as weeklyClass) {
-                                <span>{{ weeklyClass.assignments.length }} / 5</span>
-                              } @else {
+                            <h3 class="visually-hidden">{{ slotLabel(slot) }}</h3>
+                            @if (!store.classForSlot(slot.id)) {
+                              <header>
                                 <span>Libre</span>
-                              }
-                            </header>
+                              </header>
+                            }
                             <ul>
                               @if (store.classForSlot(slot.id); as weeklyClass) {
                                 @for (assignment of weeklyClass.assignments; track assignment.id) {
                                   <li>
-                                    <span>{{ assignment.studentDisplayName }}</span>
+                                    <a
+                                      class="student-link"
+                                      [routerLink]="['/personas', assignment.studentId]"
+                                      [queryParams]="{ fromStatus: 'ACTIVE', from: 'horario' }"
+                                      >{{ assignment.studentDisplayName }}</a
+                                    >
                                     @if (isEditable()) {
                                       <button
                                         type="button"

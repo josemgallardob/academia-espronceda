@@ -1,15 +1,30 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { problemMessage } from '../people/people-api';
 import { ScheduleStore, slotLabel } from './schedule-api';
 import {
   DAY_LABELS,
   WEEK_DAYS,
+  type EvaluationOutcome,
   type Schedule,
   type ScheduleAssignment,
+  type ScheduleFinding,
   type StudentHours,
   type WeeklySlot,
 } from './schedule.models';
+
+const HIDDEN_UI_RULE_IDS = new Set([
+  'CLASS_CAPACITY_IDEAL',
+  'PREFERRED_TEACHER_BACH1_SCIENCES',
+  'PREFERRED_TEACHER_OTHER_SCIENCES',
+]);
+
+const SLOT_HIGHLIGHT_HIDDEN_RULE_IDS = new Set([
+  ...HIDDEN_UI_RULE_IDS,
+  'CLASS_CAPACITY_MINIMUM',
+  'CLASS_CAPACITY_MAXIMUM',
+]);
 
 type BoardTab = 'quadrant' | 'warnings';
 
@@ -20,6 +35,7 @@ interface Notice {
 
 @Component({
   selector: 'app-schedule-board',
+  imports: [RouterLink],
   templateUrl: './schedule-board.component.html',
   styleUrl: './schedule-board.component.scss',
 })
@@ -35,7 +51,9 @@ export class ScheduleBoardComponent implements OnInit {
   readonly slotLabel = slotLabel;
 
   readonly isEditable = computed(() => this.store.schedule()?.state === 'DRAFT');
-  readonly findings = computed(() => this.store.schedule()?.evaluation?.findings ?? []);
+  readonly findings = computed(() =>
+    visibleFindings(this.store.schedule()?.evaluation?.findings ?? []),
+  );
 
   ngOnInit(): void {
     this.store.load();
@@ -96,7 +114,15 @@ export class ScheduleBoardComponent implements OnInit {
 
   classHasConflict(slot: WeeklySlot): boolean {
     const weeklyClass = this.store.classForSlot(slot.id);
-    return Boolean(weeklyClass && weeklyClass.findingFingerprints.length > 0);
+    if (!weeklyClass) {
+      return false;
+    }
+    const fingerprints = new Set(weeklyClass.findingFingerprints);
+    return this.findings().some(
+      (finding) =>
+        !SLOT_HIGHLIGHT_HIDDEN_RULE_IDS.has(finding.ruleId) &&
+        fingerprints.has(finding.fingerprint),
+    );
   }
 
   onDragStart(studentId: string, event: DragEvent): void {
@@ -211,7 +237,7 @@ export class ScheduleBoardComponent implements OnInit {
   }
 
   confirmTitle(): string {
-    const outcome = this.store.schedule()?.evaluation?.outcome;
+    const outcome = this.uiOutcome();
     if (outcome === 'BLOCKED') {
       return 'No se puede confirmar el horario';
     }
@@ -244,16 +270,21 @@ export class ScheduleBoardComponent implements OnInit {
     if (!evaluation) {
       return '';
     }
-    if (evaluation.outcome === 'BLOCKED') {
+    const outcome = this.uiOutcome();
+    if (outcome === 'BLOCKED') {
       return 'Hay reglas que impiden confirmar. Revisa la pestaña de avisos y corrige las asignaciones bloqueantes.';
     }
-    if (evaluation.outcome === 'HAS_RELAXABLE_CONFLICTS') {
+    if (outcome === 'HAS_RELAXABLE_CONFLICTS') {
       return 'El horario se guardará con incidencias conocidas. La responsabilidad de aceptar estas excepciones es tuya.';
     }
-    if (evaluation.outcome === 'VALID_WITH_RECOMMENDATIONS') {
+    if (outcome === 'VALID_WITH_RECOMMENDATIONS') {
       return 'El horario es válido. Quedan recomendaciones de calidad que puedes aceptar al confirmar.';
     }
     return 'El horario no tiene conflictos. Puedes confirmarlo como horario vigente.';
+  }
+
+  private uiOutcome(): EvaluationOutcome | undefined {
+    return uiOutcome(this.store.schedule()?.evaluation?.outcome, this.findings());
   }
 
   private assignStudent(studentId: string, teacherId: string, slotId: string): void {
@@ -269,7 +300,10 @@ export class ScheduleBoardComponent implements OnInit {
 }
 
 function generationNotice(schedule: Schedule): Notice {
-  const outcome = schedule.evaluation?.outcome;
+  const outcome = uiOutcome(
+    schedule.evaluation?.outcome,
+    visibleFindings(schedule.evaluation?.findings ?? []),
+  );
   if (outcome === 'HAS_RELAXABLE_CONFLICTS' || outcome === 'BLOCKED') {
     return {
       tone: 'warning',
@@ -291,5 +325,19 @@ function generationNotice(schedule: Schedule): Notice {
 }
 
 function hasFindings(schedule: Schedule): boolean {
-  return (schedule.evaluation?.findings.length ?? 0) > 0;
+  return visibleFindings(schedule.evaluation?.findings ?? []).length > 0;
+}
+
+function visibleFindings(findings: ScheduleFinding[]): ScheduleFinding[] {
+  return findings.filter((finding) => !HIDDEN_UI_RULE_IDS.has(finding.ruleId));
+}
+
+function uiOutcome(
+  outcome: EvaluationOutcome | undefined,
+  visible: ScheduleFinding[],
+): EvaluationOutcome | undefined {
+  if (outcome === 'VALID_WITH_RECOMMENDATIONS' && visible.length === 0) {
+    return 'IDEAL';
+  }
+  return outcome;
 }

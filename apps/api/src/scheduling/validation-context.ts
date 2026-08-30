@@ -65,6 +65,11 @@ export const RULE_DEFINITIONS = {
     severity: 'ERROR',
     priority: null,
   },
+  STUDENT_SAME_DAY_CONTIGUOUS: {
+    enforcement: 'HARD',
+    severity: 'ERROR',
+    priority: null,
+  },
   TEACHER_SUBJECT_COMPATIBILITY: {
     enforcement: 'HARD',
     severity: 'ERROR',
@@ -76,6 +81,11 @@ export const RULE_DEFINITIONS = {
     priority: null,
   },
   TEACHER_AVAILABILITY: {
+    enforcement: 'HARD',
+    severity: 'ERROR',
+    priority: null,
+  },
+  TEACHER_WORKING_SLOT_OCCUPIED: {
     enforcement: 'HARD',
     severity: 'ERROR',
     priority: null,
@@ -100,6 +110,11 @@ export const RULE_DEFINITIONS = {
     severity: 'ERROR',
     priority: null,
   },
+  STUDENT_TEACHER_CONTINUITY: {
+    enforcement: 'HARD',
+    severity: 'ERROR',
+    priority: null,
+  },
   CLASS_CAPACITY_MAXIMUM: {
     enforcement: 'RELAXABLE',
     severity: 'ERROR',
@@ -120,7 +135,7 @@ export const RULE_DEFINITIONS = {
     belowIdealPenaltyPerStudent: 1,
     aboveIdealPenaltyPerStudent: 2,
   },
-  STUDENT_TEACHER_CONTINUITY: {
+  STUDENT_DAY_SPREAD: {
     enforcement: 'PREFERENCE',
     severity: 'WARNING',
     priority: 4,

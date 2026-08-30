@@ -15,7 +15,7 @@
     {
       "id": "teacher-1",
       "profile": "SENIOR_SCIENCES",
-      "supportedCourseCodes": ["BACH_1", "BACH_2", "OTHER"],
+      "supportedCourseCodes": ["BACH_2", "OTHER"],
       "supportedSubjectCodes": [
         "MATHEMATICS",
         "SOCIAL_SCIENCES_MATHEMATICS",

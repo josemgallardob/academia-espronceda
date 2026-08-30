@@ -164,6 +164,88 @@ describe('PeopleComponent', () => {
     expect(peopleStore.load).toHaveBeenCalledWith('WAITING_LIST');
   });
 
+  it('filters people in real time by name or surname characters', () => {
+    const fixture = TestBed.createComponent(PeopleComponent);
+    fixture.detectChanges();
+    const search = fixture.nativeElement.querySelector('input[type="search"]') as HTMLInputElement;
+
+    search.value = 'a';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Ana Ruiz');
+    expect(fixture.nativeElement.textContent).toContain('Carlos Ruiz');
+    expect(fixture.nativeElement.textContent).not.toContain('Mostrando');
+
+    search.value = 'ana';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Ana Ruiz');
+    expect(fixture.nativeElement.textContent).not.toContain('Carlos Ruiz');
+    expect(fixture.nativeElement.textContent).toContain('Mostrando 1 de 2');
+  });
+
+  it('applies multiple course, subject and hour filters at once', () => {
+    activeState.set({
+      kind: 'ready',
+      items: [
+        person('active-1', 'ACTIVE', 'Ana'),
+        person('active-2', 'ACTIVE', 'Carlos', {
+          courseCode: 'ESO_1',
+          subjectHours: [{ subjectCode: 'ENGLISH', weeklyHours: 2 }],
+          weeklyHoursTotal: 2,
+        }),
+        person('active-3', 'ACTIVE', 'Diana', {
+          courseCode: 'ESO_1',
+          subjectHours: [{ subjectCode: 'ENGLISH', weeklyHours: 4 }],
+          weeklyHoursTotal: 4,
+        }),
+      ],
+      total: 3,
+    });
+    const fixture = TestBed.createComponent(PeopleComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    component.toggleCourse('ESO_1', checkboxEvent(true));
+    component.toggleSubject('ENGLISH', checkboxEvent(true));
+    component.toggleHours(4, checkboxEvent(true));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Diana Ruiz');
+    expect(fixture.nativeElement.textContent).not.toContain('Ana Ruiz');
+    expect(fixture.nativeElement.textContent).not.toContain('Carlos Ruiz');
+    expect(fixture.nativeElement.textContent).toContain('Curso (1)');
+    expect(fixture.nativeElement.textContent).toContain('Asignatura (1)');
+    expect(fixture.nativeElement.textContent).toContain('Horas (1)');
+  });
+
+  it('shows an empty filtered state and restores the list when filters are cleared', () => {
+    const fixture = TestBed.createComponent(PeopleComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    component.nameQuery.set('zzz');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Ninguna persona coincide');
+
+    component.clearFilters();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Ana Ruiz');
+    expect(fixture.nativeElement.textContent).toContain('Carlos Ruiz');
+  });
+
+  it('selects only the people currently visible after filtering', () => {
+    const fixture = TestBed.createComponent(PeopleComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    component.nameQuery.set('ana');
+    component.toggleAll(true);
+
+    expect(component.currentSelection()).toEqual(new Set(['active-1']));
+  });
+
   it('keeps notices across tabs and disables actions outside a ready state', () => {
     const fixture = TestBed.createComponent(PeopleComponent);
     fixture.detectChanges();
@@ -178,7 +260,19 @@ describe('PeopleComponent', () => {
   });
 });
 
-function person(id: string, status: Person['status'], firstName: string): Person {
+function checkboxEvent(checked: boolean): Event {
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.checked = checked;
+  return { target: input } as unknown as Event;
+}
+
+function person(
+  id: string,
+  status: Person['status'],
+  firstName: string,
+  overrides: Partial<Person> = {},
+): Person {
   return {
     id,
     firstName,
@@ -198,5 +292,6 @@ function person(id: string, status: Person['status'], firstName: string): Person
     status,
     createdAt: '2026-08-22T10:00:00.000Z',
     updatedAt: '2026-08-22T10:00:00.000Z',
+    ...overrides,
   };
 }

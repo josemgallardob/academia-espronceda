@@ -17,6 +17,7 @@ from academia_espronceda_solver.rules import (
     feasible_shared_sessions,
     has_science_workload,
     minimum_teachers_to_cover,
+    slots_by_day,
     teacher_compatible_with,
 )
 from academia_espronceda_solver.schemas import (
@@ -42,6 +43,7 @@ def evaluate_solution(
     findings: list[SolverFinding] = []
 
     _collect_class_capacity(classes, penalties, rule_totals, findings)
+    _collect_day_spread(request, classes, penalties, rule_totals, findings)
     _collect_teacher_continuity(request, classes, penalties, rule_totals, findings)
     _collect_related_students(request, classes, penalties, rule_totals, findings)
     _collect_preferred_teachers(request, classes, penalties, rule_totals, findings)
@@ -56,9 +58,9 @@ def evaluate_solution(
         )
         for rule_id, amounts in sorted(
             rule_totals.items(),
-            key=lambda item: (RULE_DEFINITIONS[item[0]].priority, item[0]),
+            key=lambda item: (RULE_DEFINITIONS[item[0]].priority or 0, item[0]),
         )
-        if amounts
+        if amounts and RULE_DEFINITIONS[rule_id].priority is not None
     ]
     score = ScheduleScore(
         direction="MINIMIZE",
@@ -157,6 +159,45 @@ def _collect_class_capacity(
                     "studentIds": student_ids,
                     "actualCapacity": actual,
                     "idealCapacity": IDEAL_CAPACITY,
+                },
+            )
+
+
+def _collect_day_spread(
+    request: SolveScheduleRequest,
+    classes: Sequence[WeeklyClass],
+    penalties: dict[int, float],
+    rule_totals: dict[str, list[float]],
+    findings: list[SolverFinding],
+) -> None:
+    slot_by_id = {slot.id: slot for slot in request.slots}
+    assigned: dict[str, list[str]] = defaultdict(list)
+    for weekly_class in classes:
+        for student_id in weekly_class.studentIds:
+            assigned[student_id].append(weekly_class.slotId)
+    for student in request.students:
+        student_slots = [
+            slot_by_id[slot_id] for slot_id in assigned.get(student.id, []) if slot_id in slot_by_id
+        ]
+        for day, day_slots in slots_by_day(student_slots).items():
+            unique_ids = unique_sorted(slot.id for slot in day_slots)
+            assigned_hours = len(unique_ids)
+            extra = assigned_hours - 1
+            if extra <= 0:
+                continue
+            _add_finding(
+                findings,
+                penalties,
+                rule_totals,
+                "STUDENT_DAY_SPREAD",
+                extra,
+                entity_refs=[
+                    EntityReference(type="STUDENT", id=student.id),
+                ],
+                slot_ids=unique_ids,
+                parameters={
+                    "dayOfWeek": day,
+                    "assignedHours": assigned_hours,
                 },
             )
 
@@ -329,8 +370,9 @@ def _add_finding(
             parameters=normalized,
         )
     )
-    penalties[priority] += amount
-    rule_totals[rule_id].append(amount)
+    if priority is not None:
+        penalties[priority] += amount
+        rule_totals[rule_id].append(amount)
 
 
 def _teachers_for_student(classes: Sequence[WeeklyClass], student_id: str) -> list[str]:

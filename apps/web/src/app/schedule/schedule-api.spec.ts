@@ -45,6 +45,36 @@ describe('ScheduleStore', () => {
     expect(store.studentHours()[0].remainingHours).toBe(2);
   });
 
+  it('loads the current confirmed schedule instead of a leftover empty draft', () => {
+    const leftoverDraft = schedule({
+      id: 'draft-empty',
+      state: 'DRAFT',
+      isCurrent: false,
+      sourceScheduleId: null,
+      classes: [],
+    });
+    const confirmed = schedule({
+      id: 'schedule-current',
+      state: 'CONFIRMED',
+      isCurrent: true,
+    });
+    store.load();
+    httpTesting.expectOne('/api/v1/teachers').flush([teacher()]);
+    httpTesting
+      .expectOne(
+        (request) => request.url === '/api/v1/people' && request.params.get('status') === 'ACTIVE',
+      )
+      .flush(peopleResponse([person()]));
+    httpTesting.expectOne('/api/v1/schedules').flush(listResponse([confirmed, leftoverDraft]));
+    httpTesting.expectOne('/api/v1/schedules/draft-empty').flush(leftoverDraft);
+    httpTesting.expectOne('/api/v1/schedules/schedule-current').flush(confirmed);
+
+    expect(store.workspace()).toMatchObject({
+      kind: 'ready',
+      schedule: { id: 'schedule-current', state: 'CONFIRMED' },
+    });
+  });
+
   it('shows only students compatible with the selected teacher and updates immediately', () => {
     store.load();
     httpTesting.expectOne('/api/v1/teachers').flush([profesor1(), profesor2(), profesor3()]);
@@ -360,6 +390,37 @@ describe('ScheduleStore', () => {
       kind: 'ready',
       schedule: { state: 'CONFIRMED', isCurrent: true },
     });
+  });
+
+  it('loads the current confirmed schedule', () => {
+    let result: Schedule | null | undefined;
+    store.getCurrentConfirmedSchedule().subscribe((schedule) => {
+      result = schedule;
+    });
+    const request = httpTesting.expectOne('/api/v1/schedules/current');
+    expect(request.request.method).toBe('GET');
+    request.flush(schedule({ state: 'CONFIRMED', isCurrent: true }));
+    expect(result).toMatchObject({ id: 'schedule-1', state: 'CONFIRMED', isCurrent: true });
+  });
+
+  it('returns null when there is no current confirmed schedule', () => {
+    let result: Schedule | null | undefined = schedule();
+    store.getCurrentConfirmedSchedule().subscribe((current) => {
+      result = current;
+    });
+    httpTesting
+      .expectOne('/api/v1/schedules/current')
+      .flush({ title: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+    expect(result).toBeNull();
+  });
+
+  it('lists teachers independently of the workspace', () => {
+    let result: TeacherOption[] = [];
+    store.listTeachers().subscribe((teachers) => {
+      result = teachers;
+    });
+    httpTesting.expectOne('/api/v1/teachers').flush([teacher()]);
+    expect(result).toEqual([teacher()]);
   });
 
   function flushWorkspace(): void {

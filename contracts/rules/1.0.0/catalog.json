@@ -25,8 +25,8 @@
       },
       {
         "priority": 4,
-        "name": "Keep each student's compatible workload with one teacher",
-        "ruleIds": ["STUDENT_TEACHER_CONTINUITY"]
+        "name": "Spread a student's hours across different weekdays",
+        "ruleIds": ["STUDENT_DAY_SPREAD"]
       },
       {
         "priority": 5,
@@ -150,6 +150,27 @@
       "optimization": null
     },
     {
+      "id": "STUDENT_SAME_DAY_CONTIGUOUS",
+      "name": "Same-day classes must be consecutive",
+      "description": "A student cannot have two or more classes on the same weekday unless those classes occupy consecutive one-hour slots, so the student does not leave and return later that day.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "For every student and weekday, the assigned slots on that day form a contiguous block: after sorting by startTime, each slot's endTime equals the next slot's startTime.",
+      "entities": ["SCHEDULE", "CLASS", "ASSIGNMENT", "STUDENT", "SLOT"],
+      "evidence": ["scheduleId", "studentId", "dayOfWeek", "classIds", "slotIds"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
       "id": "TEACHER_SUBJECT_COMPATIBILITY",
       "name": "Teacher and subject compatibility",
       "description": "Every assigned student must have at least one contracted subject supported by the teacher, and any explicit subject allocation must use a supported subject.",
@@ -221,6 +242,21 @@
         "CONFIRMATION",
         "GENERATED_SCHEDULE_VALIDATION"
       ],
+      "parameters": {},
+      "optimization": null
+    },
+    {
+      "id": "TEACHER_WORKING_SLOT_OCCUPIED",
+      "name": "Teacher working slots stay occupied",
+      "description": "When generating a schedule, every teacher working slot that can receive at least one compatible available student must contain a class with students. This invariant is hard in both strict and relaxed search and cannot be confirmed away.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
+      "condition": "For every teacherId and availableSlotId pair that has at least one feasible student assignment, the generated schedule contains a class with one or more studentIds.",
+      "entities": ["SCHEDULE", "CLASS", "TEACHER", "SLOT", "STUDENT"],
+      "evidence": ["scheduleId", "teacherId", "slotId", "classId", "studentIds"],
+      "appliesTo": ["SOLVER_STRICT", "SOLVER_RELAXED", "GENERATED_SCHEDULE_VALIDATION"],
       "parameters": {},
       "optimization": null
     },
@@ -437,13 +473,41 @@
       }
     },
     {
-      "id": "STUDENT_TEACHER_CONTINUITY",
-      "name": "Student teacher continuity",
-      "description": "A student's compatible workload should use the fewest teachers needed to cover all contracted subjects.",
+      "id": "STUDENT_DAY_SPREAD",
+      "name": "Spread student hours across weekdays",
+      "description": "A student's weekly hours should use as many distinct weekdays as possible; two or more hours on the same day are accepted only when they are consecutive.",
       "classification": "PREFERENCE",
       "enforcement": "PREFERENCE",
       "severity": "WARNING",
       "priority": 4,
+      "condition": "Each extra assigned hour beyond the first on the same weekday is a preference penalty.",
+      "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT", "SLOT"],
+      "evidence": ["scheduleId", "studentId", "dayOfWeek", "slotIds", "assignedHours"],
+      "appliesTo": [
+        "SOLVER_STRICT",
+        "SOLVER_RELAXED",
+        "DRAFT_VALIDATION",
+        "CONFIRMATION",
+        "GENERATED_SCHEDULE_VALIDATION"
+      ],
+      "parameters": {
+        "penaltyPerExtraSameDayHour": 1
+      },
+      "optimization": {
+        "metric": "EXTRA_HOURS_ON_THE_SAME_DAY",
+        "parameters": {
+          "penaltyPerExtraSameDayHour": 1
+        }
+      }
+    },
+    {
+      "id": "STUDENT_TEACHER_CONTINUITY",
+      "name": "Student teacher continuity",
+      "description": "A student may be assigned to multiple teachers only when no smaller compatible teacher set can cover all contracted subjects. This invariant is hard in both strict and relaxed search and cannot be confirmed away.",
+      "classification": "RULE",
+      "enforcement": "HARD",
+      "severity": "ERROR",
+      "priority": null,
       "condition": "The number of teachers assigned to a student does not exceed the minimum needed to cover that student's subject set.",
       "entities": ["SCHEDULE", "ASSIGNMENT", "STUDENT", "TEACHER", "SUBJECT"],
       "evidence": [
@@ -461,12 +525,7 @@
         "GENERATED_SCHEDULE_VALIDATION"
       ],
       "parameters": {},
-      "optimization": {
-        "metric": "ADDITIONAL_TEACHERS_ABOVE_MINIMUM",
-        "parameters": {
-          "penaltyPerAdditionalTeacher": 1
-        }
-      }
+      "optimization": null
     },
     {
       "id": "RELATED_STUDENTS_TOGETHER",

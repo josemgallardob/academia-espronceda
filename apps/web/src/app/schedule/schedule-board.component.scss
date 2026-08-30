@@ -336,6 +336,21 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0.25rem 0;
+  color: #172235;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.student-link {
+  color: #344c6c;
+  font-weight: 750;
+  text-decoration: none;
+  text-underline-offset: 0.16em;
+}
+
+.student-link:hover,
+.student-link:focus-visible {
+  text-decoration: underline;
 }
 
 .placeholder {
@@ -348,7 +363,10 @@ button {
   padding: 0 0.45rem;
   border: 0;
   background: transparent;
-  color: #8b2d24;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 .warnings {

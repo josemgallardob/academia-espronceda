@@ -122,6 +122,124 @@ def test_unknown_strict_falls_back_to_relaxed(monkeypatch, load_fixture) -> None
     assert outcome.solution is not None
 
 
+def test_relaxed_mode_still_occupies_every_feasible_teacher_slot() -> None:
+    request = SolveScheduleRequest.model_validate(
+        {
+            "contractVersion": "1.0.0",
+            "ruleCatalogVersion": "1.0.0",
+            "requestId": "request-occupied-relaxed",
+            "timezone": "Europe/Madrid",
+            "slots": [
+                {
+                    "id": "MONDAY_16_00",
+                    "dayOfWeek": "MONDAY",
+                    "startTime": "16:00",
+                    "endTime": "17:00",
+                },
+                {
+                    "id": "TUESDAY_16_00",
+                    "dayOfWeek": "TUESDAY",
+                    "startTime": "16:00",
+                    "endTime": "17:00",
+                },
+            ],
+            "teachers": [
+                {
+                    "id": "teacher-2",
+                    "profile": "GENERAL_SCIENCES",
+                    "supportedCourseCodes": ["BACH_1"],
+                    "supportedSubjectCodes": ["MATHEMATICS"],
+                    "availableSlotIds": ["MONDAY_16_00", "TUESDAY_16_00"],
+                }
+            ],
+            "students": [
+                {
+                    "id": f"student-{index}",
+                    "status": "ACTIVE",
+                    "courseCode": "BACH_1",
+                    "subjectHours": [{"subjectCode": "MATHEMATICS", "weeklyHours": 1}],
+                    "weeklyHoursTotal": 1,
+                    "unavailableSlotIds": [],
+                }
+                for index in range(1, 5)
+            ],
+            "relationships": [],
+            "options": {"timeLimitSeconds": 10, "randomSeed": 12345},
+        }
+    )
+
+    outcome = CpSatScheduleEngine().solve(request, time_limit_seconds=5)
+
+    assert outcome.mode == "RELAXED"
+    assert outcome.status == "OPTIMAL"
+    assert outcome.attempts[0].status == "INFEASIBLE"
+    assert outcome.solution is not None
+    assert {weekly_class.slotId for weekly_class in outcome.solution.classes} == {
+        "MONDAY_16_00",
+        "TUESDAY_16_00",
+    }
+    assert all(weekly_class.studentIds for weekly_class in outcome.solution.classes)
+
+
+def test_unfilled_teacher_slots_are_infeasible_even_when_relaxed() -> None:
+    request = SolveScheduleRequest.model_validate(
+        {
+            "contractVersion": "1.0.0",
+            "ruleCatalogVersion": "1.0.0",
+            "requestId": "request-occupied-infeasible",
+            "timezone": "Europe/Madrid",
+            "slots": [
+                {
+                    "id": slot_id,
+                    "dayOfWeek": day,
+                    "startTime": "16:00",
+                    "endTime": "17:00",
+                }
+                for slot_id, day in (
+                    ("MONDAY_16_00", "MONDAY"),
+                    ("TUESDAY_16_00", "TUESDAY"),
+                    ("WEDNESDAY_16_00", "WEDNESDAY"),
+                    ("THURSDAY_16_00", "THURSDAY"),
+                )
+            ],
+            "teachers": [
+                {
+                    "id": "teacher-2",
+                    "profile": "GENERAL_SCIENCES",
+                    "supportedCourseCodes": ["BACH_1"],
+                    "supportedSubjectCodes": ["MATHEMATICS"],
+                    "availableSlotIds": [
+                        "MONDAY_16_00",
+                        "TUESDAY_16_00",
+                        "WEDNESDAY_16_00",
+                        "THURSDAY_16_00",
+                    ],
+                }
+            ],
+            "students": [
+                {
+                    "id": f"student-{index}",
+                    "status": "ACTIVE",
+                    "courseCode": "BACH_1",
+                    "subjectHours": [{"subjectCode": "MATHEMATICS", "weeklyHours": 1}],
+                    "weeklyHoursTotal": 1,
+                    "unavailableSlotIds": [],
+                }
+                for index in range(1, 4)
+            ],
+            "relationships": [],
+            "options": {"timeLimitSeconds": 10, "randomSeed": 12345},
+        }
+    )
+
+    outcome = CpSatScheduleEngine().solve(request, time_limit_seconds=5)
+
+    assert outcome.mode == "RELAXED"
+    assert outcome.status == "INFEASIBLE"
+    assert [attempt.status for attempt in outcome.attempts] == ["INFEASIBLE", "INFEASIBLE"]
+    assert outcome.solution is None
+
+
 def test_unknown_in_both_passes_returns_no_solution(monkeypatch, load_fixture) -> None:
     request = SolveScheduleRequest.model_validate(load_fixture("strict-ideal.request.json"))
 

@@ -13,6 +13,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { PeopleStore, problemMessage } from './people-api';
+import { activeNameQuery, filterPeople } from './people-list-filter';
 import type {
   CourseCode,
   PeopleListState,
@@ -65,6 +66,13 @@ export class PeopleComponent implements OnInit {
   readonly operationPending = signal(false);
   readonly notice = signal<Notice | null>(null);
   readonly confirmation = signal<Confirmation | null>(null);
+  readonly nameQuery = signal('');
+  readonly selectedCourses = signal<ReadonlySet<CourseCode>>(new Set());
+  readonly selectedSubjects = signal<ReadonlySet<SubjectCode>>(new Set());
+  readonly selectedHours = signal<ReadonlySet<number>>(new Set());
+  readonly courseOptions = Object.entries(courseLabels) as Array<[CourseCode, string]>;
+  readonly subjectOptions = Object.entries(subjectLabels) as Array<[SubjectCode, string]>;
+  readonly hourOptions = [1, 2, 3, 4, 5] as const;
   readonly cancelButton = viewChild<ElementRef<HTMLButtonElement>>('cancelButton');
   readonly confirmButton = viewChild<ElementRef<HTMLButtonElement>>('confirmButton');
 
@@ -75,10 +83,25 @@ export class PeopleComponent implements OnInit {
     () =>
       this.currentState().kind !== 'ready' || this.selectedCount() === 0 || this.operationPending(),
   );
-  readonly currentItems = computed(() => {
+  readonly unfilteredItems = computed(() => {
     const state = this.currentState();
     return state.kind === 'ready' ? state.items : [];
   });
+  readonly currentItems = computed(() =>
+    filterPeople(this.unfilteredItems(), {
+      query: this.nameQuery(),
+      courseCodes: [...this.selectedCourses()],
+      subjectCodes: [...this.selectedSubjects()],
+      weeklyHours: [...this.selectedHours()],
+    }),
+  );
+  readonly hasActiveFilters = computed(
+    () =>
+      activeNameQuery(this.nameQuery()) !== '' ||
+      this.selectedCourses().size > 0 ||
+      this.selectedSubjects().size > 0 ||
+      this.selectedHours().size > 0,
+  );
   readonly currentErrorMessage = computed(() => {
     const state = this.currentState();
     return state.kind === 'error' ? state.message : '';
@@ -142,6 +165,37 @@ export class PeopleComponent implements OnInit {
 
   handleToggleAll(event: Event): void {
     this.toggleAll(checkboxValue(event));
+  }
+
+  handleNameQuery(event: Event): void {
+    this.nameQuery.set(event.target instanceof HTMLInputElement ? event.target.value : '');
+  }
+
+  toggleCourse(courseCode: CourseCode, event: Event): void {
+    this.selectedCourses.set(
+      toggleSetValue(this.selectedCourses(), courseCode, checkboxValue(event)),
+    );
+  }
+
+  toggleSubject(subjectCode: SubjectCode, event: Event): void {
+    this.selectedSubjects.set(
+      toggleSetValue(this.selectedSubjects(), subjectCode, checkboxValue(event)),
+    );
+  }
+
+  toggleHours(hours: number, event: Event): void {
+    this.selectedHours.set(toggleSetValue(this.selectedHours(), hours, checkboxValue(event)));
+  }
+
+  clearFilters(): void {
+    this.nameQuery.set('');
+    this.selectedCourses.set(new Set());
+    this.selectedSubjects.set(new Set());
+    this.selectedHours.set(new Set());
+  }
+
+  filterTriggerLabel(label: string, count: number): string {
+    return count === 0 ? label : `${label} (${count})`;
   }
 
   requestActivation(trigger: Event): void {
@@ -331,4 +385,14 @@ export class PeopleComponent implements OnInit {
 
 function checkboxValue(event: Event): boolean {
   return event.target instanceof HTMLInputElement && event.target.checked;
+}
+
+function toggleSetValue<T>(current: ReadonlySet<T>, value: T, checked: boolean): ReadonlySet<T> {
+  const next = new Set(current);
+  if (checked) {
+    next.add(value);
+  } else {
+    next.delete(value);
+  }
+  return next;
 }

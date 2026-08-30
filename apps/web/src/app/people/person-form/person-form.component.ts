@@ -52,6 +52,7 @@ export class PersonFormComponent implements OnInit {
     this.route.snapshot.queryParamMap.get('fromStatus') === 'WAITING_LIST'
       ? 'WAITING_LIST'
       : 'ACTIVE';
+  readonly fromSchedule = this.route.snapshot.queryParamMap.get('from') === 'horario';
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly loadError = signal('');
@@ -260,6 +261,7 @@ export class PersonFormComponent implements OnInit {
             queryParams: {
               fromStatus: person.status,
               saved: this.editing ? 'updated' : 'created',
+              ...(this.fromSchedule ? { from: 'horario' } : {}),
             },
           });
         },
@@ -395,9 +397,13 @@ export class PersonFormComponent implements OnInit {
   }
 
   returnQueryParams(): Record<string, string> {
-    return this.editing
-      ? { fromStatus: this.loadedPerson()?.status ?? this.sourceStatus }
-      : { status: this.sourceStatus };
+    if (!this.editing) {
+      return { status: this.sourceStatus };
+    }
+    return {
+      fromStatus: this.loadedPerson()?.status ?? this.sourceStatus,
+      ...(this.fromSchedule ? { from: 'horario' } : {}),
+    };
   }
 }
 

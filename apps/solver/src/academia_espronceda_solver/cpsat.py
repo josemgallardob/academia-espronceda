@@ -16,6 +16,8 @@ from academia_espronceda_solver.rules import (
     has_science_workload,
     minimum_teachers_to_cover,
     overlapping_slot_pairs,
+    slot_range_is_contiguous,
+    slots_by_day,
     teacher_compatible_with,
     teacher_supports_subject,
 )
@@ -63,13 +65,16 @@ def solve_attempt(
 
     _constrain_exact_hours(model, request, assign)
     _constrain_no_student_overlap(model, request, assign)
+    _constrain_same_day_contiguous(model, request, assign)
+    _constrain_occupied_teacher_slots(model, groups)
+    _constrain_teacher_continuity(model, request, assign)
     _constrain_class_capacity(model, groups, strict=strict)
     _constrain_subject_hours(model, request, assign, alloc)
     _minimize_lexicographic_preferences(model, request, assign, groups, strict=strict)
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_seconds
-    solver.parameters.random_seed = request.options.randomSeed
+    solver.parameters.random_seed = request.options.randomSeed & 0x7FFFFFFF
     solver.parameters.num_search_workers = 1
     solver.parameters.log_search_progress = False
 
@@ -158,34 +163,128 @@ def _constrain_no_student_overlap(
                 model.Add(sum(variables) <= 1)
 
 
+def _student_slot_presence(
+    model: cp_model.CpModel,
+    request: SolveScheduleRequest,
+    assign: dict[AssignKey, cp_model.IntVar],
+) -> dict[tuple[str, str], cp_model.IntVar]:
+    presence: dict[tuple[str, str], cp_model.IntVar] = {}
+    for student in request.students:
+        for slot in request.slots:
+            variables = [
+                variable
+                for (student_id, _, slot_id), variable in assign.items()
+                if student_id == student.id and slot_id == slot.id
+            ]
+            if not variables:
+                continue
+            present = model.NewBoolVar(f"present:{student.id}:{slot.id}")
+            model.AddMaxEquality(present, variables)
+            presence[(student.id, slot.id)] = present
+    return presence
+
+
+def _constrain_same_day_contiguous(
+    model: cp_model.CpModel,
+    request: SolveScheduleRequest,
+    assign: dict[AssignKey, cp_model.IntVar],
+) -> None:
+    presence = _student_slot_presence(model, request, assign)
+    for student in request.students:
+        for day_slots in slots_by_day(request.slots).values():
+            attendable = [
+                (index, slot)
+                for index, slot in enumerate(day_slots)
+                if (student.id, slot.id) in presence
+            ]
+            for left_pos, (left_index, left_slot) in enumerate(attendable):
+                for right_index, right_slot in attendable[left_pos + 1 :]:
+                    left_var = presence[(student.id, left_slot.id)]
+                    right_var = presence[(student.id, right_slot.id)]
+                    if not slot_range_is_contiguous(day_slots, left_index, right_index):
+                        model.Add(left_var + right_var <= 1)
+                        continue
+                    for middle in day_slots[left_index + 1 : right_index]:
+                        middle_var = presence.get((student.id, middle.id))
+                        if middle_var is None:
+                            model.Add(left_var + right_var <= 1)
+                            break
+                        model.Add(left_var + right_var <= 1 + middle_var)
+
+
+def _day_spread_penalty(
+    model: cp_model.CpModel,
+    request: SolveScheduleRequest,
+    assign: dict[AssignKey, cp_model.IntVar],
+):
+    zero = model.NewConstant(0)
+    terms = []
+    for student in request.students:
+        for day, day_slots in slots_by_day(request.slots).items():
+            slot_ids = {slot.id for slot in day_slots}
+            hours_vars = [
+                variable
+                for (student_id, _, slot_id), variable in assign.items()
+                if student_id == student.id and slot_id in slot_ids
+            ]
+            if not hours_vars:
+                continue
+            hours = sum(hours_vars)
+            delta = model.NewIntVar(
+                -1,
+                student.weeklyHoursTotal,
+                f"daySpreadDelta:{student.id}:{day}",
+            )
+            extra = model.NewIntVar(
+                0,
+                student.weeklyHoursTotal,
+                f"daySpread:{student.id}:{day}",
+            )
+            model.Add(delta == hours - 1)
+            model.AddMaxEquality(extra, [delta, zero])
+            terms.append(extra)
+    return sum(terms) if terms else 0
+
+
 def _class_groups(
     model: cp_model.CpModel,
     request: SolveScheduleRequest,
     assign: dict[AssignKey, cp_model.IntVar],
 ) -> list[_ClassGroup]:
     groups: list[_ClassGroup] = []
+    known_slots = {slot.id for slot in request.slots}
     for teacher in request.teachers:
-        for slot in request.slots:
+        for slot_id in teacher.availableSlotIds:
+            if slot_id not in known_slots:
+                continue
             variables = [
                 variable
-                for (_, teacher_id, slot_id), variable in assign.items()
-                if teacher_id == teacher.id and slot_id == slot.id
+                for (_, teacher_id, assigned_slot_id), variable in assign.items()
+                if teacher_id == teacher.id and assigned_slot_id == slot_id
             ]
             if not variables:
                 continue
             size = sum(variables)
-            occupied = model.NewBoolVar(f"occupied:{teacher.id}:{slot.id}")
+            occupied = model.NewBoolVar(f"occupied:{teacher.id}:{slot_id}")
             model.Add(size >= 1).OnlyEnforceIf(occupied)
             model.Add(size == 0).OnlyEnforceIf(occupied.Not())
             groups.append(
                 _ClassGroup(
                     teacher_id=teacher.id,
-                    slot_id=slot.id,
+                    slot_id=slot_id,
                     size=size,
                     occupied=occupied,
                 )
             )
     return groups
+
+
+def _constrain_occupied_teacher_slots(
+    model: cp_model.CpModel,
+    groups: Sequence[_ClassGroup],
+) -> None:
+    for group in groups:
+        model.Add(group.size >= 1)
 
 
 def _constrain_class_capacity(
@@ -241,7 +340,7 @@ def _minimize_lexicographic_preferences(
 ) -> None:
     p1, p2 = _capacity_violation_penalties(model, request, groups, strict=strict)
     p3 = _ideal_capacity_penalty(model, request, groups)
-    p4 = _continuity_penalty(model, request, assign)
+    p4 = _day_spread_penalty(model, request, assign)
     p5 = _related_students_penalty(model, request, assign)
     p6 = _preferred_teacher_penalty(request, assign)
     class_slots = max(len(request.teachers) * len(request.slots), 1)
@@ -250,7 +349,7 @@ def _minimize_lexicographic_preferences(
         max(student_count * class_slots, 1),
         max(MINIMUM_CAPACITY * class_slots, 1),
         max(ABOVE_IDEAL_PENALTY_PER_STUDENT * student_count * class_slots, 1),
-        max(len(request.students) * max(len(request.teachers) - 1, 0), 1),
+        max(sum(max(student.weeklyHoursTotal - 1, 0) for student in request.students), 1),
         max(
             len(request.relationships)
             * max((student.weeklyHoursTotal for student in request.students), default=0),
@@ -353,14 +452,11 @@ def _ideal_capacity_penalty(
     return sum(terms)
 
 
-def _continuity_penalty(
+def _constrain_teacher_continuity(
     model: cp_model.CpModel,
     request: SolveScheduleRequest,
     assign: dict[AssignKey, cp_model.IntVar],
-):
-    zero = model.NewConstant(0)
-    terms = []
-    teacher_count_cap = len(request.teachers)
+) -> None:
     for student in request.students:
         uses: list[cp_model.IntVar] = []
         for teacher in request.teachers:
@@ -382,12 +478,7 @@ def _continuity_penalty(
             [item.subjectCode for item in student.subjectHours],
             request.teachers,
         )
-        extra = model.NewIntVar(0, teacher_count_cap, f"extra:{student.id}")
-        delta = model.NewIntVar(-teacher_count_cap, teacher_count_cap, f"extraDelta:{student.id}")
-        model.Add(delta == sum(uses) - minimum)
-        model.AddMaxEquality(extra, [delta, zero])
-        terms.append(extra)
-    return sum(terms) if terms else 0
+        model.Add(sum(uses) <= minimum)
 
 
 def _related_students_penalty(

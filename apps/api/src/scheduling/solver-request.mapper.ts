@@ -17,7 +17,7 @@ export function seedFromRequestId(requestId: string): number {
     hash ^= character.charCodeAt(0);
     hash = Math.imul(hash, 16777619);
   }
-  return hash >>> 0;
+  return (hash >>> 0) & 0x7fffffff;
 }
 
 export function toSolveScheduleRequest(input: {

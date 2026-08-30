@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { problemMessage } from '../people/people-api';
 import type { Person, PersonListResponse } from '../people/people.models';
@@ -232,6 +232,21 @@ export class ScheduleStore {
     );
   }
 
+  getCurrentConfirmedSchedule(): Observable<Schedule | null> {
+    return this.http.get<Schedule>(`${schedulesUrl}/current`).pipe(
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          return of(null);
+        }
+        throw error;
+      }),
+    );
+  }
+
+  listTeachers(): Observable<TeacherOption[]> {
+    return this.http.get<TeacherOption[]>(teachersUrl);
+  }
+
   private applySchedule(schedule: Schedule): void {
     this.workspaceSignal.set({ kind: 'ready', schedule });
     if (!this.selectedTeacherIdSignal() && schedule.teachers[0]) {
@@ -253,6 +268,18 @@ export class ScheduleStore {
       switchMap((list) => {
         const draft = list.items.find((item) => item.state === 'DRAFT');
         const current = list.items.find((item) => item.isCurrent);
+        if (draft && current && draft.id !== current.id) {
+          return this.http.get<Schedule>(`${schedulesUrl}/${draft.id}`).pipe(
+            switchMap((loadedDraft) => {
+              const useCurrent =
+                loadedDraft.classes.length === 0 &&
+                loadedDraft.sourceScheduleId !== current.id;
+              return useCurrent
+                ? this.http.get<Schedule>(`${schedulesUrl}/${current.id}`)
+                : of(loadedDraft);
+            }),
+          );
+        }
         const id = draft?.id ?? current?.id;
         return id ? this.http.get<Schedule>(`${schedulesUrl}/${id}`) : of(null);
       }),

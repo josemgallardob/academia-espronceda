@@ -84,13 +84,13 @@ Una persona puede apuntarse a una o varias asignaturas.
 
 ## Horario habitual de apertura
 
-| Dia | Horario |
-| --- | --- |
-| Lunes | 16:00-21:00 |
-| Martes | 16:00-21:00 |
+| Dia       | Horario     |
+| --------- | ----------- |
+| Lunes     | 16:00-21:00 |
+| Martes    | 16:00-21:00 |
 | Miercoles | 16:00-21:00 |
-| Jueves | 16:00-21:00 |
-| Viernes | 16:00-19:00 |
+| Jueves    | 16:00-21:00 |
+| Viernes   | 16:00-19:00 |
 
 Cada horario semanal debe construirse dentro de estas franjas de apertura y respetando la disponibilidad concreta de cada profesor.
 
@@ -118,13 +118,13 @@ Excepciones:
 
 Horario:
 
-| Dia | Horario |
-| --- | --- |
-| Lunes | 16:00-21:00 |
-| Martes | 16:00-21:00 |
+| Dia       | Horario     |
+| --------- | ----------- |
+| Lunes     | 16:00-21:00 |
+| Martes    | 16:00-21:00 |
 | Miercoles | 16:00-21:00 |
-| Jueves | 16:00-21:00 |
-| Viernes | 16:00-19:00 |
+| Jueves    | 16:00-21:00 |
+| Viernes   | 16:00-19:00 |
 
 ### Profesor 2: ciencias de ESO y 1o Bachillerato
 
@@ -153,13 +153,13 @@ Restricciones:
 
 Horario:
 
-| Dia | Horario |
-| --- | --- |
-| Lunes | 16:00-21:00 |
-| Martes | 16:00-21:00 |
+| Dia       | Horario     |
+| --------- | ----------- |
+| Lunes     | 16:00-21:00 |
+| Martes    | 16:00-21:00 |
 | Miercoles | 16:00-21:00 |
-| Jueves | 16:00-21:00 |
-| Viernes | 16:00-19:00 |
+| Jueves    | 16:00-21:00 |
+| Viernes   | 16:00-19:00 |
 
 ### Profesor 3: Lengua e Ingles
 
@@ -181,13 +181,13 @@ Cursos:
 
 Horario:
 
-| Dia | Horario |
-| --- | --- |
-| Lunes | 16:00-20:00 |
-| Martes | 16:00-20:00 |
+| Dia       | Horario     |
+| --------- | ----------- |
+| Lunes     | 16:00-20:00 |
+| Martes    | 16:00-20:00 |
 | Miercoles | 16:00-20:00 |
-| Jueves | 16:00-20:00 |
-| Viernes | 16:00-19:00 |
+| Jueves    | 16:00-20:00 |
+| Viernes   | 16:00-19:00 |
 
 ## Datos de una persona
 
@@ -291,11 +291,14 @@ Para que una asignacion se considere libre de conflictos debe cumplir que:
 4. La persona esta disponible en la franja.
 5. La clase no supera la capacidad maxima.
 6. La persona no tiene ya otra clase asignada en el mismo dia y hora.
-7. La asignacion respeta las horas semanales por asignatura cuando las asignaturas de la persona implican profesores distintos.
+7. Si la persona ya tiene otra clase el mismo dia, la nueva franja debe ser consecutiva a las que ya tiene ese dia; no puede quedar un hueco intermedio.
+8. La asignacion respeta las horas semanales por asignatura cuando las asignaturas de la persona implican profesores distintos.
 
 La restriccion de no solape hace que los cuadrantes de los tres profesores sean interdependientes.
 
 Ejemplo: si una persona ya tiene clase el lunes de 19:00 a 20:00 con el Profesor 1, asignarla tambien el lunes de 19:00 a 20:00 con el Profesor 3 producira un conflicto de solape que debera mostrarse al usuario.
+
+Las horas de una persona deben intentarse repartir en dias distintos. Si dos o mas clases coinciden el mismo dia, tienen que ser franjas seguidas. Un caso como lunes 17:00-18:00 y lunes 19:00-20:00 no es aceptable: la persona terminaria, se iria y tendria que volver una hora despues. Esta invariante es HARD: no se puede relajar ni confirmar.
 
 Estas reglas deben guiar la generacion automatica y la validacion del horario global. No obstante, representan la operativa esperada del negocio y no un bloqueo tecnico absoluto: el usuario podra confirmar excepcionalmente un horario que incumpla alguna de ellas siempre que el sistema identifique los conflictos, explique sus consecuencias y solicite una confirmacion expresa e informada.
 
