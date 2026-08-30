@@ -42,3 +42,13 @@ export function solverResultDiverged(detail: string): ProblemDetailsException {
     detail,
   });
 }
+
+export function generationBusy(): ProblemDetailsException {
+  return new ProblemDetailsException({
+    status: 503,
+    code: 'GENERATION_BUSY',
+    title: 'Ya hay una generación en curso',
+    detail:
+      'Espere a que termine la generación actual antes de lanzar otra.',
+  });
+}

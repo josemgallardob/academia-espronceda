@@ -50,6 +50,10 @@ export class DatabaseConnection implements OnModuleDestroy {
     return connection;
   }
 
+  async ping(): Promise<void> {
+    await this.client.execute('SELECT 1');
+  }
+
   async migrate(migrationsFolder: string): Promise<void> {
     await migrate(this.db, { migrationsFolder });
   }

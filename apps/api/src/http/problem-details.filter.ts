@@ -3,10 +3,10 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
-  Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { randomUUID } from 'node:crypto';
+import { currentRequestId, resolveRequestId } from '../observability/request-context';
+import { writeStructuredLog } from '../observability/structured-log';
 import { ProblemDetailsException } from './problem-details.exception';
 import { ScheduleDomainError } from '../scheduling/schedule-errors';
 
@@ -23,21 +23,27 @@ interface ProblemDetails {
 
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(ProblemDetailsFilter.name);
-
   catch(exception: unknown, host: ArgumentsHost): void {
     const context = host.switchToHttp();
     const request = context.getRequest<Request>();
     const response = context.getResponse<Response>();
-    const traceId = randomUUID();
+    const traceId =
+      currentRequestId() ?? resolveRequestId(request.header('x-request-id'));
     const problem = this.toProblemDetails(exception, request, traceId);
+    response.setHeader('X-Request-Id', traceId);
 
-    if (problem.status >= 500) {
-      this.logger.error(
-        `Unhandled request failure traceId=${traceId} method=${request.method} path=${request.path}`,
-        exception instanceof Error ? exception.stack : undefined,
-      );
-    }
+    writeStructuredLog({
+      level: problem.status >= 500 ? 'error' : 'warn',
+      event: 'http.problem',
+      requestId: traceId,
+      method: request.method,
+      path: request.path,
+      status: problem.status,
+      code: problem.code,
+      ...(exception instanceof Error && problem.status >= 500
+        ? { errorName: exception.name }
+        : {}),
+    });
 
     response
       .status(problem.status)

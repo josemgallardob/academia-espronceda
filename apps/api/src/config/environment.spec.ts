@@ -18,6 +18,8 @@ describe('loadApiEnvironment', () => {
       loginRateWindowSeconds: 900,
       loginRateIpLimit: 20,
       loginRateIdentifierLimit: 5,
+      solverTimeoutBufferSeconds: 5,
+      solverMaxConcurrent: 1,
     });
     expect(environment.corsOrigins).toEqual([
       'http://localhost:4200',
@@ -65,6 +67,27 @@ describe('loadApiEnvironment', () => {
 
     expect(environment.nodeEnv).toBe('production');
     expect(environment.corsOrigins).toEqual(['https://academia.example.com']);
+    expect(environment.solverTimeoutBufferSeconds).toBe(5);
+    expect(environment.solverMaxConcurrent).toBe(1);
+  });
+
+  it('accepts operational solver timeout and concurrency overrides', () => {
+    const environment = loadApiEnvironment({
+      SOLVER_TIMEOUT_BUFFER_SECONDS: '8',
+      SOLVER_MAX_CONCURRENT: '2',
+    });
+
+    expect(environment.solverTimeoutBufferSeconds).toBe(8);
+    expect(environment.solverMaxConcurrent).toBe(2);
+  });
+
+  it('rejects solver operational limits outside the approved range', () => {
+    expect(() =>
+      loadApiEnvironment({ SOLVER_TIMEOUT_BUFFER_SECONDS: '61' }),
+    ).toThrow('SOLVER_TIMEOUT_BUFFER_SECONDS must be an integer between 0 and 60');
+    expect(() => loadApiEnvironment({ SOLVER_MAX_CONCURRENT: '0' })).toThrow(
+      'SOLVER_MAX_CONCURRENT must be an integer between 1 and 8',
+    );
   });
 
   it('rejects a local database in production', () => {
