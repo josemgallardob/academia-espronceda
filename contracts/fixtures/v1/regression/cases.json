@@ -1,0 +1,119 @@
+{
+  "batteryVersion": "1.0.0",
+  "cases": [
+    {
+      "id": "minimal-valid",
+      "request": "minimal-valid.request.json",
+      "response": "minimal-valid.response.json",
+      "solve": {
+        "hasUsableSolution": true,
+        "mode": "STRICT",
+        "statuses": ["OPTIMAL"],
+        "requiredFindingRuleIds": [],
+        "forbiddenFindingRuleIds": [
+          "CLASS_CAPACITY_MINIMUM",
+          "CLASS_CAPACITY_MAXIMUM",
+          "STUDENT_WEEKLY_HOURS_EXACT",
+          "STUDENT_TIME_OVERLAP"
+        ]
+      }
+    },
+    {
+      "id": "multiple-valid-solutions",
+      "request": "multiple-valid-solutions.request.json",
+      "response": "multiple-valid-solutions.response.json",
+      "solve": {
+        "hasUsableSolution": true,
+        "mode": "STRICT",
+        "statuses": ["OPTIMAL"],
+        "requiredFindingRuleIds": [],
+        "forbiddenFindingRuleIds": [
+          "CLASS_CAPACITY_MINIMUM",
+          "CLASS_CAPACITY_MAXIMUM",
+          "STUDENT_WEEKLY_HOURS_EXACT"
+        ],
+        "allowMultipleSolutions": true
+      }
+    },
+    {
+      "id": "impossible-availability",
+      "request": "impossible-availability.request.json",
+      "response": "impossible-availability.response.json",
+      "solve": {
+        "hasUsableSolution": false,
+        "mode": "RELAXED",
+        "statuses": ["INFEASIBLE"]
+      }
+    },
+    {
+      "id": "student-overlap",
+      "request": "student-overlap.request.json",
+      "response": "student-overlap.response.json",
+      "invalidSolution": "student-overlap.invalid-solution.json",
+      "solve": {
+        "hasUsableSolution": false,
+        "mode": "RELAXED",
+        "statuses": ["INFEASIBLE"]
+      },
+      "evaluate": {
+        "requiredFindingRuleIds": ["STUDENT_TIME_OVERLAP"]
+      }
+    },
+    {
+      "id": "insufficient-capacity",
+      "request": "insufficient-capacity.request.json",
+      "response": "insufficient-capacity.response.json",
+      "solve": {
+        "hasUsableSolution": true,
+        "mode": "RELAXED",
+        "statuses": ["OPTIMAL"],
+        "requiredFindingRuleIds": ["CLASS_CAPACITY_MAXIMUM"],
+        "forbiddenFindingRuleIds": ["STUDENT_WEEKLY_HOURS_EXACT"]
+      }
+    },
+    {
+      "id": "cross-subject-teachers",
+      "request": "cross-subject-teachers.request.json",
+      "response": "cross-subject-teachers.response.json",
+      "solve": {
+        "hasUsableSolution": true,
+        "mode": "STRICT",
+        "statuses": ["OPTIMAL"],
+        "requiredFindingRuleIds": [],
+        "forbiddenFindingRuleIds": [
+          "STUDENT_SUBJECT_HOURS_EXACT",
+          "STUDENT_TEACHER_CONTINUITY",
+          "STUDENT_WEEKLY_HOURS_EXACT"
+        ]
+      }
+    },
+    {
+      "id": "best-effort-required",
+      "request": "best-effort-required.request.json",
+      "response": "best-effort-required.response.json",
+      "solve": {
+        "hasUsableSolution": true,
+        "mode": "RELAXED",
+        "statuses": ["OPTIMAL"],
+        "requiredFindingRuleIds": ["CLASS_CAPACITY_MINIMUM"],
+        "forbiddenFindingRuleIds": ["STUDENT_WEEKLY_HOURS_EXACT"]
+      }
+    },
+    {
+      "id": "weekly-hours-exceeded",
+      "request": "weekly-hours-exceeded.request.json",
+      "response": "weekly-hours-exceeded.response.json",
+      "invalidSolution": "weekly-hours-exceeded.invalid-solution.json",
+      "solve": {
+        "hasUsableSolution": true,
+        "mode": "STRICT",
+        "statuses": ["OPTIMAL"],
+        "requiredFindingRuleIds": [],
+        "forbiddenFindingRuleIds": ["STUDENT_WEEKLY_HOURS_EXACT"]
+      },
+      "evaluate": {
+        "requiredFindingRuleIds": ["STUDENT_WEEKLY_HOURS_EXACT"]
+      }
+    }
+  ]
+}

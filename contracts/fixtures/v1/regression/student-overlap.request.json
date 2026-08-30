@@ -1,0 +1,57 @@
+{
+  "contractVersion": "1.0.0",
+  "ruleCatalogVersion": "1.0.0",
+  "requestId": "request-student-overlap",
+  "timezone": "Europe/Madrid",
+  "slots": [
+    {
+      "id": "MONDAY_16_00",
+      "dayOfWeek": "MONDAY",
+      "startTime": "16:00",
+      "endTime": "17:00"
+    },
+    {
+      "id": "MONDAY_16_30",
+      "dayOfWeek": "MONDAY",
+      "startTime": "16:30",
+      "endTime": "17:30"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "teacher-2",
+      "profile": "GENERAL_SCIENCES",
+      "supportedCourseCodes": ["BACH_1"],
+      "supportedSubjectCodes": ["MATHEMATICS"],
+      "availableSlotIds": ["MONDAY_16_00", "MONDAY_16_30"]
+    }
+  ],
+  "students": [
+    {
+      "id": "student-1",
+      "status": "ACTIVE",
+      "courseCode": "BACH_1",
+      "subjectHours": [{ "subjectCode": "MATHEMATICS", "weeklyHours": 2 }],
+      "weeklyHoursTotal": 2,
+      "unavailableSlotIds": []
+    },
+    {
+      "id": "student-2",
+      "status": "ACTIVE",
+      "courseCode": "BACH_1",
+      "subjectHours": [{ "subjectCode": "MATHEMATICS", "weeklyHours": 2 }],
+      "weeklyHoursTotal": 2,
+      "unavailableSlotIds": []
+    },
+    {
+      "id": "student-3",
+      "status": "ACTIVE",
+      "courseCode": "BACH_1",
+      "subjectHours": [{ "subjectCode": "MATHEMATICS", "weeklyHours": 2 }],
+      "weeklyHoursTotal": 2,
+      "unavailableSlotIds": []
+    }
+  ],
+  "relationships": [],
+  "options": { "timeLimitSeconds": 10, "randomSeed": 12345 }
+}

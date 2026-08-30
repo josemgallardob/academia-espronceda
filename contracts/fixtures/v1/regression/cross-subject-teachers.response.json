@@ -1,0 +1,204 @@
+{
+  "contractVersion": "1.0.0",
+  "ruleCatalogVersion": "1.0.0",
+  "requestId": "request-cross-subject-teachers",
+  "mode": "STRICT",
+  "status": "OPTIMAL",
+  "attempts": [
+    {
+      "mode": "STRICT",
+      "status": "OPTIMAL",
+      "elapsedMilliseconds": 1
+    }
+  ],
+  "solution": {
+    "classes": [
+      {
+        "id": "class-MONDAY_16_00-teacher-2",
+        "teacherId": "teacher-2",
+        "slotId": "MONDAY_16_00",
+        "studentIds": ["student-1", "student-2", "student-3"]
+      },
+      {
+        "id": "class-TUESDAY_16_00-teacher-2",
+        "teacherId": "teacher-2",
+        "slotId": "TUESDAY_16_00",
+        "studentIds": ["student-1", "student-2", "student-3"]
+      },
+      {
+        "id": "class-WEDNESDAY_16_00-teacher-3",
+        "teacherId": "teacher-3",
+        "slotId": "WEDNESDAY_16_00",
+        "studentIds": ["student-1", "student-2", "student-3"]
+      }
+    ],
+    "subjectTeacherAllocations": [
+      {
+        "studentId": "student-1",
+        "teacherId": "teacher-2",
+        "subjectHours": [
+          {
+            "subjectCode": "PHYSICS",
+            "weeklyHours": 2
+          }
+        ],
+        "totalHours": 2
+      },
+      {
+        "studentId": "student-1",
+        "teacherId": "teacher-3",
+        "subjectHours": [
+          {
+            "subjectCode": "ENGLISH",
+            "weeklyHours": 1
+          }
+        ],
+        "totalHours": 1
+      },
+      {
+        "studentId": "student-2",
+        "teacherId": "teacher-2",
+        "subjectHours": [
+          {
+            "subjectCode": "PHYSICS",
+            "weeklyHours": 2
+          }
+        ],
+        "totalHours": 2
+      },
+      {
+        "studentId": "student-2",
+        "teacherId": "teacher-3",
+        "subjectHours": [
+          {
+            "subjectCode": "ENGLISH",
+            "weeklyHours": 1
+          }
+        ],
+        "totalHours": 1
+      },
+      {
+        "studentId": "student-3",
+        "teacherId": "teacher-2",
+        "subjectHours": [
+          {
+            "subjectCode": "PHYSICS",
+            "weeklyHours": 2
+          }
+        ],
+        "totalHours": 2
+      },
+      {
+        "studentId": "student-3",
+        "teacherId": "teacher-3",
+        "subjectHours": [
+          {
+            "subjectCode": "ENGLISH",
+            "weeklyHours": 1
+          }
+        ],
+        "totalHours": 1
+      }
+    ],
+    "score": {
+      "direction": "MINIMIZE",
+      "bestScore": 0,
+      "tiers": [
+        {
+          "priority": 1,
+          "penalty": 0.0
+        },
+        {
+          "priority": 2,
+          "penalty": 0.0
+        },
+        {
+          "priority": 3,
+          "penalty": 3.0
+        },
+        {
+          "priority": 4,
+          "penalty": 0.0
+        },
+        {
+          "priority": 5,
+          "penalty": 0.0
+        },
+        {
+          "priority": 6,
+          "penalty": 0.0
+        }
+      ],
+      "ruleBreakdown": [
+        {
+          "ruleId": "CLASS_CAPACITY_IDEAL",
+          "priority": 3,
+          "occurrenceCount": 3,
+          "penalty": 3.0
+        }
+      ]
+    },
+    "findings": [
+      {
+        "fingerprint": "sha256:3ddf216c863e89e30160e1f6c0777af2ae6f8b343552f95a7a2ccde5d6c71077",
+        "ruleId": "CLASS_CAPACITY_IDEAL",
+        "enforcement": "PREFERENCE",
+        "severity": "WARNING",
+        "blocksConfirmation": false,
+        "entityRefs": [
+          {
+            "type": "CLASS",
+            "id": "class-MONDAY_16_00-teacher-2"
+          }
+        ],
+        "slotIds": ["MONDAY_16_00"],
+        "parameters": {
+          "actualCapacity": 3,
+          "idealCapacity": 4,
+          "studentIds": ["student-1", "student-2", "student-3"]
+        }
+      },
+      {
+        "fingerprint": "sha256:810ba7c4f18a8e6938ac23a54bba245bbe051ac7d28f4cc7033a50a1ac9710cb",
+        "ruleId": "CLASS_CAPACITY_IDEAL",
+        "enforcement": "PREFERENCE",
+        "severity": "WARNING",
+        "blocksConfirmation": false,
+        "entityRefs": [
+          {
+            "type": "CLASS",
+            "id": "class-WEDNESDAY_16_00-teacher-3"
+          }
+        ],
+        "slotIds": ["WEDNESDAY_16_00"],
+        "parameters": {
+          "actualCapacity": 3,
+          "idealCapacity": 4,
+          "studentIds": ["student-1", "student-2", "student-3"]
+        }
+      },
+      {
+        "fingerprint": "sha256:e62b304111985553e9e032bbca19ebb3f61441fa36f1ce7521e4862b4da3027d",
+        "ruleId": "CLASS_CAPACITY_IDEAL",
+        "enforcement": "PREFERENCE",
+        "severity": "WARNING",
+        "blocksConfirmation": false,
+        "entityRefs": [
+          {
+            "type": "CLASS",
+            "id": "class-TUESDAY_16_00-teacher-2"
+          }
+        ],
+        "slotIds": ["TUESDAY_16_00"],
+        "parameters": {
+          "actualCapacity": 3,
+          "idealCapacity": 4,
+          "studentIds": ["student-1", "student-2", "student-3"]
+        }
+      }
+    ]
+  },
+  "elapsedMilliseconds": 1,
+  "randomSeed": 12345,
+  "timeLimitSeconds": 10.0
+}
