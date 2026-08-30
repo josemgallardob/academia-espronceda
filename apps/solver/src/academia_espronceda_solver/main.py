@@ -36,6 +36,7 @@ from academia_espronceda_solver.service import solve_schedule
 
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     configure_concurrency(get_settings().max_concurrent)

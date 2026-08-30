@@ -131,7 +131,10 @@ export function loadApiEnvironment(
   return {
     nodeEnv,
     host: value('API_HOST'),
-    port: parsePort(value('API_PORT'), 'API_PORT'),
+    port: parsePort(
+      source.API_PORT?.trim() || source.PORT?.trim() || value('API_PORT'),
+      'API_PORT',
+    ),
     corsOrigins,
     solverUrl: solverUrl.toString(),
     databaseUrl,

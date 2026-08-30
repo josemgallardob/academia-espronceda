@@ -71,6 +71,32 @@ describe('loadApiEnvironment', () => {
     expect(environment.solverMaxConcurrent).toBe(1);
   });
 
+  it('honors the platform PORT when API_PORT is omitted', () => {
+    const environment = loadApiEnvironment({
+      NODE_ENV: 'production',
+      API_HOST: '0.0.0.0',
+      PORT: '10000',
+      API_CORS_ORIGINS: 'https://academia.example.com',
+      SOLVER_URL: 'http://solver.internal:8001',
+      DATABASE_URL: 'libsql://database.turso.io',
+      DATABASE_AUTH_TOKEN: 'database-token',
+      JWT_SECRET: 'j'.repeat(64),
+      JWT_ISSUER: 'academia-espronceda-api',
+      JWT_AUDIENCE: 'academia-espronceda-web',
+      JWT_TTL_SECONDS: '36000',
+      INTERNAL_SERVICE_TOKEN: 's'.repeat(32),
+      AUTH_COOKIE_NAME: '__Host-academia_session',
+      XSRF_COOKIE_NAME: 'XSRF-TOKEN',
+      AUTH_LOGIN_RATE_WINDOW_SECONDS: '900',
+      AUTH_LOGIN_IP_LIMIT: '20',
+      AUTH_LOGIN_IDENTIFIER_LIMIT: '5',
+      COOKIE_SECURE: 'true',
+      TRUST_PROXY: 'true',
+    });
+
+    expect(environment.port).toBe(10_000);
+  });
+
   it('accepts operational solver timeout and concurrency overrides', () => {
     const environment = loadApiEnvironment({
       SOLVER_TIMEOUT_BUFFER_SECONDS: '8',

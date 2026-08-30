@@ -8,8 +8,9 @@ El proyecto dispone de dos entornos:
 2. `production`: artefactos optimizados, dominio HTTPS publico, Turso remoto y comunicacion
    privada entre NestJS y FastAPI.
 
-La seleccion del proveedor y el aprovisionamiento real pertenecen a las tareas DE-04 y DE-05.
-Este documento define el contrato que debera respetar cualquier plataforma elegida.
+La plataforma cerrada es Render. El contrato de topologia, secretos, dominio, migraciones,
+CI de despliegue y costes esta en
+[Plataforma de despliegue](./08-plataforma-despliegue.md). DE-05 aplica `render.yaml`.
 
 ## Topologia
 
@@ -29,20 +30,18 @@ origenes locales declarados expresamente en CORS.
 ### Produccion
 
 ```text
-https://<dominio-publico>
-    ├── /*       ─────> Angular estatico
-    └── /api/*   ─────> NestJS publico ─────> FastAPI privado
-                                  │
-                                  └──────────> Turso/libSQL remoto
+https://<dominio-publico>                 Render Web Service
+    ├── /*       ─────> Angular estatico (servido por NestJS)
+    └── /api/*, /health, /ready
+                 ─────> NestJS ─────> FastAPI (Render Private Service)
+                            │
+                            └───────> Turso/libSQL remoto
 ```
 
-El router de la plataforma debe retirar el prefijo `/api` antes de reenviar la peticion a
-NestJS. Por ejemplo, `/api/health` en el dominio publico llega como `/health` al proceso
-NestJS. FastAPI no debe publicar puerto, ruta ni dominio accesible desde Internet.
-
-Servir frontend y API desde un unico origen simplifica las cookies seguras, CORS y la
-proteccion CSRF. Si la plataforma elegida obliga a usar un subdominio de API, se deberan
-adaptar la URL de Angular y la politica de cookies antes del despliegue.
+Un solo origen HTTPS conserva las cookies `__Host-`, CORS y CSRF. NestJS mantiene sus
+rutas (`/health`, `/api/v1/...`) y sirve el bundle de Angular en el resto. FastAPI no
+publica puerto, ruta ni dominio a Internet; NestJS lo llama en
+`http://academia-espronceda-solver:8001`.
 
 ## Preparacion y arranque local
 
@@ -175,13 +174,12 @@ aislamiento de red. El token de Turso solo se entrega a NestJS.
 
 Antes de abrir produccion:
 
-1. Configurar el dominio y sus registros DNS en la plataforma elegida.
+1. Configurar el dominio y sus registros DNS en el Web Service de Render.
 2. Activar certificado TLS valido y redireccion permanente de HTTP a HTTPS.
-3. Enrutar `/api/*` a NestJS retirando `/api`.
-4. Servir Angular con fallback a `index.html` para sus rutas de cliente.
-5. Mantener FastAPI sin acceso publico.
-6. Establecer `API_CORS_ORIGINS` al origen HTTPS exacto.
-7. Ejecutar smoke tests sobre web, `/api/health`, `/api/ready` y el flujo NestJS-FastAPI.
+3. Servir Angular desde NestJS con fallback a `index.html` (DE-05).
+4. Mantener FastAPI como Private Service, sin acceso publico.
+5. Establecer `API_CORS_ORIGINS` al origen HTTPS exacto.
+6. Ejecutar smoke tests sobre web, `/health`, `/ready` y el flujo NestJS-FastAPI.
 
 La observabilidad, la correlacion de llamadas y el diagnostico de fallos se detallan en
 [Diagnostico operativo](./07-diagnostico-operativo.md).

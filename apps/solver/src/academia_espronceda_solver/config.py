@@ -22,7 +22,7 @@ def load_settings(source: Mapping[str, str] | None = None) -> SolverSettings:
     values = environ if source is None else source
     node_env = _read_environment(values.get("NODE_ENV"))
     host = values.get("SOLVER_HOST", "127.0.0.1").strip()
-    port = _read_port(values.get("SOLVER_PORT", "8001"))
+    port = _read_port(values.get("SOLVER_PORT") or values.get("PORT") or "8001")
     service_token = values.get(
         "INTERNAL_SERVICE_TOKEN",
         "local-only-service-token-replace-in-every-deployed-environment",

@@ -13,6 +13,18 @@ def test_loads_development_defaults() -> None:
     assert settings.max_concurrent == 1
 
 
+def test_honors_platform_port_when_solver_port_is_omitted() -> None:
+    settings = load_settings({"PORT": "10000"})
+
+    assert settings.port == 10000
+
+
+def test_prefers_solver_port_over_platform_port() -> None:
+    settings = load_settings({"SOLVER_PORT": "8001", "PORT": "10000"})
+
+    assert settings.port == 8001
+
+
 def test_rejects_invalid_port() -> None:
     with pytest.raises(ValueError, match="SOLVER_PORT"):
         load_settings({"SOLVER_PORT": "70000"})

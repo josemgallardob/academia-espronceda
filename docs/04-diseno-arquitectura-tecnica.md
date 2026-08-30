@@ -545,19 +545,15 @@ El despliegue solo podra continuar cuando las comprobaciones obligatorias de la 
 
 ## Despliegue
 
-La plataforma de despliegue no queda cerrada en esta fase.
+La plataforma cerrada para el MVP es Render (region `frankfurt`). El detalle de la
+comparacion, entornos, secretos, dominio, migraciones, CI de despliegue y costes esta en
+[Plataforma de despliegue](./08-plataforma-despliegue.md). El blueprint es `render.yaml`.
 
-La eleccion de Turso/libSQL evita depender de un disco persistente local para la base de datos, por lo que no se cierra la puerta a despliegues PaaS o serverless.
+La eleccion de Turso/libSQL evita un disco persistente en Render.
 
-Opciones compatibles:
-
-1. Azure App Service.
-2. Render.
-3. Railway.
-4. Fly.io.
-5. Vercel u otra plataforma serverless, si los tiempos de ejecucion encajan con la generacion automatica.
-
-NestJS y el motor Python podran desplegarse como dos procesos o contenedores privados dentro de la misma unidad operativa. Inicialmente compartiran repositorio, pipeline y versionado, sin necesidad de colas, descubrimiento de servicios ni escalado independiente.
+NestJS y el motor Python se despliegan como dos servicios Render: un Web Service publico
+que sirve Angular y la API, y un Private Service para FastAPI. Comparten repositorio,
+pipeline y versionado, sin colas ni descubrimiento extra.
 
 La comunicacion HTTP entre ambos debe mantenerse en una red interna. El despliegue debera configurar timeout, limites de concurrencia y observabilidad para las llamadas de generacion. El contrato operativo vigente (logs JSON sin secretos, `X-Request-Id`, `/health`, `/ready`, `/metrics` y diagnostico de fallos) esta en `docs/07-diagnostico-operativo.md`.
 
@@ -596,5 +592,4 @@ Para PDFs o artefactos binarios, la recomendacion inicial es almacenar referenci
 
 ## Decisiones pendientes
 
-1. Elegir plataforma final de despliegue.
-2. Definir estrategia de almacenamiento para PDFs o archivos futuros.
+1. Definir estrategia de almacenamiento para PDFs o archivos futuros.

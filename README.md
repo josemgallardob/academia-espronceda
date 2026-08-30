@@ -76,12 +76,14 @@ profesores con `npm run seed:teachers`. No crea alumnos ni toca usuarios.
 
 ## Produccion
 
-El frontend se sirve bajo un dominio HTTPS publico; las peticiones a `/api` se enrutan a
-NestJS y FastAPI permanece en una red privada. Produccion usa Turso remoto y secretos
-inyectados por la plataforma, nunca archivos versionados.
+El frontend se sirve bajo un dominio HTTPS publico en **Render**; NestJS entrega Angular y
+la API en el mismo origen y FastAPI corre como Private Service. Produccion usa Turso remoto
+y secretos del Environment Group, nunca archivos versionados. La decision, el blueprint
+`render.yaml` y los costes estan en
+[Plataforma de despliegue](./docs/08-plataforma-despliegue.md).
 
-El contrato completo de variables, topologia, arranque, dominio, TLS, CORS y manejo de secretos
-esta en [Configuracion de entornos y secretos](./docs/05-configuracion-entornos.md).
+El contrato de variables, topologia, arranque, dominio, TLS, CORS y secretos esta en
+[Configuracion de entornos y secretos](./docs/05-configuracion-entornos.md).
 Health checks, logs estructurados, correlacion NestJS-FastAPI y diagnostico de fallos de
 autenticacion y del solver estan en
 [Diagnostico operativo](./docs/07-diagnostico-operativo.md).
