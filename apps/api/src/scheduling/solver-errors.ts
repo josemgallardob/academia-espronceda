@@ -48,7 +48,6 @@ export function generationBusy(): ProblemDetailsException {
     status: 503,
     code: 'GENERATION_BUSY',
     title: 'Ya hay una generación en curso',
-    detail:
-      'Espere a que termine la generación actual antes de lanzar otra.',
+    detail: 'Espere a que termine la generación actual antes de lanzar otra.',
   });
 }

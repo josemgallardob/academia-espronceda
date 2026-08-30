@@ -70,7 +70,7 @@ npm run dev:solver
 Puntos de comprobacion:
 
 - Web: `http://localhost:4200`
-- API: `http://localhost:3000/health`
+- API: `http://localhost:3000/health` y `http://localhost:3000/ready`
 - Solver: `http://localhost:8001/health`
 - Base local: `.data/academia-espronceda.db`
 
@@ -137,6 +137,8 @@ secretos.
 | `AUTH_LOGIN_IDENTIFIER_LIMIT`    | `5`                         | Intentos por identidad y ventana      | NestJS          |
 | `COOKIE_SECURE`                  | `false`                     | `true`                                | NestJS          |
 | `TRUST_PROXY`                    | `false`                     | `true`                                | NestJS          |
+| `SOLVER_TIMEOUT_BUFFER_SECONDS`  | `5`                         | Margen HTTP extra sobre el solver     | NestJS          |
+| `SOLVER_MAX_CONCURRENT`          | `1`                         | Generaciones simultaneas por proceso  | NestJS, FastAPI |
 | `TEACHER_1_DISPLAY_NAME`         | `Profesor 1`                | Etiqueta visible del profesor 1       | `seed:teachers` |
 | `TEACHER_2_DISPLAY_NAME`         | `Profesor 2`                | Etiqueta visible del profesor 2       | `seed:teachers` |
 | `TEACHER_3_DISPLAY_NAME`         | `Profesor 3`                | Etiqueta visible del profesor 3       | `seed:teachers` |
@@ -177,7 +179,10 @@ Antes de abrir produccion:
 4. Servir Angular con fallback a `index.html` para sus rutas de cliente.
 5. Mantener FastAPI sin acceso publico.
 6. Establecer `API_CORS_ORIGINS` al origen HTTPS exacto.
-7. Ejecutar smoke tests sobre web, `/api/health` y el flujo NestJS-FastAPI.
+7. Ejecutar smoke tests sobre web, `/api/health`, `/api/ready` y el flujo NestJS-FastAPI.
+
+La observabilidad, la correlacion de llamadas y el diagnostico de fallos se detallan en
+[Diagnostico operativo](./07-diagnostico-operativo.md).
 
 No se debe considerar listo el entorno si el dominio funciona por HTTP, FastAPI es publico o
 la API acepta `*` en CORS.

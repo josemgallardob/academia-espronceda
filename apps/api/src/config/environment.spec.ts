@@ -84,7 +84,9 @@ describe('loadApiEnvironment', () => {
   it('rejects solver operational limits outside the approved range', () => {
     expect(() =>
       loadApiEnvironment({ SOLVER_TIMEOUT_BUFFER_SECONDS: '61' }),
-    ).toThrow('SOLVER_TIMEOUT_BUFFER_SECONDS must be an integer between 0 and 60');
+    ).toThrow(
+      'SOLVER_TIMEOUT_BUFFER_SECONDS must be an integer between 0 and 60',
+    );
     expect(() => loadApiEnvironment({ SOLVER_MAX_CONCURRENT: '0' })).toThrow(
       'SOLVER_MAX_CONCURRENT must be an integer between 1 and 8',
     );

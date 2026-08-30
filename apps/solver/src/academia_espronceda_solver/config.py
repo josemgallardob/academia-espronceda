@@ -15,6 +15,7 @@ class SolverSettings:
     port: int
     internal_service_token: str
     max_time_limit_seconds: float
+    max_concurrent: int
 
 
 def load_settings(source: Mapping[str, str] | None = None) -> SolverSettings:
@@ -29,6 +30,7 @@ def load_settings(source: Mapping[str, str] | None = None) -> SolverSettings:
     max_time_limit_seconds = _read_time_limit(
         values.get("SOLVER_MAX_TIME_LIMIT_SECONDS", str(DEFAULT_MAX_TIME_LIMIT_SECONDS))
     )
+    max_concurrent = _read_max_concurrent(values.get("SOLVER_MAX_CONCURRENT", "1"))
 
     if not host:
         raise ValueError("SOLVER_HOST cannot be empty")
@@ -46,6 +48,7 @@ def load_settings(source: Mapping[str, str] | None = None) -> SolverSettings:
         port=port,
         internal_service_token=service_token,
         max_time_limit_seconds=max_time_limit_seconds,
+        max_concurrent=max_concurrent,
     )
 
 
@@ -80,3 +83,13 @@ def _read_time_limit(value: str) -> float:
     if not 0 < time_limit < float("inf"):
         raise ValueError("SOLVER_MAX_TIME_LIMIT_SECONDS must be a positive number")
     return time_limit
+
+
+def _read_max_concurrent(value: str) -> int:
+    try:
+        max_concurrent = int(value)
+    except ValueError as error:
+        raise ValueError("SOLVER_MAX_CONCURRENT must be an integer between 1 and 8") from error
+    if not 1 <= max_concurrent <= 8:
+        raise ValueError("SOLVER_MAX_CONCURRENT must be an integer between 1 and 8")
+    return max_concurrent

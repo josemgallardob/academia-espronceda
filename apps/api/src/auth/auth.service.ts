@@ -1,8 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createHash } from 'node:crypto';
 import { UsersRepository } from '../database/repositories/users.repository';
 import { ProblemDetailsException } from '../http/problem-details.exception';
+import { recordLoginAttempt } from '../observability/operational-metrics';
+import { writeStructuredLog } from '../observability/structured-log';
 import { verifyPassword } from '../security/password-hasher';
 import { AUTH_CONFIGURATION, DUMMY_PASSWORD_HASH } from './auth.constants';
 import type { AuthConfiguration } from './auth.configuration';
@@ -18,8 +20,6 @@ export interface LoginResult extends SessionResponse {
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
@@ -39,9 +39,13 @@ export class AuthService {
     );
 
     if (!user || !user.isActive || !passwordMatches) {
-      this.logger.warn(
-        `Rejected login identity=${fingerprint(normalizedIdentifier)}`,
-      );
+      recordLoginAttempt('INVALID_CREDENTIALS');
+      writeStructuredLog({
+        level: 'warn',
+        event: 'auth.login',
+        outcome: 'INVALID_CREDENTIALS',
+        identityFingerprint: fingerprint(normalizedIdentifier),
+      });
       throw invalidCredentials();
     }
 
@@ -62,7 +66,13 @@ export class AuthService {
     );
 
     await this.usersRepository.recordLogin(user.id, new Date().toISOString());
-    this.logger.log(`Authenticated userId=${user.id}`);
+    recordLoginAttempt('AUTHENTICATED');
+    writeStructuredLog({
+      level: 'info',
+      event: 'auth.login',
+      outcome: 'AUTHENTICATED',
+      userId: user.id,
+    });
 
     return { token, user: authenticatedUser };
   }

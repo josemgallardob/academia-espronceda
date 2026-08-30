@@ -13,7 +13,7 @@ describe('AppController', () => {
         AppService,
         {
           provide: DatabaseConnection,
-          useValue: { ping: async () => undefined },
+          useValue: { ping: () => Promise.resolve() },
         },
       ],
     }).compile();
@@ -36,7 +36,19 @@ describe('readinessStatus', () => {
     expect(readinessStatus('ok', 'ok')).toBe('ok');
     expect(readinessStatus('ok', 'error')).toBe('degraded');
     expect(readinessStatus('error', 'ok')).toBe('error');
-    expect(readinessHttpStatus({ service: 'api', status: 'degraded', checks: { database: 'ok', solver: 'error' } })).toBe(200);
-    expect(readinessHttpStatus({ service: 'api', status: 'error', checks: { database: 'error', solver: 'ok' } })).toBe(503);
+    expect(
+      readinessHttpStatus({
+        service: 'api',
+        status: 'degraded',
+        checks: { database: 'ok', solver: 'error' },
+      }),
+    ).toBe(200);
+    expect(
+      readinessHttpStatus({
+        service: 'api',
+        status: 'error',
+        checks: { database: 'error', solver: 'ok' },
+      }),
+    ).toBe(503);
   });
 });

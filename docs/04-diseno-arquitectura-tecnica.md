@@ -557,7 +557,7 @@ Opciones compatibles:
 
 NestJS y el motor Python podran desplegarse como dos procesos o contenedores privados dentro de la misma unidad operativa. Inicialmente compartiran repositorio, pipeline y versionado, sin necesidad de colas, descubrimiento de servicios ni escalado independiente.
 
-La comunicacion HTTP entre ambos debe mantenerse en una red interna. El despliegue debera configurar timeout, limites de concurrencia y observabilidad para las llamadas de generacion.
+La comunicacion HTTP entre ambos debe mantenerse en una red interna. El despliegue debera configurar timeout, limites de concurrencia y observabilidad para las llamadas de generacion. El contrato operativo vigente (logs JSON sin secretos, `X-Request-Id`, `/health`, `/ready`, `/metrics` y diagnostico de fallos) esta en `docs/07-diagnostico-operativo.md`.
 
 La unica cautela relevante para serverless es el servicio Python de generacion automatica. Si el tiempo de arranque o de resolucion no encaja con los limites de la plataforma elegida, el motor debera ejecutarse como un servicio persistente o proceso dedicado.
 

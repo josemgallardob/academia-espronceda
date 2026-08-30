@@ -48,7 +48,7 @@ npm run dev
 Servicios:
 
 - Web: `http://localhost:4200`
-- API: `http://localhost:3000`, salud en `GET /health`
+- API: `http://localhost:3000`, salud en `GET /health`, readiness en `GET /ready`
 - Solver: `http://localhost:8001`, salud en `GET /health`
 - Base libSQL local: `.data/academia-espronceda.db`
 
@@ -82,6 +82,9 @@ inyectados por la plataforma, nunca archivos versionados.
 
 El contrato completo de variables, topologia, arranque, dominio, TLS, CORS y manejo de secretos
 esta en [Configuracion de entornos y secretos](./docs/05-configuracion-entornos.md).
+Health checks, logs estructurados, correlacion NestJS-FastAPI y diagnostico de fallos de
+autenticacion y del solver estan en
+[Diagnostico operativo](./docs/07-diagnostico-operativo.md).
 
 ## Contratos y reglas de horarios
 

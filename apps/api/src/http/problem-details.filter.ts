@@ -5,7 +5,10 @@ import {
   HttpException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { currentRequestId, resolveRequestId } from '../observability/request-context';
+import {
+  currentRequestId,
+  resolveRequestId,
+} from '../observability/request-context';
 import { writeStructuredLog } from '../observability/structured-log';
 import { ProblemDetailsException } from './problem-details.exception';
 import { ScheduleDomainError } from '../scheduling/schedule-errors';
@@ -166,6 +169,11 @@ function problemDefaults(status: number): { code: string; title: string } {
       return {
         code: 'RATE_LIMIT_EXCEEDED',
         title: 'Demasiados intentos',
+      };
+    case 503:
+      return {
+        code: 'SERVICE_UNAVAILABLE',
+        title: 'Servicio no disponible',
       };
     default:
       return { code: 'INTERNAL_ERROR', title: 'Error interno del servidor' };

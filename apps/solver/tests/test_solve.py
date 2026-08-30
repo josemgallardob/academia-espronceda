@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from academia_espronceda_solver.concurrency import release_solve_slot, try_acquire_solve_slot
 from academia_espronceda_solver.config import SolverSettings
 from academia_espronceda_solver.engine import get_engine
 from academia_espronceda_solver.main import app
@@ -21,6 +22,44 @@ def test_health_does_not_require_service_authentication(client: TestClient) -> N
         "status": "ok",
         "version": "1.0.0",
     }
+
+
+def test_solve_reuses_x_request_id_as_problem_trace_id(
+    client: TestClient,
+    load_fixture: LoadFixture,
+) -> None:
+    response = client.post(
+        "/v1/schedules/solve",
+        json=load_fixture("strict-ideal.request.json"),
+        headers={"X-Request-Id": "corr-solver-unauth"},
+    )
+
+    assert response.status_code == 401
+    assert response.headers["x-request-id"] == "corr-solver-unauth"
+    assert response.json()["traceId"] == "corr-solver-unauth"
+    assert response.json()["code"] == "AUTHENTICATION_REQUIRED"
+
+
+def test_solve_rejects_when_another_generation_is_running(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    load_fixture: LoadFixture,
+) -> None:
+    assert try_acquire_solve_slot()
+    try:
+        response = client.post(
+            "/v1/schedules/solve",
+            json=load_fixture("strict-ideal.request.json"),
+            headers={**auth_headers, "X-Request-Id": "corr-solver-busy"},
+        )
+    finally:
+        release_solve_slot()
+
+    assert response.status_code == 503
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.headers["x-request-id"] == "corr-solver-busy"
+    assert response.json()["code"] == "SOLVER_BUSY"
+    assert response.json()["traceId"] == "corr-solver-busy"
 
 
 def test_solve_without_credential_returns_problem_details(

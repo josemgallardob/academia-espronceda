@@ -2,10 +2,12 @@ import { probeSolverHealth } from './solver-health';
 
 describe('probeSolverHealth', () => {
   it('returns ok when the solver health payload is healthy', async () => {
-    const fetchImpl: typeof fetch = async () =>
-      new Response(JSON.stringify({ service: 'solver', status: 'ok' }), {
-        status: 200,
-      });
+    const fetchImpl: typeof fetch = () =>
+      Promise.resolve(
+        new Response(JSON.stringify({ service: 'solver', status: 'ok' }), {
+          status: 200,
+        }),
+      );
 
     await expect(
       probeSolverHealth('http://solver.test', fetchImpl),
@@ -26,7 +28,7 @@ describe('probeSolverHealth', () => {
       probeSolverHealth('http://solver.test', timeout, 1),
     ).resolves.toBe('error');
     await expect(
-      probeSolverHealth('http://solver.test', async () =>
+      probeSolverHealth('http://solver.test', () =>
         Promise.resolve(new Response(JSON.stringify({ status: 'down' }))),
       ),
     ).resolves.toBe('error');

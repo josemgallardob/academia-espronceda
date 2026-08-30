@@ -10,6 +10,7 @@ def test_loads_development_defaults() -> None:
     assert settings.host == "127.0.0.1"
     assert settings.port == 8001
     assert settings.max_time_limit_seconds == 60.0
+    assert settings.max_concurrent == 1
 
 
 def test_rejects_invalid_port() -> None:
@@ -35,6 +36,17 @@ def test_loads_custom_max_time_limit() -> None:
     settings = load_settings({"SOLVER_MAX_TIME_LIMIT_SECONDS": "12.5"})
 
     assert settings.max_time_limit_seconds == 12.5
+
+
+def test_loads_custom_concurrency_limit() -> None:
+    settings = load_settings({"SOLVER_MAX_CONCURRENT": "2"})
+
+    assert settings.max_concurrent == 2
+
+
+def test_rejects_invalid_concurrency_limit() -> None:
+    with pytest.raises(ValueError, match="SOLVER_MAX_CONCURRENT"):
+        load_settings({"SOLVER_MAX_CONCURRENT": "0"})
 
 
 def test_rejects_invalid_max_time_limit() -> None:

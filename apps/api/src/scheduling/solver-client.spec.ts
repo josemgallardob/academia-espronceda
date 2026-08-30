@@ -50,6 +50,7 @@ describe('SolverHttpClient', () => {
         Accept: 'application/json',
         Authorization: 'Bearer test-token',
         'Content-Type': 'application/json',
+        'X-Request-Id': 'request-1',
       });
       expect(init?.body).toContain('"requestId":"request-1"');
       return Promise.resolve(jsonResponse(200, optimalResponse(request)));
@@ -130,6 +131,26 @@ describe('SolverHttpClient', () => {
     await expect(malformed.solve(request)).rejects.toMatchObject({
       problem: { status: 502, code: 'SOLVER_INVALID_RESPONSE' },
     });
+  });
+
+  it('rejects a second solve while the concurrency limit is held', async () => {
+    let release!: () => void;
+    const held = new SolverHttpClient({
+      baseUrl: 'http://solver.test',
+      serviceToken: 'test-token',
+      maxConcurrent: 1,
+      fetchImpl: () =>
+        new Promise<Response>((resolve) => {
+          release = () => resolve(jsonResponse(200, optimalResponse(request)));
+        }),
+    });
+
+    const first = held.solve(request);
+    await expect(held.solve(request)).rejects.toMatchObject({
+      problem: { status: 503, code: 'GENERATION_BUSY' },
+    });
+    release();
+    await expect(first).resolves.toMatchObject({ requestId: 'request-1' });
   });
 
   it('parses a usable solver payload', () => {

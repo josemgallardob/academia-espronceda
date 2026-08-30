@@ -10,6 +10,7 @@ def run() -> None:
         host=settings.host,
         port=settings.port,
         reload=settings.node_env == "development",
+        access_log=False,
     )
 
 

@@ -357,7 +357,7 @@
 		{
 			"id": "731145b6",
 			"type": "text",
-			"text": "## DE-03 Add operational guardrails and observability\nIncorporar logs estructurados sin secretos, health checks, correlacion de llamadas NestJS-FastAPI, metricas basicas, timeouts, limites de concurrencia y tratamiento uniforme de errores. Documentar diagnostico operativo y verificar los escenarios de fallo del solver y autenticacion.",
+			"text": "## DE-03 Add operational guardrails and observability\n## DE-03 Add operational guardrails and observability\nIncorporar logs estructurados sin secretos, health checks, correlacion de llamadas NestJS-FastAPI, metricas basicas, timeouts, limites de concurrencia y tratamiento uniforme de errores. Documentar diagnostico operativo y verificar los escenarios de fallo del solver y autenticacion.\n\nImplemented: JSON logs with redaction, X-Request-Id correlation across NestJS and FastAPI, GET /ready and /metrics, solver timeout buffer and max concurrency, uniform problem+json with shared traceId. Diagnosis in docs/07-diagnostico-operativo.md.",
 			"x": 2220,
 			"y": 400,
 			"width": 280,

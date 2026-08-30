@@ -17,6 +17,7 @@ _PROBLEM_TYPES = {
     "INCOMPATIBLE_VERSION": "/problems/incompatible-version",
     "REJECTED_SOLVE_OPTIONS": "/problems/rejected-solve-options",
     "SOLVER_EXECUTION_FAILED": "/problems/solver-error",
+    "SOLVER_BUSY": "/problems/solver-busy",
     "INTERNAL_ERROR": "/problems/internal-error",
 }
 
@@ -65,7 +66,7 @@ def build_problem(
 ) -> ProblemDetails:
     trace_id = _trace_id(request)
     instance = request.url.path
-    if status >= 500 or solver_status == "ERROR":
+    if solver_status == "ERROR" or (status >= 500 and code != "SOLVER_BUSY"):
         return SolverErrorProblem(
             type=_PROBLEM_TYPES.get(code, "/problems/solver-error"),
             title=title,
@@ -123,6 +124,9 @@ def http_exception_problem(request: Request, exc: StarletteHTTPException) -> Pro
 
 
 def _trace_id(request: Request) -> str:
+    state_id = getattr(request.state, "request_id", None)
+    if isinstance(state_id, str) and state_id.strip():
+        return state_id.strip()
     header = request.headers.get("x-request-id", "").strip()
     return header if header else str(uuid4())
 

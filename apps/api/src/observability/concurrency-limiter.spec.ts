@@ -16,7 +16,7 @@ describe('ConcurrencyLimiter', () => {
 
     await expect(
       limiter.run(
-        async () => 'second',
+        () => Promise.resolve('second'),
         () => {
           throw new Error('busy');
         },
@@ -27,7 +27,7 @@ describe('ConcurrencyLimiter', () => {
     await expect(first).resolves.toBe('done');
     await expect(
       limiter.run(
-        async () => 'third',
+        () => Promise.resolve('third'),
         () => {
           throw new Error('busy');
         },
