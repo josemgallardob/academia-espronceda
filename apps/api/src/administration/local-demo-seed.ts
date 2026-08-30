@@ -83,7 +83,7 @@ async function alignAdministrativeAccounts(
         id: randomUUID(),
         username: account.username,
         email: account.email,
-        passwordHash: passwordHashes[index]!,
+        passwordHash: passwordHashes[index],
       })),
     );
     if (!created) {
@@ -102,16 +102,16 @@ async function alignAdministrativeAccounts(
     await users.updateIdentityAndPassword(user.id, {
       username: `__demo_tmp_${index}`,
       email: `demo-tmp-${index}@local.test`,
-      passwordHash: passwordHashes[index]!,
+      passwordHash: passwordHashes[index],
       occurredAt,
     });
   }
   for (const [index, user] of targets.entries()) {
-    const account = LOCAL_DEMO_ACCOUNTS[index]!;
+    const account = LOCAL_DEMO_ACCOUNTS[index];
     await users.updateIdentityAndPassword(user.id, {
       username: account.username,
       email: account.email,
-      passwordHash: passwordHashes[index]!,
+      passwordHash: passwordHashes[index],
       occurredAt,
     });
   }
@@ -121,7 +121,7 @@ async function alignAdministrativeAccounts(
       id: randomUUID(),
       username: LOCAL_DEMO_ACCOUNTS[1].username,
       email: LOCAL_DEMO_ACCOUNTS[1].email,
-      passwordHash: passwordHashes[1]!,
+      passwordHash: passwordHashes[1],
     });
   }
 

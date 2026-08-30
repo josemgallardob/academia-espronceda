@@ -109,6 +109,16 @@ Cada comando dispone además de variantes por servicio, por ejemplo `test:web`, 
 `npx playwright install chromium`. `npm run test:e2e:browsers` reserva Firefox y WebKit
 para versionado o despliegue; no hay regresion visual en este paso.
 
+## Integracion continua
+
+Cada push a `main` dispara `.github/workflows/ci.yml`: formato, contratos, lint, tests
+(unitarios, property-based e integracion HTTP de NestJS) y build de Angular, NestJS y
+Python. La comprobacion de tipos queda cubierta por lint y por los builds.
+
+No hace falta abrir un pull request. El mismo workflow se puede lanzar a mano y, con
+`include_extended`, reserva el hueco para recorridos Playwright en Chromium cuando existan
+en `main`. La suite multinavegador y la regresion visual siguen fuera de este job.
+
 ## Convenciones de idioma
 
 Los textos visibles para los usuarios se escriben en español. El código, los identificadores,
