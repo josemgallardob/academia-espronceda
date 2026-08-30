@@ -8,9 +8,10 @@ El proyecto dispone de dos entornos:
 2. `production`: artefactos optimizados, dominio HTTPS publico, Turso remoto y comunicacion
    privada entre NestJS y FastAPI.
 
-La plataforma cerrada es Render. El contrato de topologia, secretos, dominio, migraciones,
+La plataforma cerrada es Railway. El contrato de topologia, secretos, dominio, migraciones,
 CI de despliegue y costes esta en
-[Plataforma de despliegue](./08-plataforma-despliegue.md). DE-05 aplica `render.yaml`.
+[Plataforma de despliegue](./08-plataforma-despliegue.md). DE-05 aplica
+`.railway/railway.ts`.
 
 ## Topologia
 
@@ -30,18 +31,18 @@ origenes locales declarados expresamente en CORS.
 ### Produccion
 
 ```text
-https://<dominio-publico>                 Render Web Service
+https://<dominio-publico>                 Railway academia-espronceda-web
     ├── /*       ─────> Angular estatico (servido por NestJS)
     └── /api/*, /health, /ready
-                 ─────> NestJS ─────> FastAPI (Render Private Service)
+                 ─────> NestJS ─────> FastAPI (Railway academia-espronceda-solver)
                             │
                             └───────> Turso/libSQL remoto
 ```
 
 Un solo origen HTTPS conserva las cookies `__Host-`, CORS y CSRF. NestJS mantiene sus
 rutas (`/health`, `/api/v1/...`) y sirve el bundle de Angular en el resto. FastAPI no
-publica puerto, ruta ni dominio a Internet; NestJS lo llama en
-`http://academia-espronceda-solver:8001`.
+publica puerto, ruta ni dominio a Internet; NestJS lo llama en el hostname privado
+`RAILWAY_PRIVATE_DOMAIN` del solver, puerto 8001.
 
 ## Preparacion y arranque local
 
@@ -174,10 +175,10 @@ aislamiento de red. El token de Turso solo se entrega a NestJS.
 
 Antes de abrir produccion:
 
-1. Configurar el dominio y sus registros DNS en el Web Service de Render.
+1. Configurar el dominio y sus registros DNS en el servicio web de Railway.
 2. Activar certificado TLS valido y redireccion permanente de HTTP a HTTPS.
 3. Servir Angular desde NestJS con fallback a `index.html` (DE-05).
-4. Mantener FastAPI como Private Service, sin acceso publico.
+4. Mantener FastAPI sin dominio publico, solo red privada.
 5. Establecer `API_CORS_ORIGINS` al origen HTTPS exacto.
 6. Ejecutar smoke tests sobre web, `/health`, `/ready` y el flujo NestJS-FastAPI.
 

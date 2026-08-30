@@ -76,10 +76,10 @@ profesores con `npm run seed:teachers`. No crea alumnos ni toca usuarios.
 
 ## Produccion
 
-El frontend se sirve bajo un dominio HTTPS publico en **Render**; NestJS entrega Angular y
-la API en el mismo origen y FastAPI corre como Private Service. Produccion usa Turso remoto
-y secretos del Environment Group, nunca archivos versionados. La decision, el blueprint
-`render.yaml` y los costes estan en
+El frontend se sirve bajo un dominio HTTPS publico en **Railway**; NestJS entrega Angular y
+la API en el mismo origen y FastAPI corre en la red privada, sin URL publica. Produccion
+usa Turso remoto y secretos del panel de Railway, nunca archivos versionados. La decision,
+el blueprint `.railway/railway.ts` y los costes estan en
 [Plataforma de despliegue](./docs/08-plataforma-despliegue.md).
 
 El contrato de variables, topologia, arranque, dominio, TLS, CORS y secretos esta en

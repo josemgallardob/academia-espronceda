@@ -545,14 +545,15 @@ El despliegue solo podra continuar cuando las comprobaciones obligatorias de la 
 
 ## Despliegue
 
-La plataforma cerrada para el MVP es Render (region `frankfurt`). El detalle de la
+La plataforma cerrada para el MVP es Railway (region `europe-west4`). El detalle de la
 comparacion, entornos, secretos, dominio, migraciones, CI de despliegue y costes esta en
-[Plataforma de despliegue](./08-plataforma-despliegue.md). El blueprint es `render.yaml`.
+[Plataforma de despliegue](./08-plataforma-despliegue.md). El blueprint es
+`.railway/railway.ts`.
 
-La eleccion de Turso/libSQL evita un disco persistente en Render.
+La eleccion de Turso/libSQL evita un disco persistente en Railway.
 
-NestJS y el motor Python se despliegan como dos servicios Render: un Web Service publico
-que sirve Angular y la API, y un Private Service para FastAPI. Comparten repositorio,
+NestJS y el motor Python se despliegan como dos servicios Railway: uno publico que sirve
+Angular y la API, y otro sin dominio publico para FastAPI. Comparten repositorio,
 pipeline y versionado, sin colas ni descubrimiento extra.
 
 La comunicacion HTTP entre ambos debe mantenerse en una red interna. El despliegue debera configurar timeout, limites de concurrencia y observabilidad para las llamadas de generacion. El contrato operativo vigente (logs JSON sin secretos, `X-Request-Id`, `/health`, `/ready`, `/metrics` y diagnostico de fallos) esta en `docs/07-diagnostico-operativo.md`.
