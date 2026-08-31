@@ -28,7 +28,7 @@ export default defineRailway(() => {
 
   const web = service("academia-espronceda-web", {
     source: github(REPOSITORY, { branch: PRODUCTION_BRANCH }),
-    start: "npm run db:migrate:prod && npm run start:prod:api",
+    start: "npm run start:prod:api",
     healthcheck: "/health",
     healthcheckTimeout: 30,
     replicas: { [REGION]: 1 },

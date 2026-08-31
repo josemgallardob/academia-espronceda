@@ -22,4 +22,4 @@ RUN npm run build:web && npm run build:api
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["sh", "-c", "npm run db:migrate:prod && npm run start:prod:api"]
+CMD ["npm", "run", "start:prod:api"]

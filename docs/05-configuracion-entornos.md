@@ -102,7 +102,7 @@ npm run check
 Salidas y procesos:
 
 - Angular: contenido estatico de `apps/web/dist/web/browser`, servido por NestJS.
-- NestJS: `npm run db:migrate:prod && npm run start:prod:api`.
+- NestJS: `npm run start:prod:api` (migra Turso al arrancar).
 - FastAPI: `python -m academia_espronceda_solver`, solo en la red privada.
 
 Las variables de `.env.production.example` se configuran en el gestor de variables y secretos

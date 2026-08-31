@@ -129,10 +129,10 @@ Internet o CORS admite `*`.
 Orden en cada deploy del servicio web:
 
 1. Build de Angular y NestJS.
-2. Start: `npm run db:migrate:prod` contra Turso y despues NestJS. El migrador compilado
-   no necesita `drizzle-kit` en la imagen de produccion. Turso es publico; la migracion
-   no usa la red privada de Railway.
-3. Arranque de NestJS, que exige el bundle de Angular o falla al arrancar.
+2. Start: NestJS aplica las migraciones Drizzle contra Turso y luego escucha.
+   No hace falta `drizzle-kit` ni un JS suelto en `dist/`. Turso es publico; la
+   migracion no usa la red privada de Railway.
+3. Si falta el bundle de Angular, NestJS falla al arrancar.
 
 El solver no toca la base. Tras el primer deploy:
 
