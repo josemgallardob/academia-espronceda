@@ -17,7 +17,9 @@ RUN npm ci
 COPY apps/api apps/api
 COPY apps/web apps/web
 
-RUN npm run build:web && npm run build:api
+RUN npm run build:web && npm run build:api \
+  && test -f apps/api/dist/main.js \
+  && test -f apps/web/dist/web/browser/index.html
 
 ENV NODE_ENV=production
 EXPOSE 3000
