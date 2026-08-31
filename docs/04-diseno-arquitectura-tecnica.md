@@ -541,7 +541,9 @@ Antes de un despliegue, al crear una version o de forma programada se ejecutara:
 
 Los fallos intermitentes no se resolveran mediante reintentos indefinidos. Deben diagnosticarse, aislarse y corregirse; los reintentos se limitaran a absorber fallos transitorios conocidos de infraestructura.
 
-El despliegue solo podra continuar cuando las comprobaciones obligatorias de la rama principal hayan finalizado correctamente.
+El despliegue a produccion solo podra continuar cuando las comprobaciones obligatorias de
+la rama `stable` hayan finalizado correctamente. Los evolutivos siguen integrandose en
+`main`.
 
 ## Despliegue
 

@@ -90,7 +90,8 @@ El start de produccion migra Turso con el migrador compilado y arranca NestJS, q
 sirve `apps/web/dist/web/browser` con fallback a `index.html`.
 
 Antes de un deploy, la misma secuencia de comprobaciones (formato, contratos, lint, tests
-y build) es la que ejecuta GitHub Actions en cada push a `main`. Ver `.github/workflows/ci.yml`.
+y build) es la que ejecuta GitHub Actions en cada push a `main` y a `stable`. Railway
+publica desde `stable`. Ver `.github/workflows/ci.yml`.
 
 ```bash
 npm ci

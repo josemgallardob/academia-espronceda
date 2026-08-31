@@ -1,8 +1,9 @@
 # Railway project
 
 Production topology for Academia Espronceda. The source of truth is
-`railway.ts`. Apply it from a machine logged into Railway after filling
-`preserve()` secrets in the dashboard.
+`railway.ts`. Services deploy from the `stable` branch. Apply it from a
+machine logged into Railway after filling `preserve()` secrets in the
+dashboard.
 
 ```bash
 npm install railway
