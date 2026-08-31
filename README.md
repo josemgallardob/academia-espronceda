@@ -76,11 +76,12 @@ profesores con `npm run seed:teachers`. No crea alumnos ni toca usuarios.
 
 ## Produccion
 
-El frontend se sirve bajo un dominio HTTPS publico en **Railway**; NestJS entrega Angular y
-la API en el mismo origen y FastAPI corre en la red privada, sin URL publica. Produccion
-usa Turso remoto y secretos del panel de Railway, nunca archivos versionados. Las imagenes
-son `Dockerfile.web` y `Dockerfile.solver`. La decision, el blueprint `.railway/railway.ts`,
-el arranque, el smoke y la recuperacion estan en
+El frontend se sirve bajo un dominio HTTPS publico en **Railway** desde la rama `stable`;
+NestJS entrega Angular y la API en el mismo origen y FastAPI corre en la red privada, sin
+URL publica. `main` queda para evolutivos. Produccion usa Turso remoto y secretos del
+panel de Railway, nunca archivos versionados. Las imagenes son `Dockerfile.web` y
+`Dockerfile.solver`. La decision, el blueprint `.railway/railway.ts`, el arranque, el
+smoke y la recuperacion estan en
 [Plataforma de despliegue](./docs/08-plataforma-despliegue.md).
 
 Tras el primer deploy, crear las dos cuentas y el catalogo de profesores desde un equipo
@@ -120,9 +121,10 @@ para versionado o despliegue; no hay regresion visual en este paso.
 
 ## Integracion continua
 
-Cada push a `main` dispara `.github/workflows/ci.yml`: formato, contratos, lint, tests
-(unitarios, property-based e integracion HTTP de NestJS) y build de Angular, NestJS y
-Python. La comprobacion de tipos queda cubierta por lint y por los builds.
+Cada push a `main` o a `stable` dispara `.github/workflows/ci.yml`: formato, contratos,
+lint, tests (unitarios, property-based e integracion HTTP de NestJS) y build de Angular,
+NestJS y Python. Railway publica solo desde `stable` y espera ese check. La comprobacion
+de tipos queda cubierta por lint y por los builds.
 
 No hace falta abrir un pull request. El mismo workflow se puede lanzar a mano y, con
 `include_extended`, reserva el hueco para recorridos Playwright en Chromium cuando existan

@@ -25,8 +25,9 @@ en la seccion final de este documento.
 ## Comparacion
 
 Criterios: origen HTTPS unico (cookies `__Host-`), FastAPI no publico, despliegue desde
-`main` sin exigir PR, secretos fuera de Git, migraciones explicitas, coste alineado con
-uso esporadico y que el solver no se duerma a mitad de una generacion.
+`stable` (checkpoint de produccion; `main` sigue para evolutivos), secretos fuera de Git,
+migraciones explicitas, coste alineado con uso esporadico y que el solver no se duerma a
+mitad de una generacion.
 
 | Opcion | Origen unico | Solver privado | Operacion | Coste esperado | Veredicto |
 | ------ | ------------ | -------------- | --------- | -------------- | --------- |
@@ -141,14 +142,16 @@ El solver no toca la base. Tras el primer deploy:
 3. No ejecutar `seed:local` contra Turso.
 
 Si una migracion falla, el proceso no llega a escuchar. No hay rollback automatico de
-esquema: se corrige en `main` y se vuelve a desplegar.
+esquema: se corrige en `stable` (o se promociona un arreglo desde `main`) y se vuelve a
+desplegar.
 
 ## CI de despliegue
 
-1. Push a `main` (no hace falta PR).
+1. Promocionar a `stable` el commit que debe salir a produccion (no cada push a `main`).
 2. GitHub Actions `.github/workflows/ci.yml` ejecuta formato, contratos, lint, tests y
-   build. El despliegue no debe continuar si ese job falla.
-3. Railway, conectado al mismo repositorio y a `main`, espera el check de CI y publica.
+   build en `main` y en `stable`. El despliegue no debe continuar si el check de `stable`
+   falla.
+3. Railway, conectado al mismo repositorio y a `stable`, espera el check de CI y publica.
 4. El servicio web migra y arranca; el solver arranca FastAPI.
 5. Smoke minimo: `PRODUCTION_BASE_URL=https://<dominio> npm run smoke:production` y una
    sesion autenticada de generacion.
@@ -206,9 +209,9 @@ No se usan volumenes persistentes en Railway: la verdad esta en Turso.
 4. En el solver: desactivar el dominio publico, Serverless activado, tope de RAM ~2 GB,
    health check `GET /health`.
 5. En el web: Serverless activado, health check `GET /health` (nunca `/ready`),
-   esperar el check de CI de `main` antes de publicar, adjuntar el dominio HTTPS.
+   esperar el check de CI de `stable` antes de publicar, adjuntar el dominio HTTPS.
 6. Confirmar `SOLVER_URL` al hostname privado y `PORT` del solver.
-7. Primer deploy desde `main`. El contenedor web migra y arranca; el solver arranca
+7. Primer deploy desde `stable`. El contenedor web migra y arranca; el solver arranca
    FastAPI.
 8. Crear las dos cuentas con `npm run admin:create-users` y sembrar profesores con
    `npm run seed:teachers` contra Turso, desde un equipo local.
@@ -222,8 +225,8 @@ Hobby cobra 5 USD/mes aunque no haya compute.
 
 | Sintoma | Que hacer |
 | ------- | --------- |
-| Deploy rojo | Leer el log de build. Si CI de `main` fallo, no publicar. Corregir en `main`. |
-| Migracion falla | El proceso web no llega a escuchar. Corregir SQL en `main` y redesplegar. No hay rollback automatico de esquema. |
+| Deploy rojo | Leer el log de build. Si CI de `stable` fallo, no publicar. Corregir y promocionar a `stable`. |
+| Migracion falla | El proceso web no llega a escuchar. Corregir SQL, llevarlo a `stable` y redesplegar. No hay rollback automatico de esquema. |
 | `/health` 502 o timeout en frio | Esperar el arranque Serverless y repetir. Si persiste, el contenedor no arranca: logs de Railway. |
 | `/ready` con `database=error` | Token o URL de Turso. NestJS no debe seguir en el balanceador. |
 | `/ready` con `solver=error` | Solver dormido o sin red privada. Login y personas siguen. Lanzar una generacion o `GET` interno a `/health` del solver. |

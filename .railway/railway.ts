@@ -9,10 +9,11 @@ import {
 
 const REPOSITORY = "jmgallardob/academia-espronceda";
 const REGION = "europe-west4";
+const PRODUCTION_BRANCH = "stable";
 
 export default defineRailway(() => {
   const solver = service("academia-espronceda-solver", {
-    source: github(REPOSITORY, { branch: "main" }),
+    source: github(REPOSITORY, { branch: PRODUCTION_BRANCH }),
     start: "python -m academia_espronceda_solver",
     healthcheck: "/health",
     healthcheckTimeout: 120,
@@ -26,7 +27,7 @@ export default defineRailway(() => {
   });
 
   const web = service("academia-espronceda-web", {
-    source: github(REPOSITORY, { branch: "main" }),
+    source: github(REPOSITORY, { branch: PRODUCTION_BRANCH }),
     start: "npm run db:migrate:prod && npm run start:prod:api",
     healthcheck: "/health",
     healthcheckTimeout: 30,
