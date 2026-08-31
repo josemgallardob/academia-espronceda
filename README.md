@@ -78,9 +78,15 @@ profesores con `npm run seed:teachers`. No crea alumnos ni toca usuarios.
 
 El frontend se sirve bajo un dominio HTTPS publico en **Railway**; NestJS entrega Angular y
 la API en el mismo origen y FastAPI corre en la red privada, sin URL publica. Produccion
-usa Turso remoto y secretos del panel de Railway, nunca archivos versionados. La decision,
-el blueprint `.railway/railway.ts` y los costes estan en
+usa Turso remoto y secretos del panel de Railway, nunca archivos versionados. Las imagenes
+son `Dockerfile.web` y `Dockerfile.solver`. La decision, el blueprint `.railway/railway.ts`,
+el arranque, el smoke y la recuperacion estan en
 [Plataforma de despliegue](./docs/08-plataforma-despliegue.md).
+
+Tras el primer deploy, crear las dos cuentas y el catalogo de profesores desde un equipo
+local contra Turso (`npm run admin:create-users` y `npm run seed:teachers`). Comprobar
+salud y el documento Angular con
+`PRODUCTION_BASE_URL=https://<dominio> npm run smoke:production`.
 
 El contrato de variables, topologia, arranque, dominio, TLS, CORS y secretos esta en
 [Configuracion de entornos y secretos](./docs/05-configuracion-entornos.md).
@@ -102,6 +108,7 @@ npm run format:check    # comprueba el formato sin modificar
 npm run lint            # analiza TypeScript, plantillas y Python
 npm run test            # ejecuta las pruebas de los tres servicios
 npm run test:e2e        # recorridos críticos en Chromium
+npm run smoke:production # /health, /ready y /login contra PRODUCTION_BASE_URL
 npm run build           # construye o valida los tres servicios
 npm run check           # ejecuta todas las comprobaciones anteriores
 ```

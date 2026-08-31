@@ -68,6 +68,90 @@ describe('SolverHttpClient', () => {
     expect(fetchCalls).toBe(1);
   });
 
+  it('retries connection failures and gateway 502 responses while the solver wakes', async () => {
+    const delays: number[] = [];
+    let fetchCalls = 0;
+    const fetchImpl: typeof fetch = () => {
+      fetchCalls += 1;
+      if (fetchCalls === 1) {
+        return Promise.reject(new TypeError('fetch failed'));
+      }
+      if (fetchCalls === 2) {
+        return Promise.resolve(jsonResponse(502, { detail: 'upstream' }));
+      }
+      return Promise.resolve(jsonResponse(200, optimalResponse(request)));
+    };
+    const client = new SolverHttpClient({
+      baseUrl: 'http://solver.test',
+      serviceToken: 'test-token',
+      fetchImpl,
+      coldStartBackoffMs: [5, 5],
+      sleep: (ms) => {
+        delays.push(ms);
+        return Promise.resolve();
+      },
+    });
+
+    await expect(client.solve(request)).resolves.toMatchObject({
+      status: 'OPTIMAL',
+      requestId: 'request-1',
+    });
+    expect(fetchCalls).toBe(3);
+    expect(delays).toEqual([5, 5]);
+  });
+
+  it('does not retry solver timeouts or an in-progress generation', async () => {
+    let timeoutCalls = 0;
+    const timeoutClient = new SolverHttpClient({
+      baseUrl: 'http://solver.test',
+      serviceToken: 'test-token',
+      timeoutBufferSeconds: 0,
+      coldStartBackoffMs: [5],
+      sleep: () =>
+        Promise.reject(new Error('should not sleep after a solve timeout')),
+      fetchImpl: async (_url, init) =>
+        await new Promise<Response>((_resolve, reject) => {
+          timeoutCalls += 1;
+          init?.signal?.addEventListener('abort', () => {
+            const error = new Error('aborted');
+            error.name = 'TimeoutError';
+            reject(error);
+          });
+        }),
+    });
+    await expect(
+      timeoutClient.solve({
+        ...request,
+        options: { ...request.options, timeLimitSeconds: 0.001 },
+      }),
+    ).rejects.toMatchObject({
+      problem: { status: 502, code: 'SOLVER_UNAVAILABLE' },
+    });
+    expect(timeoutCalls).toBe(1);
+
+    let busyCalls = 0;
+    const busyClient = new SolverHttpClient({
+      baseUrl: 'http://solver.test',
+      serviceToken: 'test-token',
+      coldStartBackoffMs: [5],
+      sleep: () =>
+        Promise.reject(new Error('should not sleep after SOLVER_BUSY')),
+      fetchImpl: () => {
+        busyCalls += 1;
+        return Promise.resolve(
+          jsonResponse(503, {
+            code: 'SOLVER_BUSY',
+            detail: 'already running',
+          }),
+        );
+      },
+    });
+    await expect(busyClient.solve(request)).rejects.toMatchObject({
+      problem: { status: 503, code: 'GENERATION_BUSY' },
+    });
+    expect(busyCalls).toBe(1);
+  });
+
   it('maps timeouts and 5xx failures to SOLVER_UNAVAILABLE', async () => {
     const timeoutClient = new SolverHttpClient({
       baseUrl: 'http://solver.test',

@@ -99,8 +99,10 @@ Si el limite esta ocupado:
 - NestJS responde `503 GENERATION_BUSY`.
 - FastAPI responde `503 SOLVER_BUSY` si recibe otra llamada directa.
 
-No hay reintentos automaticos. El operador o el usuario debe esperar a que termine la
-generacion en curso.
+No hay reintentos automaticos de un solve ocupado. El operador o el usuario debe esperar
+a que termine la generacion en curso. NestJS si reintenta fallos de arranque en frio
+(red o 502 de pasarela) con esperas de 1s, 2s, 4s y 8s; no reintenta un timeout de
+solve ni un `503 SOLVER_BUSY`.
 
 ## Fallos de autenticacion
 
@@ -120,7 +122,7 @@ problema es 429, mirar `AUTH_LOGIN_IP_LIMIT` y `AUTH_LOGIN_IDENTIFIER_LIMIT`.
 
 | Sintoma | Codigo | Que revisar |
 | ------- | ------ | ----------- |
-| Timeout o red | `502 SOLVER_UNAVAILABLE` | `SOLVER_URL`, red privada, proceso FastAPI y `GET {SOLVER_URL}/health`. |
+| Timeout o red | `502 SOLVER_UNAVAILABLE` | `SOLVER_URL`, red privada, proceso FastAPI y `GET {SOLVER_URL}/health`. Si el solver dormia, buscar `solver.cold_start_retry`. |
 | Token interno o 5xx del motor | `502 SOLVER_UNAVAILABLE` | Token, logs `solver.response` del motor y `/health` de FastAPI. |
 | Contrato o JSON invalido | `502 SOLVER_INVALID_RESPONSE` | Version del contrato y del catalogo. |
 | Resultado incoherente con NestJS | `502 SOLVER_RESULT_DIVERGED` | Defecto de consistencia: no reintentar a ciegas. |

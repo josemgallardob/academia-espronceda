@@ -16,13 +16,11 @@ No hay entorno de staging en el MVP. Un solo operador y dos profesores no justif
 segundo cluster. Los entornos de preview de Railway quedan fuera de alcance.
 
 El uso es estacional: sobre todo al inicio de curso y pocas veces al dia. El compute
-puede dormir entre sesiones y apagarse el resto del año. DE-05 activa Serverless en
-ambos servicios y deja Hobby solo durante la campana.
+puede dormir entre sesiones y apagarse el resto del año. Serverless va activado en
+ambos servicios; Hobby solo durante la campana.
 
-El aprovisionamiento real, las cuentas administrativas y el smoke en produccion pertenecen
-a DE-05. Este documento cierra la eleccion y el contrato que DE-05 debe respetar.
-
-El blueprint versionado es `.railway/railway.ts`.
+El blueprint versionado es `.railway/railway.ts`. La operacion y la recuperacion estan
+en la seccion final de este documento.
 
 ## Comparacion
 
@@ -65,9 +63,10 @@ Un solo origen publico evita adaptar cookies, CORS y CSRF. NestJS escucha en `0.
 honra `PORT` o `API_PORT` (Railway asigna `PORT`). FastAPI solo acepta trafico de la red
 privada del proyecto; no recibe dominio `up.railway.app` ni certificado publico.
 
-`SOLVER_URL` apunta al hostname privado del solver en el puerto 8001. El token interno
-autentica la llamada; no sustituye el aislamiento de red. El cliente `@libsql/client` usa
-HTTP por peticion contra Turso: no deja un socket abierto que impida el sueno.
+`SOLVER_URL` se construye desde `RAILWAY_PRIVATE_DOMAIN` y `PORT` del solver. El token
+interno autentica la llamada; no sustituye el aislamiento de red. El cliente
+`@libsql/client` usa HTTP por peticion contra Turso: no deja un socket abierto que
+impida el sueno.
 
 Health checks:
 
@@ -75,8 +74,12 @@ Health checks:
   y al solver y los mantiene despiertos.
 - Solver: `GET /health` solo desde la red interna o la sonda de Railway.
 
-DE-05 debe hacer que NestJS sirva `apps/web/dist/web/browser` con fallback a `index.html`.
-Hasta entonces el blueprint deja documentados build y start; no se considera desplegado.
+NestJS sirve `apps/web/dist/web/browser` con fallback a `index.html` para las rutas de
+Angular (`/login`, `/personas`, `/horario`). Las rutas `/api/*`, `/health`, `/ready` y
+`/metrics` siguen en NestJS.
+
+Las imagenes son `Dockerfile.web` (Node 24.16.0) y `Dockerfile.solver` (Python 3.14.2).
+Railway las selecciona con `RAILWAY_DOCKERFILE_PATH`.
 
 ## Secretos y variables
 
@@ -97,11 +100,13 @@ Claves:
 
 Valores no secretos que el blueprint fija: `NODE_ENV=production`, `API_HOST=0.0.0.0`,
 `COOKIE_SECURE=true`, `TRUST_PROXY=true`, `AUTH_COOKIE_NAME=__Host-academia_session`,
-`SOLVER_HOST=0.0.0.0`, `SOLVER_PORT=8001`.
+`SOLVER_HOST=0.0.0.0`, `RAILWAY_DOCKERFILE_PATH`. NestJS y FastAPI escuchan el `PORT`
+que inyecta Railway.
 
-`SOLVER_URL` se construye desde `RAILWAY_PRIVATE_DOMAIN` del solver. Si el plan no acepta
-la interpolacion, DE-05 la deja en el panel como
-`http://${{academia-espronceda-solver.RAILWAY_PRIVATE_DOMAIN}}:8001`.
+`SOLVER_URL` se interpola en `.railway/railway.ts` como
+`http://${solver.env.RAILWAY_PRIVATE_DOMAIN}:${solver.env.PORT}`. Si el plan no acepta
+esa referencia, dejarla en el panel con la misma forma
+`http://${{academia-espronceda-solver.RAILWAY_PRIVATE_DOMAIN}}:${{academia-espronceda-solver.PORT}}`.
 
 El listado completo sigue en [Configuracion de entornos y secretos](./05-configuracion-entornos.md).
 `.env.production.example` es la plantilla para rellenar las variables de Railway.
@@ -123,13 +128,15 @@ Internet o CORS admite `*`.
 Orden en cada deploy del servicio web:
 
 1. Build de Angular y NestJS.
-2. Start: `npm run db:migrate` contra Turso y despues NestJS. La red privada de Railway
-   no existe en el build; Turso es publico y la migracion no la necesita.
-3. Arranque de NestJS.
+2. Start: `npm run db:migrate:prod` contra Turso y despues NestJS. El migrador compilado
+   no necesita `drizzle-kit` en la imagen de produccion. Turso es publico; la migracion
+   no usa la red privada de Railway.
+3. Arranque de NestJS, que exige el bundle de Angular o falla al arrancar.
 
-El solver no toca la base. Tras el primer deploy (DE-05):
+El solver no toca la base. Tras el primer deploy:
 
-1. `npm run admin:create-users` (interactivo, fuera de CI).
+1. Desde un equipo con `.env.local` apuntando a Turso (nunca en Git):
+   `npm run admin:create-users`.
 2. `npm run seed:teachers`.
 3. No ejecutar `seed:local` contra Turso.
 
@@ -143,8 +150,8 @@ esquema: se corrige en `main` y se vuelve a desplegar.
    build. El despliegue no debe continuar si ese job falla.
 3. Railway, conectado al mismo repositorio y a `main`, espera el check de CI y publica.
 4. El servicio web migra y arranca; el solver arranca FastAPI.
-5. Smoke minimo: `https://<dominio>/health`, `https://<dominio>/ready` y una llamada
-   autenticada de generacion (DE-05).
+5. Smoke minimo: `PRODUCTION_BASE_URL=https://<dominio> npm run smoke:production` y una
+   sesion autenticada de generacion.
 
 No hay workflow de GitHub que despliegue por SSH ni que imprima secretos. Railway es el
 desplegador; GitHub es la puerta de calidad.
@@ -162,8 +169,9 @@ cierra el stream en cada query). `/health` no toca la base. El riesgo de no dorm
 una sonda de plataforma en `/ready` o health checks demasiado frecuentes.
 
 El primer request tras el sueno puede tardar y, en frio, Railway puede devolver 502
-mientras arranca el contenedor. DE-05 debe reintentar el cliente NestJS→solver unos
-segundos o aceptar ese fallo puntual en la primera generacion del dia.
+mientras arranca el contenedor. NestJS reintenta la llamada al solver ante fallos de
+red y 502 de pasarela (1s, 2s, 4s y 8s). No reintenta un timeout de solve ni un
+`503 SOLVER_BUSY`. La primera generacion del dia puede tardar unos segundos extra.
 
 Fuera de campana: bajar Hobby a Free o cancelar la suscripcion. Hobby cobra 5 USD/mes
 aunque no haya compute. Render sigue como reserva si se prefiere suspender instancias
@@ -189,16 +197,42 @@ puede acercar la factura a 25-35 USD ese mes. Doce meses de Hobby olvidado son 6
 
 No se usan volumenes persistentes en Railway: la verdad esta en Turso.
 
-## Lo que DE-05 debe hacer
+## Operacion del MVP
 
-1. Crear el proyecto Railway, enlazar el repositorio y aplicar `.railway/railway.ts`.
-2. Rellenar secretos, `API_CORS_ORIGINS` y el dominio del servicio web.
-3. Confirmar `SOLVER_URL` al hostname privado y puerto 8001.
-4. Activar Serverless en ambos servicios. Health check solo en `/health`.
-5. Esperar el check de CI de `main` antes de publicar.
-6. Asignar ~2 GB de RAM al solver.
-7. Servir el bundle de Angular desde NestJS.
-8. Confirmar Node 24 y Python 3.14 en el runtime; si Railway no los ofrece, anadir
-   Dockerfiles sin cambiar la topologia.
-9. Migrar, crear las dos cuentas, sembrar profesores y ejecutar el smoke.
-10. Documentar encender Hobby en agosto y bajarlo a Free al terminar la campana.
+1. Crear el proyecto Railway en `europe-west4`, plan Hobby, y `railway link`.
+2. Aplicar `.railway/railway.ts` (`railway config plan` y `railway config apply`).
+3. Rellenar `preserve()`: `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `JWT_SECRET`,
+   `INTERNAL_SERVICE_TOKEN` (el mismo valor en web y solver) y `API_CORS_ORIGINS`.
+4. En el solver: desactivar el dominio publico, Serverless activado, tope de RAM ~2 GB,
+   health check `GET /health`.
+5. En el web: Serverless activado, health check `GET /health` (nunca `/ready`),
+   esperar el check de CI de `main` antes de publicar, adjuntar el dominio HTTPS.
+6. Confirmar `SOLVER_URL` al hostname privado y `PORT` del solver.
+7. Primer deploy desde `main`. El contenedor web migra y arranca; el solver arranca
+   FastAPI.
+8. Crear las dos cuentas con `npm run admin:create-users` y sembrar profesores con
+   `npm run seed:teachers` contra Turso, desde un equipo local.
+9. `PRODUCTION_BASE_URL=https://<dominio> npm run smoke:production`.
+10. Recorrer login, personas, horario manual y generacion automatica en el navegador.
+
+Campana: activar Hobby en agosto. Al terminar, bajar a Free o cancelar la suscripcion.
+Hobby cobra 5 USD/mes aunque no haya compute.
+
+## Recuperacion basica
+
+| Sintoma | Que hacer |
+| ------- | --------- |
+| Deploy rojo | Leer el log de build. Si CI de `main` fallo, no publicar. Corregir en `main`. |
+| Migracion falla | El proceso web no llega a escuchar. Corregir SQL en `main` y redesplegar. No hay rollback automatico de esquema. |
+| `/health` 502 o timeout en frio | Esperar el arranque Serverless y repetir. Si persiste, el contenedor no arranca: logs de Railway. |
+| `/ready` con `database=error` | Token o URL de Turso. NestJS no debe seguir en el balanceador. |
+| `/ready` con `solver=error` | Solver dormido o sin red privada. Login y personas siguen. Lanzar una generacion o `GET` interno a `/health` del solver. |
+| `502 SOLVER_UNAVAILABLE` | Red privada, `SOLVER_URL`, token interno identico y RAM del solver. Revisar `solver.cold_start_retry` en logs. |
+| `503 GENERATION_BUSY` | Hay un solve en curso. Esperar; no relanzar en bucle. |
+| Login imposible | `API_CORS_ORIGINS` debe ser el origen HTTPS exacto. Cookie `__Host-` exige HTTPS y `Path=/`. |
+| Angular en blanco | Bundle ausente: el start deberia haber fallado. Si `/login` no es HTML, NestJS no esta sirviendo `dist/web/browser`. |
+| Dominio propio no resuelve | DNS del servicio web y TLS de Railway. No abrir HTTP. |
+| Coste alto fuera de campana | Apagar Serverless no basta: bajar Hobby a Free. |
+
+El diagnostico detallado de autenticacion y del solver esta en
+[Diagnostico operativo](./07-diagnostico-operativo.md).

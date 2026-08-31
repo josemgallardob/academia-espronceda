@@ -1,0 +1,25 @@
+FROM node:24.16.0-bookworm-slim
+
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN corepack enable && corepack prepare npm@11.13.0 --activate
+
+COPY package.json package-lock.json .nvmrc ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+
+RUN npm ci
+
+COPY apps/api apps/api
+COPY apps/web apps/web
+
+RUN npm run build:web && npm run build:api
+
+ENV NODE_ENV=production
+EXPOSE 3000
+
+CMD ["sh", "-c", "npm run db:migrate:prod && npm run start:prod:api"]

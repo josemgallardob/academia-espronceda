@@ -4,10 +4,19 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import type { ApiEnvironment } from './config/environment';
 import { httpObservabilityMiddleware } from './observability/http-observability.middleware';
+import {
+  resolveAngularBrowserRoot,
+  serveAngularBrowser,
+} from './web/angular-browser';
+
+export interface ApiApplicationOptions {
+  webRoot?: string;
+}
 
 export function configureApiApplication(
   app: NestExpressApplication,
   environment: ApiEnvironment,
+  options: ApiApplicationOptions = {},
 ): void {
   app.use(httpObservabilityMiddleware);
   app.use(helmet());
@@ -31,5 +40,14 @@ export function configureApiApplication(
 
   if (environment.trustProxy) {
     app.set('trust proxy', 1);
+  }
+
+  const webRoot =
+    options.webRoot ??
+    (environment.nodeEnv === 'production'
+      ? resolveAngularBrowserRoot()
+      : undefined);
+  if (webRoot !== undefined) {
+    serveAngularBrowser(app, webRoot);
   }
 }

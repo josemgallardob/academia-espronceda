@@ -372,7 +372,7 @@
 			"y": 580,
 			"width": 280,
 			"height": 160,
-			"color": "5"
+			"color": "4"
 		},
 		{
 			"id": "33b9705a",
@@ -387,12 +387,12 @@
 		{
 			"id": "5e8f54d7",
 			"type": "text",
-			"text": "## DE-05 Deploy MVP and run smoke validation\nDesplegar el MVP con migraciones, dos cuentas administrativas y conectividad privada al solver. Ejecutar builds, suite obligatoria, smoke tests de autenticacion, CRUD, horario manual y generacion automatica, y documentar operacion y recuperacion basica.",
+			"text": "## DE-05 Deploy MVP and run smoke validation\n## DE-05 Deploy MVP and run smoke validation\nDesplegar el MVP con migraciones, dos cuentas administrativas y conectividad privada al solver. Ejecutar builds, suite obligatoria, smoke tests de autenticacion, CRUD, horario manual y generacion automatica, y documentar operacion y recuperacion basica.\n\nImplementado: NestJS sirve `apps/web/dist/web/browser` con fallback SPA; migrador compilado (`db:migrate:prod`); reintentos de arranque en frio NestJS→solver; `Dockerfile.web`/`Dockerfile.solver` (Node 24.16 / Python 3.14.2); `SOLVER_URL` al hostname privado y `PORT`; `scripts/production-smoke.mjs`; runbook de operacion y recuperacion en docs/08.",
 			"x": 2220,
 			"y": 760,
 			"width": 280,
 			"height": 160,
-			"color": "6"
+			"color": "2"
 		},
 		{
 			"id": "cea8e123",
