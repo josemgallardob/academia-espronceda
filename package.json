@@ -39,7 +39,6 @@
     "test:e2e:browsers": "E2E_BROWSERS=all npx playwright test --config e2e/playwright.config.ts",
     "db:generate": "npm run db:generate --workspace @academia-espronceda/api",
     "db:migrate": "npm run db:migrate --workspace @academia-espronceda/api",
-    "db:migrate:prod": "npm run db:migrate:prod --workspace @academia-espronceda/api",
     "db:check": "npm run db:check --workspace @academia-espronceda/api",
     "db:studio": "npm run db:studio --workspace @academia-espronceda/api",
     "admin:create-users": "npm run admin:create-users --workspace @academia-espronceda/api",
@@ -57,5 +56,8 @@
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "prettier": "^3.8.1"
+  },
+  "dependencies": {
+    "railway": "^3.11.0"
   }
 }
