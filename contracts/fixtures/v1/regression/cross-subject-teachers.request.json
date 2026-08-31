@@ -1,0 +1,79 @@
+{
+  "contractVersion": "1.0.0",
+  "ruleCatalogVersion": "1.0.0",
+  "requestId": "request-cross-subject-teachers",
+  "timezone": "Europe/Madrid",
+  "slots": [
+    {
+      "id": "MONDAY_16_00",
+      "dayOfWeek": "MONDAY",
+      "startTime": "16:00",
+      "endTime": "17:00"
+    },
+    {
+      "id": "TUESDAY_16_00",
+      "dayOfWeek": "TUESDAY",
+      "startTime": "16:00",
+      "endTime": "17:00"
+    },
+    {
+      "id": "WEDNESDAY_16_00",
+      "dayOfWeek": "WEDNESDAY",
+      "startTime": "16:00",
+      "endTime": "17:00"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "teacher-2",
+      "profile": "GENERAL_SCIENCES",
+      "supportedCourseCodes": ["BACH_1"],
+      "supportedSubjectCodes": ["PHYSICS", "MATHEMATICS"],
+      "availableSlotIds": ["MONDAY_16_00", "TUESDAY_16_00"]
+    },
+    {
+      "id": "teacher-3",
+      "profile": "LANGUAGES",
+      "supportedCourseCodes": ["BACH_1"],
+      "supportedSubjectCodes": ["ENGLISH"],
+      "availableSlotIds": ["WEDNESDAY_16_00"]
+    }
+  ],
+  "students": [
+    {
+      "id": "student-1",
+      "status": "ACTIVE",
+      "courseCode": "BACH_1",
+      "subjectHours": [
+        { "subjectCode": "PHYSICS", "weeklyHours": 2 },
+        { "subjectCode": "ENGLISH", "weeklyHours": 1 }
+      ],
+      "weeklyHoursTotal": 3,
+      "unavailableSlotIds": []
+    },
+    {
+      "id": "student-2",
+      "status": "ACTIVE",
+      "courseCode": "BACH_1",
+      "subjectHours": [
+        { "subjectCode": "PHYSICS", "weeklyHours": 2 },
+        { "subjectCode": "ENGLISH", "weeklyHours": 1 }
+      ],
+      "weeklyHoursTotal": 3,
+      "unavailableSlotIds": []
+    },
+    {
+      "id": "student-3",
+      "status": "ACTIVE",
+      "courseCode": "BACH_1",
+      "subjectHours": [
+        { "subjectCode": "PHYSICS", "weeklyHours": 2 },
+        { "subjectCode": "ENGLISH", "weeklyHours": 1 }
+      ],
+      "weeklyHoursTotal": 3,
+      "unavailableSlotIds": []
+    }
+  ],
+  "relationships": [],
+  "options": { "timeLimitSeconds": 10, "randomSeed": 12345 }
+}

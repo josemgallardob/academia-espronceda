@@ -1,0 +1,139 @@
+{
+  "contractVersion": "1.0.0",
+  "ruleCatalogVersion": "1.0.0",
+  "requestId": "request-insufficient-capacity",
+  "mode": "RELAXED",
+  "status": "OPTIMAL",
+  "attempts": [
+    {
+      "mode": "STRICT",
+      "status": "INFEASIBLE",
+      "elapsedMilliseconds": 1
+    },
+    {
+      "mode": "RELAXED",
+      "status": "OPTIMAL",
+      "elapsedMilliseconds": 1
+    }
+  ],
+  "solution": {
+    "classes": [
+      {
+        "id": "class-MONDAY_16_00-teacher-2",
+        "teacherId": "teacher-2",
+        "slotId": "MONDAY_16_00",
+        "studentIds": ["student-1", "student-2", "student-3", "student-4", "student-5", "student-6"]
+      }
+    ],
+    "subjectTeacherAllocations": [],
+    "score": {
+      "direction": "MINIMIZE",
+      "bestScore": 0,
+      "tiers": [
+        {
+          "priority": 1,
+          "penalty": 1.0
+        },
+        {
+          "priority": 2,
+          "penalty": 0.0
+        },
+        {
+          "priority": 3,
+          "penalty": 4.0
+        },
+        {
+          "priority": 4,
+          "penalty": 0.0
+        },
+        {
+          "priority": 5,
+          "penalty": 0.0
+        },
+        {
+          "priority": 6,
+          "penalty": 0.0
+        }
+      ],
+      "ruleBreakdown": [
+        {
+          "ruleId": "CLASS_CAPACITY_MAXIMUM",
+          "priority": 1,
+          "occurrenceCount": 1,
+          "penalty": 1.0
+        },
+        {
+          "ruleId": "CLASS_CAPACITY_IDEAL",
+          "priority": 3,
+          "occurrenceCount": 1,
+          "penalty": 4.0
+        }
+      ]
+    },
+    "findings": [
+      {
+        "fingerprint": "sha256:be31dfb3f3fec20d458e1fe13a209409f3c277b04c48186e8fec7a940bce8253",
+        "ruleId": "CLASS_CAPACITY_IDEAL",
+        "enforcement": "PREFERENCE",
+        "severity": "WARNING",
+        "blocksConfirmation": false,
+        "entityRefs": [
+          {
+            "type": "CLASS",
+            "id": "class-MONDAY_16_00-teacher-2"
+          }
+        ],
+        "slotIds": ["MONDAY_16_00"],
+        "parameters": {
+          "actualCapacity": 6,
+          "idealCapacity": 4,
+          "studentIds": [
+            "student-1",
+            "student-2",
+            "student-3",
+            "student-4",
+            "student-5",
+            "student-6"
+          ]
+        }
+      },
+      {
+        "fingerprint": "sha256:df4aad5b59db0fe427a3316516ae779834a8849f96dcf3e60f0d92a38b1f2794",
+        "ruleId": "CLASS_CAPACITY_MAXIMUM",
+        "enforcement": "RELAXABLE",
+        "severity": "ERROR",
+        "blocksConfirmation": false,
+        "entityRefs": [
+          {
+            "type": "CLASS",
+            "id": "class-MONDAY_16_00-teacher-2"
+          },
+          {
+            "type": "SLOT",
+            "id": "MONDAY_16_00"
+          },
+          {
+            "type": "TEACHER",
+            "id": "teacher-2"
+          }
+        ],
+        "slotIds": ["MONDAY_16_00"],
+        "parameters": {
+          "actualCapacity": 6,
+          "maximumCapacity": 5,
+          "studentIds": [
+            "student-1",
+            "student-2",
+            "student-3",
+            "student-4",
+            "student-5",
+            "student-6"
+          ]
+        }
+      }
+    ]
+  },
+  "elapsedMilliseconds": 2,
+  "randomSeed": 12345,
+  "timeLimitSeconds": 10.0
+}

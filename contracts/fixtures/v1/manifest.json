@@ -91,6 +91,118 @@
       "path": "app/confirmed-with-incidences.response.json",
       "semanticValidator": "APP_SCHEDULE",
       "expected": "VALID"
+    },
+    {
+      "id": "regression.minimal-valid.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/minimal-valid.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.minimal-valid.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/minimal-valid.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.multiple-valid-solutions.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/multiple-valid-solutions.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.multiple-valid-solutions.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/multiple-valid-solutions.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.impossible-availability.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/impossible-availability.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.impossible-availability.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/impossible-availability.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.student-overlap.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/student-overlap.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.student-overlap.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/student-overlap.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.insufficient-capacity.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/insufficient-capacity.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.insufficient-capacity.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/insufficient-capacity.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.cross-subject-teachers.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/cross-subject-teachers.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.cross-subject-teachers.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/cross-subject-teachers.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.best-effort-required.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/best-effort-required.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.best-effort-required.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/best-effort-required.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.weekly-hours-exceeded.request",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleRequest",
+      "path": "regression/weekly-hours-exceeded.request.json",
+      "semanticValidator": "SOLVER_REQUEST",
+      "expected": "VALID"
+    },
+    {
+      "id": "regression.weekly-hours-exceeded.response",
+      "schemaRef": "../../solver-api/v1/openapi.json#/components/schemas/SolveScheduleResponse",
+      "path": "regression/weekly-hours-exceeded.response.json",
+      "semanticValidator": "SOLVER_RESPONSE",
+      "expected": "VALID"
     }
   ]
 }

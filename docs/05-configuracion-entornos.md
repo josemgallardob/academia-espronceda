@@ -8,8 +8,10 @@ El proyecto dispone de dos entornos:
 2. `production`: artefactos optimizados, dominio HTTPS publico, Turso remoto y comunicacion
    privada entre NestJS y FastAPI.
 
-La seleccion del proveedor y el aprovisionamiento real pertenecen a las tareas DE-04 y DE-05.
-Este documento define el contrato que debera respetar cualquier plataforma elegida.
+La plataforma cerrada es Railway. El contrato de topologia, secretos, dominio, migraciones,
+CI de despliegue, operacion y recuperacion esta en
+[Plataforma de despliegue](./08-plataforma-despliegue.md). El blueprint es
+`.railway/railway.ts`.
 
 ## Topologia
 
@@ -29,20 +31,18 @@ origenes locales declarados expresamente en CORS.
 ### Produccion
 
 ```text
-https://<dominio-publico>
-    ├── /*       ─────> Angular estatico
-    └── /api/*   ─────> NestJS publico ─────> FastAPI privado
-                                  │
-                                  └──────────> Turso/libSQL remoto
+https://<dominio-publico>                 Railway academia-espronceda-web
+    ├── /*       ─────> Angular estatico (servido por NestJS)
+    └── /api/*, /health, /ready
+                 ─────> NestJS ─────> FastAPI (Railway academia-espronceda-solver)
+                            │
+                            └───────> Turso/libSQL remoto
 ```
 
-El router de la plataforma debe retirar el prefijo `/api` antes de reenviar la peticion a
-NestJS. Por ejemplo, `/api/health` en el dominio publico llega como `/health` al proceso
-NestJS. FastAPI no debe publicar puerto, ruta ni dominio accesible desde Internet.
-
-Servir frontend y API desde un unico origen simplifica las cookies seguras, CORS y la
-proteccion CSRF. Si la plataforma elegida obliga a usar un subdominio de API, se deberan
-adaptar la URL de Angular y la politica de cookies antes del despliegue.
+Un solo origen HTTPS conserva las cookies `__Host-`, CORS y CSRF. NestJS mantiene sus
+rutas (`/health`, `/api/v1/...`) y sirve el bundle de Angular en el resto. FastAPI no
+publica puerto, ruta ni dominio a Internet; NestJS lo llama en el hostname privado
+`RAILWAY_PRIVATE_DOMAIN` del solver, puerto 8001.
 
 ## Preparacion y arranque local
 
@@ -70,7 +70,7 @@ npm run dev:solver
 Puntos de comprobacion:
 
 - Web: `http://localhost:4200`
-- API: `http://localhost:3000/health`
+- API: `http://localhost:3000/health` y `http://localhost:3000/ready`
 - Solver: `http://localhost:8001/health`
 - Base local: `.data/academia-espronceda.db`
 
@@ -85,8 +85,12 @@ daemon ni credenciales de Turso. La dependencia de persistencia se incorporara e
 
 ## Construccion y ejecucion de produccion
 
-La plataforma debe instalar dependencias reproducibles, construir una unica revision y
-desplegar sus tres salidas:
+Railway construye `Dockerfile.web` y `Dockerfile.solver` (Node 24.16 y Python 3.14.2).
+El start de produccion migra Turso con el migrador compilado y arranca NestJS, que
+sirve `apps/web/dist/web/browser` con fallback a `index.html`.
+
+Antes de un deploy, la misma secuencia de comprobaciones (formato, contratos, lint, tests
+y build) es la que ejecuta GitHub Actions en cada push a `main`. Ver `.github/workflows/ci.yml`.
 
 ```bash
 npm ci
@@ -94,14 +98,11 @@ npm run setup:solver
 npm run check
 ```
 
-La misma secuencia de comprobaciones (formato, contratos, lint, tests y build) es la que
-ejecuta GitHub Actions en cada push a `main`. Ver `.github/workflows/ci.yml`.
-
 Salidas y procesos:
 
-- Angular: contenido estatico optimizado de `apps/web/dist/web/browser`.
-- NestJS: `npm run start:prod:api`.
-- FastAPI: `npm run start:prod:solver`, solo en la red privada.
+- Angular: contenido estatico de `apps/web/dist/web/browser`, servido por NestJS.
+- NestJS: `npm run db:migrate:prod && npm run start:prod:api`.
+- FastAPI: `python -m academia_espronceda_solver`, solo en la red privada.
 
 Las variables de `.env.production.example` se configuran en el gestor de variables y secretos
 de la plataforma. No se copia ese archivo como `.env` en el servidor y no se hornea ningun
@@ -114,34 +115,36 @@ secretos.
 
 ## Variables
 
-| Variable                         | Desarrollo                  | Produccion                            | Consumidor      |
-| -------------------------------- | --------------------------- | ------------------------------------- | --------------- |
-| `NODE_ENV`                       | `development`               | `production`                          | NestJS, FastAPI |
-| `WEB_HOST`                       | `127.0.0.1`                 | No aplica al bundle estatico          | Arranque local  |
-| `WEB_PORT`                       | `4200`                      | Gestionado por el hosting             | Arranque local  |
-| `API_HOST`                       | `127.0.0.1`                 | `0.0.0.0` o interfaz privada asignada | NestJS          |
-| `API_PORT`                       | `3000`                      | Puerto asignado/interno               | NestJS          |
-| `API_CORS_ORIGINS`               | Origenes locales explicitos | `https://<dominio-publico>`           | NestJS          |
-| `SOLVER_HOST`                    | `127.0.0.1`                 | Interfaz de red privada               | FastAPI         |
-| `SOLVER_PORT`                    | `8001`                      | Puerto interno                        | FastAPI         |
-| `SOLVER_URL`                     | `http://127.0.0.1:8001`     | URL interna, nunca publica            | NestJS          |
-| `DATABASE_URL`                   | `file:./.data/...`          | `libsql://...turso.io`                | NestJS          |
-| `DATABASE_AUTH_TOKEN`            | Vacio                       | Secreto de Turso                      | NestJS          |
-| `JWT_SECRET`                     | Marcador local conocido     | Secreto aleatorio de 64+ caracteres   | NestJS          |
-| `JWT_ISSUER`                     | `academia-espronceda-api`   | Emisor estable de la API              | NestJS          |
-| `JWT_AUDIENCE`                   | `academia-espronceda-web`   | Audiencia estable de la web           | NestJS          |
-| `JWT_TTL_SECONDS`                | `36000` (10 horas)          | Entre 28800 y 43200                   | NestJS          |
-| `INTERNAL_SERVICE_TOKEN`         | Marcador local conocido     | Secreto aleatorio de 32+ caracteres   | NestJS, FastAPI |
-| `AUTH_COOKIE_NAME`               | `academia_session`          | `__Host-academia_session`             | NestJS          |
-| `XSRF_COOKIE_NAME`               | `XSRF-TOKEN`                | `XSRF-TOKEN`                          | NestJS, Angular |
-| `AUTH_LOGIN_RATE_WINDOW_SECONDS` | `900`                       | Ventana entre 60 y 3600 segundos      | NestJS          |
-| `AUTH_LOGIN_IP_LIMIT`            | `20`                        | Intentos por IP y ventana             | NestJS          |
-| `AUTH_LOGIN_IDENTIFIER_LIMIT`    | `5`                         | Intentos por identidad y ventana      | NestJS          |
-| `COOKIE_SECURE`                  | `false`                     | `true`                                | NestJS          |
-| `TRUST_PROXY`                    | `false`                     | `true`                                | NestJS          |
-| `TEACHER_1_DISPLAY_NAME`         | `Profesor 1`                | Etiqueta visible del profesor 1       | `seed:teachers` |
-| `TEACHER_2_DISPLAY_NAME`         | `Profesor 2`                | Etiqueta visible del profesor 2       | `seed:teachers` |
-| `TEACHER_3_DISPLAY_NAME`         | `Profesor 3`                | Etiqueta visible del profesor 3       | `seed:teachers` |
+| Variable                         | Desarrollo                  | Produccion                                | Consumidor      |
+| -------------------------------- | --------------------------- | ----------------------------------------- | --------------- |
+| `NODE_ENV`                       | `development`               | `production`                              | NestJS, FastAPI |
+| `WEB_HOST`                       | `127.0.0.1`                 | No aplica al bundle estatico              | Arranque local  |
+| `WEB_PORT`                       | `4200`                      | Gestionado por el hosting                 | Arranque local  |
+| `API_HOST`                       | `127.0.0.1`                 | `0.0.0.0` o interfaz privada asignada     | NestJS          |
+| `API_PORT`                       | `3000`                      | `PORT` de Railway si no hay `API_PORT`    | NestJS          |
+| `API_CORS_ORIGINS`               | Origenes locales explicitos | `https://<dominio-publico>`               | NestJS          |
+| `SOLVER_HOST`                    | `127.0.0.1`                 | Interfaz de red privada                   | FastAPI         |
+| `SOLVER_PORT`                    | `8001`                      | `PORT` de Railway si no hay `SOLVER_PORT` | FastAPI         |
+| `SOLVER_URL`                     | `http://127.0.0.1:8001`     | Hostname privado y `PORT` del solver      | NestJS          |
+| `DATABASE_URL`                   | `file:./.data/...`          | `libsql://...turso.io`                    | NestJS          |
+| `DATABASE_AUTH_TOKEN`            | Vacio                       | Secreto de Turso                          | NestJS          |
+| `JWT_SECRET`                     | Marcador local conocido     | Secreto aleatorio de 64+ caracteres       | NestJS          |
+| `JWT_ISSUER`                     | `academia-espronceda-api`   | Emisor estable de la API                  | NestJS          |
+| `JWT_AUDIENCE`                   | `academia-espronceda-web`   | Audiencia estable de la web               | NestJS          |
+| `JWT_TTL_SECONDS`                | `36000` (10 horas)          | Entre 28800 y 43200                       | NestJS          |
+| `INTERNAL_SERVICE_TOKEN`         | Marcador local conocido     | Secreto aleatorio de 32+ caracteres       | NestJS, FastAPI |
+| `AUTH_COOKIE_NAME`               | `academia_session`          | `__Host-academia_session`                 | NestJS          |
+| `XSRF_COOKIE_NAME`               | `XSRF-TOKEN`                | `XSRF-TOKEN`                              | NestJS, Angular |
+| `AUTH_LOGIN_RATE_WINDOW_SECONDS` | `900`                       | Ventana entre 60 y 3600 segundos          | NestJS          |
+| `AUTH_LOGIN_IP_LIMIT`            | `20`                        | Intentos por IP y ventana                 | NestJS          |
+| `AUTH_LOGIN_IDENTIFIER_LIMIT`    | `5`                         | Intentos por identidad y ventana          | NestJS          |
+| `COOKIE_SECURE`                  | `false`                     | `true`                                    | NestJS          |
+| `TRUST_PROXY`                    | `false`                     | `true`                                    | NestJS          |
+| `SOLVER_TIMEOUT_BUFFER_SECONDS`  | `5`                         | Margen HTTP extra sobre el solver         | NestJS          |
+| `SOLVER_MAX_CONCURRENT`          | `1`                         | Generaciones simultaneas por proceso      | NestJS, FastAPI |
+| `TEACHER_1_DISPLAY_NAME`         | `Profesor 1`                | Etiqueta visible del profesor 1           | `seed:teachers` |
+| `TEACHER_2_DISPLAY_NAME`         | `Profesor 2`                | Etiqueta visible del profesor 2           | `seed:teachers` |
+| `TEACHER_3_DISPLAY_NAME`         | `Profesor 3`                | Etiqueta visible del profesor 3           | `seed:teachers` |
 
 `API_CORS_ORIGINS` acepta una lista separada por comas, sin rutas ni comodines. En produccion
 todos los origenes deben usar HTTPS.
@@ -173,13 +176,16 @@ aislamiento de red. El token de Turso solo se entrega a NestJS.
 
 Antes de abrir produccion:
 
-1. Configurar el dominio y sus registros DNS en la plataforma elegida.
+1. Configurar el dominio y sus registros DNS en el servicio web de Railway.
 2. Activar certificado TLS valido y redireccion permanente de HTTP a HTTPS.
-3. Enrutar `/api/*` a NestJS retirando `/api`.
-4. Servir Angular con fallback a `index.html` para sus rutas de cliente.
-5. Mantener FastAPI sin acceso publico.
-6. Establecer `API_CORS_ORIGINS` al origen HTTPS exacto.
-7. Ejecutar smoke tests sobre web, `/api/health` y el flujo NestJS-FastAPI.
+3. Confirmar que NestJS sirve Angular con fallback a `index.html`.
+4. Mantener FastAPI sin dominio publico, solo red privada.
+5. Establecer `API_CORS_ORIGINS` al origen HTTPS exacto.
+6. Ejecutar `PRODUCTION_BASE_URL=https://<dominio> npm run smoke:production` y el
+   recorrido autenticado de login, personas, horario manual y generacion.
+
+La observabilidad, la correlacion de llamadas y el diagnostico de fallos se detallan en
+[Diagnostico operativo](./07-diagnostico-operativo.md).
 
 No se debe considerar listo el entorno si el dominio funciona por HTTP, FastAPI es publico o
 la API acepta `*` en CORS.

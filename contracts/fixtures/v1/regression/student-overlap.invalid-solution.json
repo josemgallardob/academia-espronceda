@@ -1,0 +1,17 @@
+{
+  "classes": [
+    {
+      "id": "class-MONDAY_16_00-teacher-2",
+      "teacherId": "teacher-2",
+      "slotId": "MONDAY_16_00",
+      "studentIds": ["student-1", "student-2", "student-3"]
+    },
+    {
+      "id": "class-MONDAY_16_30-teacher-2",
+      "teacherId": "teacher-2",
+      "slotId": "MONDAY_16_30",
+      "studentIds": ["student-1", "student-2", "student-3"]
+    }
+  ],
+  "subjectTeacherAllocations": []
+}

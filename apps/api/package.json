@@ -21,13 +21,16 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
+    "db:migrate:prod": "node dist/database/run-migrations.js",
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts --host=127.0.0.1",
     "admin:create-users": "tsx src/administration/scripts/create-administrative-users.ts",
     "admin:reset-password": "tsx src/administration/scripts/reset-administrative-password.ts",
     "seed:local": "tsx src/administration/scripts/seed-local-demo.ts",
     "seed:teachers": "tsx src/administration/scripts/seed-teacher-catalog.ts",
-    "seed:volume": "tsx src/administration/scripts/seed-volume-roster.ts"
+    "seed:volume": "tsx src/administration/scripts/seed-volume-roster.ts",
+    "seed:e2e": "node --import tsx src/administration/scripts/seed-e2e.ts",
+    "reset:e2e": "node --import tsx src/administration/scripts/reset-e2e-operational-data.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

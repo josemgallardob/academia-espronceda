@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { currentOrNewRequestId } from '../observability/request-context';
 import { PeopleRepository } from '../database/repositories/people.repository';
 import { SchedulesRepository } from '../database/repositories/schedules.repository';
 import { TeachersRepository } from '../database/repositories/teachers.repository';
@@ -65,7 +66,7 @@ export class SchedulesService {
 
   async generateDraft(): Promise<Schedule> {
     const catalog = await this.loadLiveCatalog();
-    const requestId = randomUUID();
+    const requestId = currentOrNewRequestId();
     const request = toSolveScheduleRequest({
       requestId,
       slots: catalog.slots,

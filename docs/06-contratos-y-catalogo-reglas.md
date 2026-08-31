@@ -166,3 +166,23 @@ La comprobación valida referencias, manifiestos, esquema y semántica del catá
 operaciones, invariantes de horas, franjas, relaciones, estados del solver, reparto de
 asignaturas, revisiones y evidencia de confirmación. También valida todos los fixtures positivos
 y negativos declarados en su manifiesto.
+
+## Batería de regresión compartida
+
+`contracts/fixtures/v1/regression/` publica los ocho problemas de referencia que deben
+resolver de forma coherente el solver Python y el validador NestJS:
+
+| Identificador              | Qué comprueba                                                             |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `minimal-valid`            | Caso factible mínimo, solución estricta sin conflictos                    |
+| `multiple-valid-solutions` | Varias particiones equivalentes de 4+4                                    |
+| `impossible-availability`  | Indisponibilidad que hace el problema imposible                           |
+| `student-overlap`          | Franjas solapadas; el solver no emite horario y NestJS marca el solape    |
+| `insufficient-capacity`    | Best effort relajado por superar el máximo de clase                       |
+| `cross-subject-teachers`   | Reparto exacto de horas entre profesores por asignatura                   |
+| `best-effort-required`     | Best effort relajado por no alcanzar el mínimo de clase                   |
+| `weekly-hours-exceeded`    | El solver no excede horas; un horario inválido hace fallar la divergencia |
+
+Las pruebas de ambos runtimes leen `cases.json`. Un horario generado que no coincida en
+versión de catálogo, puntuación lexicográfica o recuento de reglas con NestJS hace fallar
+la suite.

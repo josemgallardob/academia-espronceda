@@ -20,6 +20,8 @@ export interface ApiEnvironment {
   loginRateIdentifierLimit: number;
   cookieSecure: boolean;
   trustProxy: boolean;
+  solverTimeoutBufferSeconds: number;
+  solverMaxConcurrent: number;
 }
 
 const DEVELOPMENT_DEFAULTS = {
@@ -95,6 +97,20 @@ export function loadApiEnvironment(
   );
   const cookieSecure = parseBoolean(value('COOKIE_SECURE'), 'COOKIE_SECURE');
   const trustProxy = parseBoolean(value('TRUST_PROXY'), 'TRUST_PROXY');
+  const solverTimeoutBufferSeconds = parseOptionalIntegerInRange(
+    source.SOLVER_TIMEOUT_BUFFER_SECONDS,
+    'SOLVER_TIMEOUT_BUFFER_SECONDS',
+    0,
+    60,
+    5,
+  );
+  const solverMaxConcurrent = parseOptionalIntegerInRange(
+    source.SOLVER_MAX_CONCURRENT,
+    'SOLVER_MAX_CONCURRENT',
+    1,
+    8,
+    1,
+  );
 
   if (nodeEnv === 'production') {
     assertProductionConfiguration({
@@ -115,7 +131,10 @@ export function loadApiEnvironment(
   return {
     nodeEnv,
     host: value('API_HOST'),
-    port: parsePort(value('API_PORT'), 'API_PORT'),
+    port: parsePort(
+      source.API_PORT?.trim() || source.PORT?.trim() || value('API_PORT'),
+      'API_PORT',
+    ),
     corsOrigins,
     solverUrl: solverUrl.toString(),
     databaseUrl,
@@ -132,6 +151,8 @@ export function loadApiEnvironment(
     loginRateIdentifierLimit,
     cookieSecure,
     trustProxy,
+    solverTimeoutBufferSeconds,
+    solverMaxConcurrent,
   };
 }
 
@@ -155,6 +176,20 @@ function parsePort(value: string, name: string): number {
   }
 
   return port;
+}
+
+function parseOptionalIntegerInRange(
+  value: string | undefined,
+  name: string,
+  minimum: number,
+  maximum: number,
+  fallback: number,
+): number {
+  const configured = value?.trim();
+  if (!configured) {
+    return fallback;
+  }
+  return parseIntegerInRange(configured, name, minimum, maximum);
 }
 
 function parseIntegerInRange(

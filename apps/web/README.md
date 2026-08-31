@@ -13,8 +13,8 @@ ng serve
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
 Las llamadas de la aplicación usan el prefijo relativo `/api`. Durante el desarrollo,
-`proxy.conf.json` lo reenvía a NestJS en `127.0.0.1:3000`, manteniendo web, cookies y
-XSRF en el mismo origen del navegador.
+`proxy.conf.cjs` lo reenvía a NestJS (`API_PROXY_TARGET` o `127.0.0.1:3000`), manteniendo
+web, cookies y XSRF en el mismo origen del navegador.
 
 ## Code scaffolding
 
@@ -50,13 +50,12 @@ ng test
 
 ## Running end-to-end tests
 
-For end-to-end (e2e) testing, run:
+Los recorridos críticos de Playwright viven en `e2e/` y se ejecutan desde la raíz:
 
 ```bash
-ng e2e
+npx playwright install chromium
+npm run test:e2e
 ```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
 ## Additional Resources
 

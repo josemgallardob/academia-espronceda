@@ -174,6 +174,27 @@ describe('Authentication (e2e)', () => {
     expect(user.id).toBe(mainUserId);
   });
 
+  it('correlates login failures with X-Request-Id and never echoes the password', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .set('Origin', FRONTEND_ORIGIN)
+      .set('X-Request-Id', 'corr-login-fail')
+      .send({
+        identifier: 'admin',
+        password: 'wrong password that must not leak',
+      })
+      .expect(401);
+
+    expect(response.headers['x-request-id']).toBe('corr-login-fail');
+    expect(responseBody(response)).toMatchObject({
+      code: 'INVALID_CREDENTIALS',
+      traceId: 'corr-login-fail',
+    });
+    expect(JSON.stringify(response.body)).not.toContain(
+      'wrong password that must not leak',
+    );
+  });
+
   it('returns the same error for a wrong password and an unknown account', async () => {
     const existing = await login('admin', 'wrong password', 401);
     const missing = await login('nobody@example.com', 'wrong password', 401);
